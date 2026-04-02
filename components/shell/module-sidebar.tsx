@@ -1,23 +1,22 @@
 "use client";
 
-"use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PanelLeftClose } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ERP_MODULE_ITEMS, ModuleNavItem } from "@/lib/navigation";
+import { ModuleNavItem } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 type ModuleSidebarProps = {
   collapsed: boolean;
+  modules: ModuleNavItem[];
   onToggle: () => void;
 };
 
 const renderLink = (item: ModuleNavItem, pathname: string, level = 0) => {
   const Icon = item.icon;
-  const active = pathname === item.href;
+  const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
 
   return (
     <div key={item.href} className={cn("flex flex-col gap-1", level > 0 && "ml-4")}>
@@ -37,7 +36,7 @@ const renderLink = (item: ModuleNavItem, pathname: string, level = 0) => {
   );
 };
 
-export function ModuleSidebar({ collapsed, onToggle }: ModuleSidebarProps) {
+export function ModuleSidebar({ collapsed, modules, onToggle }: ModuleSidebarProps) {
   const pathname = usePathname();
 
   if (collapsed) return null;
@@ -54,7 +53,7 @@ export function ModuleSidebar({ collapsed, onToggle }: ModuleSidebarProps) {
         </Button>
       </div>
       <div className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {ERP_MODULE_ITEMS.map((item) => renderLink(item, pathname))}
+        {modules.map((item) => renderLink(item, pathname))}
       </div>
     </aside>
   );

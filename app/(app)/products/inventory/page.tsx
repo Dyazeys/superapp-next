@@ -1,21 +1,24 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+"use client";
+
+import { createColumnHelper } from "@tanstack/react-table";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
-import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { FormField } from "@/components/forms/form-field";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { createColumnHelper } from "@tanstack/react-table";
-import { useProductInventory } from "@/features/product/use-product-module";
+import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  PRODUCT_BOOLEAN_OPTIONS,
+  parseBooleanInput,
+  useProductInventory,
+} from "@/features/product/use-product-module";
+import type { MasterInventoryInput } from "@/schemas/product-module";
 import type { MasterInventoryRecord } from "@/types/product";
 
 const columnHelper = createColumnHelper<MasterInventoryRecord>();
-
-const booleanOptions = [
-  { label: "true", value: "true" },
-  { label: "false", value: "false" },
-];
 
 export default function ProductInventoryPage() {
   const hooks = useProductInventory();
@@ -38,7 +41,7 @@ export default function ProductInventoryPage() {
       id: "actions",
       header: "",
       cell: ({ row }) => (
-        <div className="flex gap-2 justify-end">
+        <div className="flex justify-end gap-2">
           <Button size="icon-xs" variant="outline" onClick={() => hooks.openInventoryModal(row.original)}>
             <Pencil className="size-3.5" />
           </Button>
@@ -51,7 +54,11 @@ export default function ProductInventoryPage() {
   ];
 
   return (
-    <PageShell eyebrow="Product" title="Master Inventory" description="Manage inventory references reused by products and BOMs.">
+    <PageShell
+      eyebrow="Product"
+      title="Master Inventory"
+      description="Manage inventory references reused by products and BOM components."
+    >
       <div className="space-y-4">
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openInventoryModal()}>
@@ -66,14 +73,16 @@ export default function ProductInventoryPage() {
         open={inventoryModal.open}
         onOpenChange={inventoryModal.setOpen}
         title={editingInventory ? "Edit inventory" : "Create inventory"}
-        description="Modal CRUD for inventory records."
-        onSubmit={inventoryForm.handleSubmit((values) => hooks.saveInventory(values))}
+        description="Manage inventory references used across products and BOM rows."
+        onSubmit={() => {
+          void inventoryForm.handleSubmit((values: MasterInventoryInput) => hooks.saveInventory(values))();
+        }}
       >
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Inventory code" htmlFor="inv_code" error={inventoryForm.formState.errors.inv_code?.message}>
             <Input id="inv_code" {...inventoryForm.register("inv_code")} disabled={Boolean(editingInventory)} />
           </FormField>
-          <FormField label="Name" htmlFor="inv_name" error={inventoryForm.formState.errors.inv_name?.message}>
+          <FormField label="Inventory name" htmlFor="inv_name" error={inventoryForm.formState.errors.inv_name?.message}>
             <Input id="inv_name" {...inventoryForm.register("inv_name")} />
           </FormField>
         </div>
@@ -81,20 +90,20 @@ export default function ProductInventoryPage() {
           <FormField label="HPP" htmlFor="hpp" error={inventoryForm.formState.errors.hpp?.message}>
             <Input id="hpp" {...inventoryForm.register("hpp")} />
           </FormField>
-          <FormField label="Active" htmlFor="is_active">
+          <FormField label="Active" htmlFor="inventory_active">
             <Input
-              id="is_active"
-              list="boolean-options"
+              id="inventory_active"
+              list="inventory-boolean-options"
               value={String(inventoryForm.watch("is_active"))}
-              onChange={(e) => inventoryForm.setValue("is_active", e.target.value === "true")}
+              onChange={(e) => inventoryForm.setValue("is_active", parseBooleanInput(e.target.value))}
             />
           </FormField>
         </div>
         <FormField label="Description" htmlFor="description">
-          <Input id="description" {...inventoryForm.register("description")} />
+          <Textarea id="description" {...inventoryForm.register("description")} />
         </FormField>
-        <datalist id="boolean-options">
-          {booleanOptions.map((option) => (
+        <datalist id="inventory-boolean-options">
+          {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

@@ -1,18 +1,20 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import { useForm, type UseFormReturn } from "react-hook-form";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useModalState } from "@/hooks/use-modal-state";
 import { productApi } from "@/features/product/api";
 import {
+  type MasterInventoryFormValues,
   masterInventorySchema,
+  type MasterProductFormValues,
   masterProductSchema,
   productBomSchema,
   productCategorySchema,
+  type ProductCategoryFormValues,
   type MasterInventoryInput,
   type MasterProductInput,
   type ProductBomInput,
@@ -20,15 +22,70 @@ import {
 } from "@/schemas/product-module";
 import type { MasterInventoryRecord, MasterProductRecord, ProductCategoryRecord } from "@/types/product";
 
-function useBaseMutation(invalidateKeys: Array<string | string[]>) {
+function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) {
   const queryClient = useQueryClient();
   const invalidate = () => Promise.all(invalidateKeys.map((key) => queryClient.invalidateQueries({ queryKey: key })));
   return invalidate;
 }
 
-export function useProductCategories() {
+export const PRODUCT_BOOLEAN_OPTIONS = [
+  { label: "true", value: "true" },
+  { label: "false", value: "false" },
+] as const;
+
+export function parseBooleanInput(value: string) {
+  return value === "true";
+}
+
+export function createEmptyBomDraft(sku: string): ProductBomInput {
+  return {
+    sku,
+    component_group: "MAIN",
+    component_type: "INVENTORY",
+    inv_code: null,
+    component_name: "",
+    qty: "1",
+    unit_cost: "0",
+    is_stock_tracked: true,
+    notes: "",
+    sequence_no: 1,
+    is_active: true,
+  };
+}
+
+type ProductCategoriesHook = {
+  categoriesQuery: UseQueryResult<ProductCategoryRecord[]>;
+  categoryForm: UseFormReturn<ProductCategoryFormValues, unknown, ProductCategoryInput>;
+  categoryModal: ReturnType<typeof useModalState>;
+  editingCategory: ProductCategoryRecord | null;
+  openCategoryModal: (category?: ProductCategoryRecord) => void;
+  saveCategory: (values: ProductCategoryInput) => Promise<void>;
+  deleteCategory: (code: string) => Promise<void>;
+};
+
+type ProductInventoryHook = {
+  inventoryQuery: UseQueryResult<MasterInventoryRecord[]>;
+  inventoryForm: UseFormReturn<MasterInventoryFormValues, unknown, MasterInventoryInput>;
+  inventoryModal: ReturnType<typeof useModalState>;
+  editingInventory: MasterInventoryRecord | null;
+  openInventoryModal: (inventory?: MasterInventoryRecord) => void;
+  saveInventory: (values: MasterInventoryInput) => Promise<void>;
+  deleteInventory: (code: string) => Promise<void>;
+};
+
+type ProductMasterHook = {
+  productsQuery: UseQueryResult<MasterProductRecord[]>;
+  productForm: UseFormReturn<MasterProductFormValues, unknown, MasterProductInput>;
+  productModal: ReturnType<typeof useModalState>;
+  editingProduct: MasterProductRecord | null;
+  openProductModal: (product?: MasterProductRecord) => void;
+  saveProduct: (values: MasterProductInput) => Promise<MasterProductRecord>;
+  deleteProduct: (sku: string) => Promise<void>;
+};
+
+export function useProductCategories(): ProductCategoriesHook {
   const [editingCategory, setEditingCategory] = useState<ProductCategoryRecord | null>(null);
-  const form = useForm<ProductCategoryInput>({
+  const form = useForm<ProductCategoryFormValues, unknown, ProductCategoryInput>({
     resolver: zodResolver(productCategorySchema),
     defaultValues: {
       category_code: "",
@@ -39,7 +96,7 @@ export function useProductCategories() {
   });
   const modal = useModalState();
   const query = useQuery({ queryKey: ["product-categories"], queryFn: productApi.categories.list });
-  const invalidate = useBaseMutation(["product-categories"]);
+  const invalidate = useBaseMutation([["product-categories"]]);
 
   const save = async (values: ProductCategoryInput) => {
     const action = editingCategory
@@ -80,15 +137,15 @@ export function useProductCategories() {
   };
 }
 
-export function useProductInventory() {
+export function useProductInventory(): ProductInventoryHook {
   const [editingInventory, setEditingInventory] = useState<MasterInventoryRecord | null>(null);
-  const form = useForm<MasterInventoryInput>({
+  const form = useForm<MasterInventoryFormValues, unknown, MasterInventoryInput>({
     resolver: zodResolver(masterInventorySchema),
     defaultValues: { inv_code: "", inv_name: "", description: "", hpp: "0", is_active: true },
   });
   const modal = useModalState();
   const query = useQuery({ queryKey: ["product-inventory"], queryFn: productApi.inventory.list });
-  const invalidate = useBaseMutation(["product-inventory"]);
+  const invalidate = useBaseMutation([["product-inventory"]]);
 
   const save = async (values: MasterInventoryInput) => {
     const action = editingInventory
@@ -130,9 +187,9 @@ export function useProductInventory() {
   };
 }
 
-export function useProductMaster() {
+export function useProductMaster(): ProductMasterHook {
   const [editingProduct, setEditingProduct] = useState<MasterProductRecord | null>(null);
-  const form = useForm<MasterProductInput>({
+  const form = useForm<MasterProductFormValues, unknown, MasterProductInput>({
     resolver: zodResolver(masterProductSchema),
     defaultValues: {
       sku: "",
@@ -155,7 +212,7 @@ export function useProductMaster() {
   });
   const modal = useModalState();
   const query = useQuery({ queryKey: ["product-products"], queryFn: productApi.products.list });
-  const invalidate = useBaseMutation(["product-products"]);
+  const invalidate = useBaseMutation([["product-products"]]);
 
   const save = async (values: MasterProductInput) => {
     const action = editingProduct
@@ -217,7 +274,7 @@ export function useProductBom(selectedSku?: string) {
     queryFn: () => (selectedSku ? productApi.products.bom.list(selectedSku) : Promise.resolve([])),
     enabled: Boolean(selectedSku),
   });
-  const invalidate = useBaseMutation([["product-bom", selectedSku], "product-products"]);
+  const invalidate = useBaseMutation([["product-bom", selectedSku], ["product-products"]]);
 
   const save = async (payload: ProductBomInput) => {
     if (!selectedSku) throw new Error("Select a product first");
@@ -252,4 +309,11 @@ export function useProductBom(selectedSku?: string) {
     saveBom: save,
     deleteBom: remove,
   };
+}
+
+export function useProductSelection(products: MasterProductRecord[] | undefined) {
+  const [selectedSku, setSelectedSku] = useState<string | null>(null);
+  const currentSku = selectedSku ?? products?.[0]?.sku ?? null;
+
+  return { selectedSku, currentSku, setSelectedSku };
 }

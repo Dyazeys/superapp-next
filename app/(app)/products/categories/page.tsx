@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DataTable } from "@/components/data/data-table";
@@ -7,16 +9,15 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { FormField } from "@/components/forms/form-field";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { useProductCategories } from "@/features/product/use-product-module";
+import {
+  PRODUCT_BOOLEAN_OPTIONS,
+  parseBooleanInput,
+  useProductCategories,
+} from "@/features/product/use-product-module";
+import type { ProductCategoryInput } from "@/schemas/product-module";
 import type { ProductCategoryRecord } from "@/types/product";
 
 const columnHelper = createColumnHelper<ProductCategoryRecord>();
-
-
-const booleanOptions = [
-  { label: "true", value: "true" },
-  { label: "false", value: "false" },
-];
 
 export default function ProductCategoriesPage() {
   const hooks = useProductCategories();
@@ -70,7 +71,9 @@ export default function ProductCategoriesPage() {
         onOpenChange={categoryModal.setOpen}
         title={editingCategory ? "Edit category" : "Create category"}
         description="Manage product categories"
-        onSubmit={categoryForm.handleSubmit((values) => hooks.saveCategory(values))}
+        onSubmit={() => {
+          void categoryForm.handleSubmit((values: ProductCategoryInput) => hooks.saveCategory(values))();
+        }}
       >
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Code" htmlFor="category_code" error={categoryForm.formState.errors.category_code?.message}>
@@ -88,12 +91,12 @@ export default function ProductCategoriesPage() {
             id="is_active"
             list="boolean-options"
             value={String(categoryForm.watch("is_active"))}
-            onChange={(e) => categoryForm.setValue("is_active", e.target.value === "true")}
+            onChange={(e) => categoryForm.setValue("is_active", parseBooleanInput(e.target.value))}
           />
           <datalist id="boolean-options">
-            {booleanOptions.map((option) => (
+            {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.value}
+                {option.label}
               </option>
             ))}
           </datalist>
