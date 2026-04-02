@@ -1,0 +1,62 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/db/prisma";
+import { toJsonValue } from "@/lib/json";
+import { syncInboundItemMovement } from "@/lib/warehouse-stock";
+import { inboundItemSchema } from "@/schemas/warehouse-module";
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  const items = await prisma.inbound_items.findMany({
+    where: { inbound_id: id },
+    orderBy: [{ created_at: "asc" }, { id: "asc" }],
+    include: {
+      master_inventory: {
+        select: {
+          inv_code: true,
+          inv_name: true,
+        },
+      },
+    },
+  });
+
+  return NextResponse.json(toJsonValue(items));
+}
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const payload = inboundItemSchema.parse({ ...(await request.json()), inbound_id: id });
+
+  const item = await prisma.$transaction(async (tx) => {
+    const created = await tx.inbound_items.create({
+      data: {
+        inbound_id: id,
+        inv_code: payload.inv_code,
+        qty_received: payload.qty_received,
+        qty_passed_qc: payload.qty_passed_qc,
+        qty_rejected_qc: payload.qty_rejected_qc,
+        unit_cost: payload.unit_cost,
+      },
+      include: {
+        master_inventory: {
+          select: {
+            inv_code: true,
+            inv_name: true,
+          },
+        },
+      },
+    });
+
+    await syncInboundItemMovement(tx, created.id);
+
+    return created;
+  });
+
+  return NextResponse.json(toJsonValue(item), { status: 201 });
+}

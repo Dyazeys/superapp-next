@@ -1,0 +1,255 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { useState } from "react";
+import { useModalState } from "@/hooks/use-modal-state";
+import { productApi } from "@/features/product/api";
+import {
+  masterInventorySchema,
+  masterProductSchema,
+  productBomSchema,
+  productCategorySchema,
+  type MasterInventoryInput,
+  type MasterProductInput,
+  type ProductBomInput,
+  type ProductCategoryInput,
+} from "@/schemas/product-module";
+import type { MasterInventoryRecord, MasterProductRecord, ProductCategoryRecord } from "@/types/product";
+
+function useBaseMutation(invalidateKeys: Array<string | string[]>) {
+  const queryClient = useQueryClient();
+  const invalidate = () => Promise.all(invalidateKeys.map((key) => queryClient.invalidateQueries({ queryKey: key })));
+  return invalidate;
+}
+
+export function useProductCategories() {
+  const [editingCategory, setEditingCategory] = useState<ProductCategoryRecord | null>(null);
+  const form = useForm<ProductCategoryInput>({
+    resolver: zodResolver(productCategorySchema),
+    defaultValues: {
+      category_code: "",
+      parent_category_code: null,
+      category_name: "",
+      is_active: true,
+    },
+  });
+  const modal = useModalState();
+  const query = useQuery({ queryKey: ["product-categories"], queryFn: productApi.categories.list });
+  const invalidate = useBaseMutation(["product-categories"]);
+
+  const save = async (values: ProductCategoryInput) => {
+    const action = editingCategory
+      ? productApi.categories.update(editingCategory.category_code, values)
+      : productApi.categories.create(values);
+    await action;
+    toast.success(`Category ${editingCategory ? "updated" : "created"}`);
+    await invalidate();
+    setEditingCategory(null);
+    modal.closeModal();
+    form.reset();
+  };
+
+  const remove = (code: string) => productApi.categories.remove(code).then(async () => {
+    toast.success("Category deleted");
+    await invalidate();
+  });
+
+  const open = (category?: ProductCategoryRecord) => {
+    setEditingCategory(category ?? null);
+    form.reset({
+      category_code: category?.category_code ?? "",
+      parent_category_code: category?.parent_category_code ?? null,
+      category_name: category?.category_name ?? "",
+      is_active: category?.is_active ?? true,
+    });
+    modal.openModal();
+  };
+
+  return {
+    categoriesQuery: query,
+    categoryForm: form,
+    categoryModal: modal,
+    editingCategory,
+    openCategoryModal: open,
+    saveCategory: save,
+    deleteCategory: remove,
+  };
+}
+
+export function useProductInventory() {
+  const [editingInventory, setEditingInventory] = useState<MasterInventoryRecord | null>(null);
+  const form = useForm<MasterInventoryInput>({
+    resolver: zodResolver(masterInventorySchema),
+    defaultValues: { inv_code: "", inv_name: "", description: "", hpp: "0", is_active: true },
+  });
+  const modal = useModalState();
+  const query = useQuery({ queryKey: ["product-inventory"], queryFn: productApi.inventory.list });
+  const invalidate = useBaseMutation(["product-inventory"]);
+
+  const save = async (values: MasterInventoryInput) => {
+    const action = editingInventory
+      ? productApi.inventory.update(editingInventory.inv_code, values)
+      : productApi.inventory.create(values);
+    await action;
+    toast.success(`Inventory ${editingInventory ? "updated" : "created"}`);
+    await invalidate();
+    setEditingInventory(null);
+    modal.closeModal();
+    form.reset();
+  };
+
+  const remove = (code: string) => productApi.inventory.remove(code).then(async () => {
+    toast.success("Inventory deleted");
+    await invalidate();
+  });
+
+  const open = (inventory?: MasterInventoryRecord) => {
+    setEditingInventory(inventory ?? null);
+    form.reset({
+      inv_code: inventory?.inv_code ?? "",
+      inv_name: inventory?.inv_name ?? "",
+      description: inventory?.description ?? "",
+      hpp: inventory?.hpp ?? "0",
+      is_active: inventory?.is_active ?? true,
+    });
+    modal.openModal();
+  };
+
+  return {
+    inventoryQuery: query,
+    inventoryForm: form,
+    inventoryModal: modal,
+    editingInventory,
+    openInventoryModal: open,
+    saveInventory: save,
+    deleteInventory: remove,
+  };
+}
+
+export function useProductMaster() {
+  const [editingProduct, setEditingProduct] = useState<MasterProductRecord | null>(null);
+  const form = useForm<MasterProductInput>({
+    resolver: zodResolver(masterProductSchema),
+    defaultValues: {
+      sku: "",
+      category_code: null,
+      sku_name: "",
+      product_name: "",
+      color: "",
+      color_code: "",
+      size: "",
+      variations: "",
+      busa_code: "",
+      inv_main: null,
+      inv_acc: null,
+      is_bundling: false,
+      is_active: true,
+      price_mp: "0",
+      price_non_mp: "0",
+      total_hpp: "0",
+    },
+  });
+  const modal = useModalState();
+  const query = useQuery({ queryKey: ["product-products"], queryFn: productApi.products.list });
+  const invalidate = useBaseMutation(["product-products"]);
+
+  const save = async (values: MasterProductInput) => {
+    const action = editingProduct
+      ? productApi.products.update(editingProduct.sku, values)
+      : productApi.products.create(values);
+    const result = await action;
+    toast.success(`Product ${editingProduct ? "updated" : "created"}`);
+    await invalidate();
+    modal.closeModal();
+    setEditingProduct(null);
+    form.reset();
+    return result;
+  };
+
+  const remove = (sku: string) => productApi.products.remove(sku).then(async () => {
+    toast.success("Product deleted");
+    await invalidate();
+  });
+
+  const open = (product?: MasterProductRecord) => {
+    setEditingProduct(product ?? null);
+    form.reset({
+      sku: product?.sku ?? "",
+      category_code: product?.category_code ?? null,
+      sku_name: product?.sku_name ?? "",
+      product_name: product?.product_name ?? "",
+      color: product?.color ?? "",
+      color_code: product?.color_code ?? "",
+      size: product?.size ?? "",
+      variations: product?.variations ?? "",
+      busa_code: product?.busa_code ?? "",
+      inv_main: product?.inv_main ?? null,
+      inv_acc: product?.inv_acc ?? null,
+      is_bundling: product?.is_bundling ?? false,
+      is_active: product?.is_active ?? true,
+      price_mp: product?.price_mp ?? "0",
+      price_non_mp: product?.price_non_mp ?? "0",
+      total_hpp: product?.total_hpp ?? "0",
+    });
+    modal.openModal();
+  };
+
+  return {
+    productsQuery: query,
+    productForm: form,
+    productModal: modal,
+    editingProduct,
+    openProductModal: open,
+    saveProduct: save,
+    deleteProduct: remove,
+  };
+}
+
+export function useProductBom(selectedSku?: string) {
+  const [editingBomId, setEditingBomId] = useState<string | null>(null);
+  const [bomDraft, setBomDraft] = useState<ProductBomInput | null>(null);
+  const query = useQuery({
+    queryKey: ["product-bom", selectedSku],
+    queryFn: () => (selectedSku ? productApi.products.bom.list(selectedSku) : Promise.resolve([])),
+    enabled: Boolean(selectedSku),
+  });
+  const invalidate = useBaseMutation([["product-bom", selectedSku], "product-products"]);
+
+  const save = async (payload: ProductBomInput) => {
+    if (!selectedSku) throw new Error("Select a product first");
+    const validated = productBomSchema.parse({ ...payload, sku: selectedSku });
+    const body = Object.fromEntries(Object.entries(validated).filter(([key]) => key !== "sku")) as Omit<
+      ProductBomInput,
+      "sku"
+    >;
+    const action = editingBomId
+      ? productApi.products.bom.update(selectedSku, editingBomId, body)
+      : productApi.products.bom.create(selectedSku, body);
+    await action;
+    toast.success(`BOM row ${editingBomId ? "updated" : "created"}`);
+    await invalidate();
+    setEditingBomId(null);
+    setBomDraft(null);
+  };
+
+  const remove = async (id: string) => {
+    if (!selectedSku) return;
+    await productApi.products.bom.remove(selectedSku, id);
+    toast.success("BOM row deleted");
+    await invalidate();
+  };
+
+  return {
+    bomQuery: query,
+    editingBomId,
+    setEditingBomId,
+    bomDraft,
+    setBomDraft,
+    saveBom: save,
+    deleteBom: remove,
+  };
+}
