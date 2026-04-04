@@ -50,12 +50,12 @@ export function ModalFormShell({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[680px]">
+      <DialogContent className="gap-0 sm:max-w-[680px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">{children}</div>
+        <div className="space-y-4 bg-white py-5 text-slate-900">{children}</div>
         <DialogFooter showCloseButton>
           <Button onClick={handleSubmit} disabled={submitPending}>
             {submitPending ? "Working..." : submitLabel}

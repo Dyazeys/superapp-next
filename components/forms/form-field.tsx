@@ -19,11 +19,13 @@ export function FormField({
   className,
 }: FormFieldProps) {
   return (
-    <div className={cn("space-y-2", className)}>
-      <Label htmlFor={htmlFor}>{label}</Label>
+    <div className={cn("space-y-2.5", className)}>
+      <Label htmlFor={htmlFor} className="text-xs font-medium tracking-[0.02em] text-foreground/80">
+        {label}
+      </Label>
       {children}
-      {error ? <p className="text-xs text-destructive">{error}</p> : null}
-      {!error && helperText ? <p className="text-xs text-muted-foreground">{helperText}</p> : null}
+      {error ? <p className="text-xs leading-5 text-destructive">{error}</p> : null}
+      {!error && helperText ? <p className="text-xs leading-5 text-muted-foreground">{helperText}</p> : null}
     </div>
   );
 }

@@ -1,10 +1,27 @@
-import type { SalesOrderInput, SalesOrderItemInput } from "@/schemas/sales-module";
-import type { ChannelLookupRecord, SalesOrderItemRecord, SalesOrderRecord } from "@/types/sales";
+import type { SalesCustomerInput, SalesOrderInput, SalesOrderItemInput } from "@/schemas/sales-module";
+import type { ChannelLookupRecord, SalesCustomerRecord, SalesOrderItemRecord, SalesOrderRecord } from "@/types/sales";
 import { requestJson } from "@/lib/request";
 
 export const salesApi = {
   channels: {
     list: () => requestJson<ChannelLookupRecord[]>("/api/sales/channels"),
+  },
+  customers: {
+    list: () => requestJson<SalesCustomerRecord[]>("/api/sales/customers"),
+    create: (payload: SalesCustomerInput) =>
+      requestJson<SalesCustomerRecord>("/api/sales/customers", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    update: (customerId: number, payload: Partial<SalesCustomerInput>) =>
+      requestJson<SalesCustomerRecord>(`/api/sales/customers/${customerId}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    remove: (customerId: number) =>
+      requestJson<{ ok: true }>(`/api/sales/customers/${customerId}`, {
+        method: "DELETE",
+      }),
   },
   orders: {
     list: () => requestJson<SalesOrderRecord[]>("/api/sales/orders"),

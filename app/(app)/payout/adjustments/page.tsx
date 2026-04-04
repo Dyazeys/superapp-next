@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,6 +22,18 @@ export default function PayoutAdjustmentsPage() {
   const hooks = usePayoutAdjustments();
   const orderLookupQuery = usePayoutOrders();
   const channelsQuery = usePayoutChannels();
+  const adjustmentRows = hooks.adjustmentsQuery.data ?? [];
+  const totalAdjustments = adjustmentRows.length;
+  const totalAmount = adjustmentRows.reduce((sum, row) => sum + Number(row.amount), 0);
+  const uniqueRefs = new Set(adjustmentRows.map((row) => row.ref ?? "")).size - (adjustmentRows.some((row) => !row.ref) ? 1 : 0);
+  const latestDate =
+    adjustmentRows.length === 0
+      ? "-"
+      : adjustmentRows
+          .map((row) => (row.adjustment_date ? String(row.adjustment_date) : ""))
+          .filter(Boolean)
+          .reduce((latest, next) => (next > latest ? next : latest), "")
+          .slice(0, 10);
 
   const columns = [
     columnHelper.accessor("ref", {
@@ -74,7 +87,7 @@ export default function PayoutAdjustmentsPage() {
     <PageShell
       eyebrow="Payout"
       title="Payout Adjustments"
-      description="Maintain payout adjustments already supported by the schema, including reference, channel, reason, amount, and payout dates."
+      description="Kelola payout adjustments untuk koreksi nilai payout sesuai data yang sudah ada."
     >
       <datalist id="payout-adjustment-refs">
         {(orderLookupQuery.data ?? []).map((order) =>
@@ -93,7 +106,14 @@ export default function PayoutAdjustmentsPage() {
         ))}
       </datalist>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total adjustments" value={String(totalAdjustments)} subtitle="Jumlah adjustment yang terlihat." />
+          <MetricCard title="Total amount" value={formatMoney(totalAmount)} subtitle="Akumulasi amount dari data yang terlihat." />
+          <MetricCard title="Unique refs" value={String(Math.max(uniqueRefs, 0))} subtitle="Jumlah referensi unik (visible)." />
+          <MetricCard title="Latest date" value={latestDate} subtitle="Tanggal adjustment terbaru." />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openAdjustmentModal()}>
             <Plus className="size-4" />

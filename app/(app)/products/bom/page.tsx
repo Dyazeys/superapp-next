@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -7,6 +7,7 @@ import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,6 +46,16 @@ export default function ProductBomPage() {
   const { selectedSku, currentSku, setSelectedSku } = useProductSelection(productsQuery.data);
   const { bomQuery, editingBomId, setEditingBomId, bomDraft, setBomDraft, saveBom, deleteBom, actionPending } =
     useProductBom(currentSku ?? undefined);
+
+  const bomRows = bomQuery.data ?? [];
+  const totalBomRows = bomRows.length;
+  const activeBomRows = bomRows.filter((row) => row.is_active).length;
+  const trackedBomRows = bomRows.filter((row) => row.is_stock_tracked).length;
+  const totalBomValue = bomRows.reduce((sum, row) => sum + Number(row.qty) * Number(row.unit_cost), 0);
+  const activeBomValue = bomRows.reduce(
+    (sum, row) => sum + (row.is_active ? Number(row.qty) * Number(row.unit_cost) : 0),
+    0
+  );
 
   const rows = useMemo(() => {
     const base = bomQuery.data ?? [];
@@ -254,13 +265,11 @@ export default function ProductBomPage() {
     }),
   ];
 
-  const selectedProduct = (productsQuery.data ?? []).find((product) => product.sku === currentSku);
-
   return (
     <PageShell
       eyebrow="Product"
       title="Product BOM"
-      description="Manage BOM rows inline for each master product while keeping the Product workspace overview intact."
+      description="Kelola baris BOM per SKU secara inline untuk kebutuhan komponen dan estimasi nilai."
     >
       <datalist id="bom-component-types">
         <option value="INVENTORY" />
@@ -281,30 +290,47 @@ export default function ProductBomPage() {
         ))}
       </datalist>
 
-      <div className="space-y-4">
-        <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div className="space-y-2">
-            <label htmlFor="product-selection" className="text-sm font-medium text-muted-foreground">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-5">
+          <MetricCard title="Total BOM rows" value={String(totalBomRows)} subtitle="Baris BOM yang terlihat untuk SKU ini." />
+          <MetricCard title="Active rows" value={String(activeBomRows)} subtitle="Baris aktif yang digunakan." />
+          <MetricCard title="Stock-tracked" value={String(trackedBomRows)} subtitle="Baris yang memengaruhi stok." />
+          <MetricCard
+            title="Total BOM value"
+            value={totalBomValue.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Σ qty × unit cost (semua baris)."
+          />
+          <MetricCard
+            title="Active BOM value"
+            value={activeBomValue.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Σ qty × unit cost (baris aktif)."
+          />
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-[28px] border border-border/70 bg-card/80 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex min-w-0 items-center gap-6">
+            <label
+              htmlFor="product-selection"
+              className="w-[140px] shrink-0 text-xs font-medium tracking-[0.02em] text-foreground/80"
+            >
               Selected product
             </label>
-            <select
-              id="product-selection"
-              className="min-w-[280px] rounded-2xl border border-input bg-background px-3 py-2 text-sm"
-              value={selectedSku ?? currentSku ?? ""}
-              disabled={productsQuery.isLoading}
-              onChange={(event) => setSelectedSku(event.target.value || null)}
-            >
-              {(productsQuery.data ?? []).map((product) => (
-                <option key={product.sku} value={product.sku}>
-                  {product.sku} - {product.product_name}
-                </option>
-              ))}
-            </select>
-            <p className="text-sm text-muted-foreground">
-              {selectedProduct
-                ? `${selectedProduct.product_name} · ${selectedProduct._count?.product_bom ?? 0} BOM rows`
-                : "Choose a product to manage its BOM rows."}
-            </p>
+            <div className="min-w-0">
+              <select
+                id="product-selection"
+                className="min-w-[320px] rounded-2xl border border-input bg-background px-3 py-2.5 text-sm shadow-sm shadow-slate-900/5"
+                value={selectedSku ?? currentSku ?? ""}
+                disabled={productsQuery.isLoading}
+                onChange={(event) => setSelectedSku(event.target.value || null)}
+              >
+                {(productsQuery.data ?? []).map((product) => (
+                  <option key={product.sku} value={product.sku}>
+                    {product.sku} - {product.product_name}
+                  </option>
+                ))}
+              </select>
+
+            </div>
           </div>
           {currentSku ? (
             <Button
@@ -335,4 +361,3 @@ export default function ProductBomPage() {
     </PageShell>
   );
 }
-

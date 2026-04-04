@@ -10,9 +10,9 @@ type IconRailProps = {
 
 export function IconRail({ activeTop, onSelect }: IconRailProps) {
   return (
-    <nav className="flex h-full w-[72px] flex-col items-center gap-3 border-r border-slate-200 bg-white px-2 py-4 text-slate-500">
-      <div className="flex h-12 w-full items-center justify-center rounded-2xl bg-slate-100 text-slate-900">
-        <span className="text-xs font-semibold tracking-[0.3em] text-slate-600">ERP</span>
+    <nav className="flex h-screen w-[72px] shrink-0 flex-col items-center gap-3 border-r border-slate-200 bg-white px-2 py-4 text-slate-500">
+      <div className="flex h-12 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm shadow-slate-900/5">
+        <span className="text-xs font-semibold tracking-[0.28em] text-slate-700">ERP</span>
       </div>
 
       <div className="flex flex-1 flex-col items-center gap-2">

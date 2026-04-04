@@ -5,6 +5,22 @@ export type ChannelLookupRecord = {
   is_marketplace: boolean;
 };
 
+export type SalesCustomerRecord = {
+  customer_id: number;
+  customer_name: string;
+  phone: string | null;
+  email: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  _count?: {
+    t_order?: number;
+  };
+  metrics?: {
+    total_revenue: string;
+  };
+};
+
 export type SalesOrderRecord = {
   order_no: string;
   order_date: string;
@@ -18,6 +34,7 @@ export type SalesOrderRecord = {
   created_at: string;
   updated_at: string;
   m_channel?: ChannelLookupRecord | null;
+  master_customer?: Pick<SalesCustomerRecord, "customer_id" | "customer_name" | "is_active"> | null;
   _count?: {
     t_order_item?: number;
   };

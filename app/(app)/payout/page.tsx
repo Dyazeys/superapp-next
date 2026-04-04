@@ -6,7 +6,7 @@ export default function PayoutPage() {
     <PageShell
       eyebrow="Payout"
       title="Payout module"
-      description="Payout is split into ERP sub-pages over the existing payout records and payout adjustments schema with no new automation."
+      description="Ringkasan modul Payout untuk monitoring payout, adjustment, dan nilai bersih berdasarkan data yang sudah ada."
     >
       <PayoutOverview />
     </PageShell>

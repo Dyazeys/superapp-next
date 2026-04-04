@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,6 +27,11 @@ export default function ProductMasterPage() {
   const categories = useProductCategories();
   const inventory = useProductInventory();
   const { productsQuery, productForm, productModal, editingProduct, openProductModal, deleteProduct } = hooks;
+  const productRows = productsQuery.data ?? [];
+  const totalProducts = productRows.length;
+  const activeProducts = productRows.filter((row) => row.is_active).length;
+  const productsWithBom = productRows.filter((row) => (row._count?.product_bom ?? 0) > 0).length;
+  const totalMpPrice = productRows.reduce((sum, row) => sum + Number(row.price_mp || 0), 0);
 
   const columns = [
     columnHelper.accessor("sku", {
@@ -75,9 +81,20 @@ export default function ProductMasterPage() {
     <PageShell
       eyebrow="Product"
       title="Master Products"
-      description="Manage master SKUs, product categorization, inventory references, and pricing from one modal CRUD flow."
+      description="Kelola SKU, kategori, referensi inventory, dan harga secara ringkas lewat modal CRUD."
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total products" value={String(totalProducts)} subtitle="Jumlah SKU yang terlihat." />
+          <MetricCard title="Produk aktif" value={String(activeProducts)} subtitle="SKU yang siap dipakai operasional." />
+          <MetricCard title="Produk dengan BOM" value={String(productsWithBom)} subtitle="SKU yang punya struktur komponen." />
+          <MetricCard
+            title="Total MP price (visible)"
+            value={totalMpPrice.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Akumulasi harga marketplace dari data yang terlihat."
+          />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => openProductModal()}>
             <Plus className="size-4" />

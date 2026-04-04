@@ -25,6 +25,18 @@ export async function PATCH(
       invariant(channel, "Channel was not found.");
     }
 
+    if (payload.customer_id != null) {
+      const customer = await prisma.master_customer.findUnique({
+        where: { customer_id: payload.customer_id },
+        select: {
+          customer_id: true,
+          is_active: true,
+        },
+      });
+      invariant(customer, "Customer was not found.");
+      invariant(customer.is_active, "Sales orders require an active customer.");
+    }
+
     if (payload.parent_order_no) {
       invariant(payload.parent_order_no !== orderNo, "Parent order cannot be the same as the order.");
       const parentOrder = await prisma.t_order.findUnique({

@@ -7,6 +7,7 @@ import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,6 +39,11 @@ export default function SalesOrderItemsPage() {
   } = useSalesOrderItems(currentOrderNo ?? undefined);
 
   const selectedOrder = (ordersQuery.data ?? []).find((order) => order.order_no === currentOrderNo) ?? null;
+  const items = itemsQuery.data ?? [];
+  const totalItems = items.length;
+  const totalGross = items.reduce((sum, item) => sum + Number(item.qty) * Number(item.unit_price), 0);
+  const totalDiscount = items.reduce((sum, item) => sum + Number(item.discount_item), 0);
+  const totalNet = totalGross - totalDiscount;
 
   const itemRows = useMemo(() => {
     const rows = itemsQuery.data ?? [];
@@ -185,7 +191,7 @@ export default function SalesOrderItemsPage() {
     <PageShell
       eyebrow="Sales"
       title="Sales Order Items"
-      description="Maintain order items inline while reusing the current stock posting behavior for normal orders."
+      description="Kelola item order secara inline untuk menjaga nilai dan efek stok tetap konsisten."
     >
       <datalist id="sales-item-product-skus">
         {(productsQuery.data ?? []).map((product) => (
@@ -195,15 +201,34 @@ export default function SalesOrderItemsPage() {
         ))}
       </datalist>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total items" value={String(totalItems)} subtitle="Jumlah baris item untuk order terpilih." />
+          <MetricCard
+            title="Total gross"
+            value={totalGross.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Σ qty × unit price."
+          />
+          <MetricCard
+            title="Total discount"
+            value={totalDiscount.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Σ discount item."
+          />
+          <MetricCard
+            title="Total net"
+            value={totalNet.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle={selectedOrder?.is_historical ? "Order historis: tidak mem-posting stok." : "Order normal: mem-posting stok."}
+          />
+        </div>
+
         <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div className="space-y-2">
-            <label htmlFor="sales-order-selection" className="text-sm font-medium text-muted-foreground">
+          <div className="space-y-1.5">
+            <label htmlFor="sales-order-selection" className="text-xs font-medium tracking-[0.02em] text-foreground/80">
               Selected order
             </label>
             <select
               id="sales-order-selection"
-              className="min-w-[320px] rounded-2xl border border-input bg-background px-3 py-2 text-sm"
+              className="min-w-[320px] rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm shadow-slate-900/5"
               value={selectedOrderNo ?? currentOrderNo ?? ""}
               disabled={ordersQuery.isLoading}
               onChange={(event) => setSelectedOrderNo(event.target.value || null)}
@@ -214,11 +239,7 @@ export default function SalesOrderItemsPage() {
                 </option>
               ))}
             </select>
-            <p className="text-sm text-muted-foreground">
-              {selectedOrder
-                ? `${selectedOrder.status} · ${selectedOrder.is_historical ? "Historical order, no stock movement" : "Normal order, posts stock"}`
-                : "Choose an order to maintain its inline order items."}
-            </p>
+
           </div>
           {currentOrderNo ? (
             <Button

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,6 +15,7 @@ import {
   SALES_BOOLEAN_OPTIONS,
   SALES_STATUS_OPTIONS,
   useSalesChannels,
+  useSalesCustomers,
   useSalesOrders,
   toDateInput,
 } from "@/features/sales/use-sales-module";
@@ -25,7 +27,14 @@ const columnHelper = createColumnHelper<SalesOrderRecord>();
 export default function SalesOrdersPage() {
   const hooks = useSalesOrders();
   const channelsQuery = useSalesChannels();
+  const customersQuery = useSalesCustomers();
   const { ordersQuery, orderForm, orderModal, editingOrder } = hooks;
+  const orderRows = ordersQuery.data ?? [];
+  const totalOrders = orderRows.length;
+  const historicalOrders = orderRows.filter((row) => row.is_historical).length;
+  const normalOrders = totalOrders - historicalOrders;
+  const totalOrderAmount = orderRows.reduce((sum, row) => sum + Number(row.total_amount || 0), 0);
+  const totalItemRows = orderRows.reduce((sum, row) => sum + (row._count?.t_order_item ?? 0), 0);
 
   const columns = [
     columnHelper.accessor("order_no", {
@@ -39,6 +48,12 @@ export default function SalesOrdersPage() {
     columnHelper.accessor("channel_id", {
       header: "Channel",
       cell: (info) => info.row.original.m_channel?.channel_name ?? (info.getValue() ?? "-"),
+    }),
+    columnHelper.accessor("customer_id", {
+      header: "Customer",
+      cell: (info) =>
+        info.row.original.master_customer?.customer_name ??
+        "Tanpa customer",
     }),
     columnHelper.accessor("total_amount", { header: "Total" }),
     columnHelper.accessor("status", {
@@ -79,12 +94,19 @@ export default function SalesOrdersPage() {
     <PageShell
       eyebrow="Sales"
       title="Sales Orders"
-      description="Manage sales order headers with modal CRUD while keeping stock posting and accounting integration on the existing API path."
+      description="Kelola header sales order untuk operasional harian tanpa mengubah mekanisme posting stok yang sudah ada."
     >
       <datalist id="sales-order-channel-ids">
         {(channelsQuery.data ?? []).map((channel) => (
           <option key={channel.channel_id} value={channel.channel_id}>
             {channel.channel_name}
+          </option>
+        ))}
+      </datalist>
+      <datalist id="sales-order-customer-ids">
+        {(customersQuery.data ?? []).map((customer) => (
+          <option key={customer.customer_id} value={customer.customer_id}>
+            {customer.customer_name}
           </option>
         ))}
       </datalist>
@@ -106,7 +128,18 @@ export default function SalesOrdersPage() {
         ))}
       </datalist>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total orders" value={String(totalOrders)} subtitle="Jumlah order yang terlihat." />
+          <MetricCard title="Normal orders" value={String(normalOrders)} subtitle="Order yang mem-posting stok." />
+          <MetricCard title="Historical orders" value={String(historicalOrders)} subtitle="Order historis (tanpa posting stok)." />
+          <MetricCard
+            title="Total amount (visible)"
+            value={totalOrderAmount.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle={`Total item rows: ${totalItemRows}`}
+          />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openOrderModal()}>
             <Plus className="size-4" />
@@ -152,9 +185,14 @@ export default function SalesOrdersPage() {
               onChange={(event) => orderForm.setValue("channel_id", event.target.value ? Number(event.target.value) : null)}
             />
           </FormField>
-          <FormField label="Customer id" htmlFor="customer_id">
+          <FormField
+            label="Customer id (opsional)"
+            htmlFor="customer_id"
+            helperText="Dipakai terutama untuk order manual atau web yang punya data customer lengkap. Order omnichannel/import boleh dikosongkan."
+          >
             <Input
               id="customer_id"
+              list="sales-order-customer-ids"
               value={orderForm.watch("customer_id") == null ? "" : String(orderForm.watch("customer_id"))}
               onChange={(event) =>
                 orderForm.setValue("customer_id", event.target.value ? Number(event.target.value) : null)

@@ -6,7 +6,7 @@ export default function SalesPage() {
     <PageShell
       eyebrow="Sales"
       title="Sales module"
-      description="Sales is now split into dedicated ERP sub-pages while preserving the existing stock-posting and accounting-connected business logic."
+      description="Ringkasan modul Sales untuk alur pesanan dan item tanpa mengubah proses bisnis yang sudah ada."
     >
       <SalesOverview />
     </PageShell>

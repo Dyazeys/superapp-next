@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,11 @@ const columnHelper = createColumnHelper<MasterInventoryRecord>();
 export default function ProductInventoryPage() {
   const hooks = useProductInventory();
   const { inventoryQuery, inventoryForm, inventoryModal, editingInventory } = hooks;
+  const inventoryRows = inventoryQuery.data ?? [];
+  const totalInventory = inventoryRows.length;
+  const activeInventory = inventoryRows.filter((row) => row.is_active).length;
+  const totalHpp = inventoryRows.reduce((sum, row) => sum + Number(row.hpp || 0), 0);
+  const activeHpp = inventoryRows.reduce((sum, row) => sum + (row.is_active ? Number(row.hpp || 0) : 0), 0);
 
   const columns = [
     columnHelper.accessor("inv_code", {
@@ -57,9 +63,24 @@ export default function ProductInventoryPage() {
     <PageShell
       eyebrow="Product"
       title="Master Inventory"
-      description="Manage inventory references reused by products and BOM components."
+      description="Kelola master inventory yang dipakai lintas produk dan komponen BOM."
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total inventory" value={String(totalInventory)} subtitle="Semua item yang terlihat di halaman ini." />
+          <MetricCard title="Inventory aktif" value={String(activeInventory)} subtitle="Item berstatus aktif." />
+          <MetricCard
+            title="Total HPP (visible)"
+            value={totalHpp.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Akumulasi HPP dari semua item yang terlihat."
+          />
+          <MetricCard
+            title="HPP aktif"
+            value={activeHpp.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Akumulasi HPP untuk item aktif."
+          />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openInventoryModal()}>
             <Plus className="size-4" />

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -24,6 +25,11 @@ export default function WarehousePurchaseOrdersPage() {
   const hooks = useWarehousePurchaseOrders();
   const { vendorsQuery } = useWarehouseVendors();
   const { purchaseOrdersQuery, purchaseOrderForm, purchaseOrderModal, editingPurchaseOrder } = hooks;
+  const poRows = purchaseOrdersQuery.data ?? [];
+  const totalPo = poRows.length;
+  const openPo = poRows.filter((row) => row.status === "OPEN").length;
+  const linkedInbound = poRows.reduce((sum, row) => sum + (row._count?.inbound_deliveries ?? 0), 0);
+  const vendorsVisible = new Set(poRows.map((row) => row.vendor_code)).size;
 
   const columns = [
     columnHelper.accessor("po_number", {
@@ -67,7 +73,7 @@ export default function WarehousePurchaseOrdersPage() {
     <PageShell
       eyebrow="Warehouse"
       title="Purchase Orders"
-      description="Manage purchase order headers with vendor references and inbound tracking."
+      description="Kelola PO untuk kontrol pembelian dan pelacakan inbound."
     >
       <datalist id="warehouse-po-vendor-codes">
         {(vendorsQuery.data ?? []).map((vendor) => (
@@ -82,7 +88,14 @@ export default function WarehousePurchaseOrdersPage() {
         ))}
       </datalist>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total PO" value={String(totalPo)} subtitle="Jumlah PO yang terlihat." />
+          <MetricCard title="PO OPEN" value={String(openPo)} subtitle="PO yang masih terbuka." />
+          <MetricCard title="Linked inbound" value={String(linkedInbound)} subtitle="Total inbound yang terkait (visible)." />
+          <MetricCard title="Vendors (visible)" value={String(vendorsVisible)} subtitle="Jumlah vendor unik di PO yang terlihat." />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openPurchaseOrderModal()}>
             <Plus className="size-4" />

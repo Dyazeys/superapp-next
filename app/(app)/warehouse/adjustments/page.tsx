@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,21 @@ export default function WarehouseAdjustmentsPage() {
   const hooks = useWarehouseAdjustments();
   const inventoryQuery = useWarehouseInventoryLookup();
   const { adjustmentsQuery, adjustmentForm, adjustmentModal, editingAdjustment } = hooks;
+  const adjustmentRows = adjustmentsQuery.data ?? [];
+  const totalAdjustments = adjustmentRows.length;
+  const adjustmentsIn = adjustmentRows.filter((row) => row.adj_type === "IN").length;
+  const adjustmentsOut = totalAdjustments - adjustmentsIn;
+  const netQty = adjustmentRows.reduce(
+    (sum, row) => sum + (row.adj_type === "IN" ? Number(row.qty || 0) : -Number(row.qty || 0)),
+    0
+  );
+  const latestAdjustmentDate =
+    adjustmentRows.length === 0
+      ? "-"
+      : adjustmentRows
+          .map((row) => row.adjustment_date)
+          .reduce((latest, next) => (next > latest ? next : latest))
+          .slice(0, 10);
 
   const columns = [
     columnHelper.accessor("adjustment_date", {
@@ -70,7 +86,7 @@ export default function WarehouseAdjustmentsPage() {
     <PageShell
       eyebrow="Warehouse"
       title="Adjustments"
-      description="Manage stock adjustments through modal CRUD while preserving the current movement-sync behavior."
+      description="Kelola penyesuaian stok untuk koreksi operasional, dengan jejak yang tetap konsisten di ledger."
     >
       <datalist id="warehouse-adjustment-inventory-codes">
         {(inventoryQuery.data ?? []).map((inventory) => (
@@ -85,7 +101,14 @@ export default function WarehouseAdjustmentsPage() {
         ))}
       </datalist>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total adjustments" value={String(totalAdjustments)} subtitle="Jumlah adjustment yang terlihat." />
+          <MetricCard title="IN / OUT" value={`${adjustmentsIn} / ${adjustmentsOut}`} subtitle="Ringkas arah perubahan stok." />
+          <MetricCard title="Net qty" value={netQty.toLocaleString("id-ID")} subtitle="IN dikurangi OUT (visible)." />
+          <MetricCard title="Latest date" value={latestAdjustmentDate} subtitle="Tanggal adjustment terbaru." />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openAdjustmentModal()}>
             <Plus className="size-4" />

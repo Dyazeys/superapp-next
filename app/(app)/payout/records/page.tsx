@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatMoney, formatShortDate } from "@/lib/format";
@@ -30,6 +31,11 @@ export default function PayoutRecordsPage() {
   const hooks = usePayouts();
   const orderLookupQuery = usePayoutOrders();
   const { selectedPayoutId, currentPayoutId, setSelectedPayoutId } = usePayoutSelection(hooks.payoutsQuery.data);
+  const payoutRows = hooks.payoutsQuery.data ?? [];
+  const totalPayouts = payoutRows.length;
+  const settledCount = payoutRows.filter((row) => String(row.payout_status ?? "").toUpperCase() === "SETTLED").length;
+  const totalGross = payoutRows.reduce((sum, row) => sum + Number(row.total_price), 0);
+  const totalNet = payoutRows.reduce((sum, row) => sum + Number(row.omset), 0);
 
   const selectedPayout =
     (hooks.payoutsQuery.data ?? []).find((payout) => payout.payout_id === currentPayoutId) ?? null;
@@ -113,7 +119,7 @@ export default function PayoutRecordsPage() {
     <PageShell
       eyebrow="Payout"
       title="Payout Records"
-      description="Maintain payout records while exposing order references, deductions, fees, net payout, and related payout adjustments from the existing schema."
+      description="Kelola payout records untuk memantau gross, net, status, dan relasi order (tanpa otomatisasi baru)."
     >
       <datalist id="payout-record-refs">
         {(orderLookupQuery.data ?? []).map((order) =>
@@ -125,15 +131,22 @@ export default function PayoutRecordsPage() {
         )}
       </datalist>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total payouts" value={String(totalPayouts)} subtitle="Jumlah payout records yang terlihat." />
+          <MetricCard title="Settled" value={String(settledCount)} subtitle="Payout berstatus SETTLED." />
+          <MetricCard title="Total gross" value={formatMoney(totalGross)} subtitle="Akumulasi gross dari data yang terlihat." />
+          <MetricCard title="Total net" value={formatMoney(totalNet)} subtitle="Akumulasi net payout dari data yang terlihat." />
+        </div>
+
         <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div className="space-y-2">
-            <label htmlFor="payout-record-selection" className="text-sm font-medium text-muted-foreground">
+          <div className="space-y-1.5">
+            <label htmlFor="payout-record-selection" className="text-xs font-medium tracking-[0.02em] text-foreground/80">
               Selected payout
             </label>
             <select
               id="payout-record-selection"
-              className="min-w-[360px] rounded-2xl border border-input bg-background px-3 py-2 text-sm"
+              className="min-w-[360px] rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm shadow-slate-900/5"
               value={selectedPayoutId ?? currentPayoutId ?? ""}
               onChange={(event) => setSelectedPayoutId(event.target.value ? Number(event.target.value) : null)}
             >
@@ -143,7 +156,7 @@ export default function PayoutRecordsPage() {
                 </option>
               ))}
             </select>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs leading-5 text-muted-foreground">
               {selectedPayout
                 ? `${selectedPayout.t_order?.order_no ?? "No order"} / gross ${formatMoney(Number(selectedPayout.total_price))} / net ${formatMoney(Number(selectedPayout.omset))}`
                 : "Choose a payout record to inspect linked order and adjustment detail."}

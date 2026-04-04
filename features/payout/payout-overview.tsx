@@ -23,7 +23,7 @@ export function PayoutOverview() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-      <WorkspacePanel title="Payout records" description="List and maintain payout headers using the existing payout table only.">
+      <WorkspacePanel title="Payout records" description="Kelola header payout menggunakan tabel payout yang sudah ada.">
         <Link
           href="/payout/records"
           className="flex items-center justify-between rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm font-medium transition-colors hover:border-slate-400 hover:bg-slate-50"
@@ -32,13 +32,13 @@ export function PayoutOverview() {
             <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <ReceiptText className="size-4" />
             </span>
-            Open sub-page
+            Buka halaman
           </span>
           <ArrowRight className="size-4" />
         </Link>
       </WorkspacePanel>
 
-      <WorkspacePanel title="Payout adjustments" description="Review and maintain payout-side adjustments already present in schema.">
+      <WorkspacePanel title="Payout adjustments" description="Kelola adjustments payout yang sudah tersedia di schema.">
         <Link
           href="/payout/adjustments"
           className="flex items-center justify-between rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm font-medium transition-colors hover:border-slate-400 hover:bg-slate-50"
@@ -47,7 +47,7 @@ export function PayoutOverview() {
             <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <Landmark className="size-4" />
             </span>
-            Open sub-page
+            Buka halaman
           </span>
           <ArrowRight className="size-4" />
         </Link>
@@ -55,23 +55,23 @@ export function PayoutOverview() {
 
       <WorkspacePanel
         title="Net payout"
-        description={`${payoutsQuery.data?.length ?? 0} payout records currently visible from the payout ledger.`}
+        description={`${payoutsQuery.data?.length ?? 0} payout records terdeteksi dari ledger payout.`}
       >
         <div className="space-y-2">
           <p className="text-3xl font-semibold tracking-tight">{formatCompactCurrency(totalNet)}</p>
           <p className="text-sm text-muted-foreground">
-            Gross {formatMoney(totalGross)} with deductions/fees {formatMoney(totalDeductions)}.
+            Gross {formatMoney(totalGross)} dengan potongan/fee {formatMoney(totalDeductions)}.
           </p>
         </div>
       </WorkspacePanel>
 
       <WorkspacePanel
         title="Adjustments value"
-        description={`${adjustmentsQuery.data?.length ?? 0} payout adjustments tied to refs and channels.`}
+        description={`${adjustmentsQuery.data?.length ?? 0} payout adjustments terhubung ke referensi dan channel.`}
       >
         <div className="space-y-2">
           <p className="text-3xl font-semibold tracking-tight">{formatCompactCurrency(totalAdjustments)}</p>
-          <p className="text-sm text-muted-foreground">Existing adjustment amounts only. No accounting automation added.</p>
+          <p className="text-sm text-muted-foreground">Nilai adjustment sesuai data yang ada. Tidak ada otomatisasi baru.</p>
         </div>
       </WorkspacePanel>
     </div>

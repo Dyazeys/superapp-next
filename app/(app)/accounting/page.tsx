@@ -6,7 +6,7 @@ export default function AccountingPage() {
     <PageShell
       eyebrow="Accounting"
       title="Accounting module"
-      description="Accounting is introduced as a read-first ERP module over the existing journal and chart-of-accounts data."
+      description="Ringkasan modul Accounting (read-first) untuk melihat COA, jurnal, dan detail entry dari data yang sudah ada."
     >
       <AccountingOverview />
     </PageShell>

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { FormField } from "@/components/forms/form-field";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { createColumnHelper } from "@tanstack/react-table";
 import {
@@ -22,6 +23,11 @@ const columnHelper = createColumnHelper<ProductCategoryRecord>();
 export default function ProductCategoriesPage() {
   const hooks = useProductCategories();
   const { categoriesQuery, categoryForm, categoryModal, editingCategory } = hooks;
+  const categoryRows = categoriesQuery.data ?? [];
+  const totalCategories = categoryRows.length;
+  const activeCategories = categoryRows.filter((row) => row.is_active).length;
+  const rootCategories = categoryRows.filter((row) => !row.parent_category_code).length;
+  const childCategories = totalCategories - rootCategories;
   const columns = [
     columnHelper.accessor("category_code", {
       header: "Code",
@@ -55,8 +61,19 @@ export default function ProductCategoriesPage() {
   ];
 
   return (
-    <PageShell eyebrow="Product" title="Product Categories" description="Manage product categories with modal CRUD">
-      <div className="space-y-4">
+    <PageShell
+      eyebrow="Product"
+      title="Product Categories"
+      description="Kelola kategori untuk menjaga struktur katalog dan pelaporan tetap rapi."
+    >
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total categories" value={String(totalCategories)} subtitle="Semua kategori yang terlihat." />
+          <MetricCard title="Kategori aktif" value={String(activeCategories)} subtitle="Kategori yang dapat digunakan." />
+          <MetricCard title="Root categories" value={String(rootCategories)} subtitle="Kategori tanpa parent." />
+          <MetricCard title="Child categories" value={String(childCategories)} subtitle="Kategori yang berada di bawah parent." />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openCategoryModal()}>
             <Plus className="size-4" />

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +26,19 @@ export default function WarehouseInboundPage() {
   const hooks = useWarehouseInbound();
   const { purchaseOrdersQuery } = useWarehousePurchaseOrders();
   const { inboundQuery, inboundForm, inboundModal, editingInbound } = hooks;
+  const inboundRows = inboundQuery.data ?? [];
+  const totalInbound = inboundRows.length;
+  const passedInbound = inboundRows.filter((row) => row.qc_status === "PASSED").length;
+  const partialInbound = inboundRows.filter((row) => row.qc_status === "PARTIAL").length;
+  const otherInbound = totalInbound - passedInbound - partialInbound;
+  const totalInboundItems = inboundRows.reduce((sum, row) => sum + (row._count?.inbound_items ?? 0), 0);
+  const latestReceiveDate =
+    inboundRows.length === 0
+      ? "-"
+      : inboundRows
+          .map((row) => row.receive_date)
+          .reduce((latest, next) => (next > latest ? next : latest))
+          .slice(0, 10);
 
   const columns = [
     columnHelper.accessor("receive_date", {
@@ -76,7 +90,7 @@ export default function WarehouseInboundPage() {
     <PageShell
       eyebrow="Warehouse"
       title="Inbound"
-      description="Manage inbound delivery headers and QC status while keeping item-level editing on its own dedicated page."
+      description="Kelola header inbound dan status QC untuk memastikan penerimaan dan posting stok tetap terkontrol."
     >
       <datalist id="warehouse-inbound-po-ids">
         {(purchaseOrdersQuery.data ?? []).map((purchaseOrder) => (
@@ -91,7 +105,15 @@ export default function WarehouseInboundPage() {
         ))}
       </datalist>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-5">
+          <MetricCard title="Total inbound" value={String(totalInbound)} subtitle="Jumlah inbound yang terlihat." />
+          <MetricCard title="QC PASSED" value={String(passedInbound)} subtitle="Inbound lulus QC." />
+          <MetricCard title="QC PARTIAL" value={String(partialInbound)} subtitle="Inbound partial QC." />
+          <MetricCard title="Other QC" value={String(otherInbound)} subtitle="Status lain (pending/reject/dll)." />
+          <MetricCard title="Items / latest" value={`${totalInboundItems} / ${latestReceiveDate}`} subtitle="Total item rows dan tanggal terbaru." />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openInboundModal()}>
             <Plus className="size-4" />

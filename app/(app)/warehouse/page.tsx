@@ -6,7 +6,7 @@ export default function WarehousePage() {
     <PageShell
       eyebrow="Warehouse"
       title="Warehouse module"
-      description="Warehouse is now split into dedicated ERP sub-pages while preserving the existing schema, API surface, and stock-posting behavior."
+      description="Ringkasan modul Warehouse untuk operasional harian: inbound, pergerakan stok, dan saldo persediaan."
     >
       <WarehouseOverview />
     </PageShell>

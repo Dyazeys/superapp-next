@@ -5,6 +5,7 @@ import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import {
   useAccountingJournalEntries,
   useAccountingJournals,
@@ -24,6 +25,13 @@ export default function AccountingJournalEntriesPage() {
   const entriesQuery = useAccountingJournalEntries(currentJournalId ?? undefined);
 
   const selectedJournal = (journalsQuery.data ?? []).find((journal) => journal.id === currentJournalId) ?? null;
+  const journalRows = journalsQuery.data ?? [];
+  const totalJournals = journalRows.length;
+  const totalJournalLines = journalRows.reduce((sum, row) => sum + Number(row.line_count || 0), 0);
+  const selectedLineCount = selectedJournal?.line_count ?? null;
+  const selectedDebit = selectedJournal?.total_debit ?? null;
+  const selectedCredit = selectedJournal?.total_credit ?? null;
+  const currentLinesVisible = (entriesQuery.data ?? []).length;
 
   const columns = [
     columnHelper.accessor("accounts.code", {
@@ -59,17 +67,36 @@ export default function AccountingJournalEntriesPage() {
     <PageShell
       eyebrow="Accounting"
       title="Journal Entries"
-      description="Inspect detailed journal lines and their source references using the existing accounting data."
+      description="Cek detail debit/kredit per jurnal untuk kebutuhan audit dan rekonsiliasi cepat."
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total journals" value={String(totalJournals)} subtitle="Jumlah header jurnal yang terlihat." />
+          <MetricCard title="Total journal lines" value={String(totalJournalLines)} subtitle="Akumulasi line count dari jurnal." />
+          <MetricCard
+            title="Selected journal"
+            value={selectedJournal ? toDateInput(selectedJournal.transaction_date) : "-"}
+            subtitle={selectedJournal ? `${selectedJournal.reference_type}` : "Pilih jurnal untuk melihat detail."}
+          />
+          <MetricCard
+            title="Lines / debit / credit"
+            value={
+              selectedJournal
+                ? `${selectedLineCount} / ${selectedDebit} / ${selectedCredit}`
+                : String(currentLinesVisible)
+            }
+            subtitle={selectedJournal ? "Ringkas dari header jurnal terpilih." : "Baris yang sedang terlihat."}
+          />
+        </div>
+
         <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div className="space-y-2">
-            <label htmlFor="accounting-journal-selection" className="text-sm font-medium text-muted-foreground">
+          <div className="space-y-1.5">
+            <label htmlFor="accounting-journal-selection" className="text-xs font-medium tracking-[0.02em] text-foreground/80">
               Selected journal
             </label>
             <select
               id="accounting-journal-selection"
-              className="min-w-[360px] rounded-2xl border border-input bg-background px-3 py-2 text-sm"
+              className="min-w-[360px] rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm shadow-slate-900/5"
               value={selectedJournalId ?? currentJournalId ?? ""}
               disabled={journalsQuery.isLoading}
               onChange={(event) => setSelectedJournalId(event.target.value || null)}
@@ -80,11 +107,7 @@ export default function AccountingJournalEntriesPage() {
                 </option>
               ))}
             </select>
-            <p className="text-sm text-muted-foreground">
-              {selectedJournal
-                ? `${selectedJournal.reference_type} · ${selectedJournal.line_count} lines · debit ${selectedJournal.total_debit} / credit ${selectedJournal.total_credit}`
-                : "Choose a journal to inspect its lines."}
-            </p>
+
           </div>
         </div>
 

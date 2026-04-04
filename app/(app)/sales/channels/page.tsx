@@ -4,6 +4,7 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { DataTable } from "@/components/data/data-table";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { useSalesChannels } from "@/features/sales/use-sales-module";
 import type { ChannelLookupRecord } from "@/types/sales";
 
@@ -11,6 +12,11 @@ const columnHelper = createColumnHelper<ChannelLookupRecord>();
 
 export default function SalesChannelsPage() {
   const channelsQuery = useSalesChannels();
+  const channelRows = channelsQuery.data ?? [];
+  const totalChannels = channelRows.length;
+  const marketplaceChannels = channelRows.filter((row) => row.is_marketplace).length;
+  const directChannels = totalChannels - marketplaceChannels;
+  const withSlug = channelRows.filter((row) => Boolean(row.slug)).length;
 
   const columns = [
     columnHelper.accessor("channel_id", {
@@ -34,9 +40,17 @@ export default function SalesChannelsPage() {
     <PageShell
       eyebrow="Sales"
       title="Channels"
-      description="Review sales channel lookup data exposed by the existing sales channel endpoint."
+      description="Lihat master channel penjualan untuk memastikan input transaksi dan pelaporan konsisten."
     >
-      <DataTable columns={columns} data={channelsQuery.data ?? []} emptyMessage="No channels found." />
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total channels" value={String(totalChannels)} subtitle="Jumlah channel yang terlihat." />
+          <MetricCard title="Marketplace" value={String(marketplaceChannels)} subtitle="Channel marketplace." />
+          <MetricCard title="Direct" value={String(directChannels)} subtitle="Channel direct/non-marketplace." />
+          <MetricCard title="Has slug" value={String(withSlug)} subtitle="Channel yang memiliki slug." />
+        </div>
+        <DataTable columns={columns} data={channelsQuery.data ?? []} emptyMessage="No channels found." />
+      </div>
     </PageShell>
   );
 }

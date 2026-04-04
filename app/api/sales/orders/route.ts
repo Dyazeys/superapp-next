@@ -21,6 +21,13 @@ export async function GET() {
             is_marketplace: true,
           },
         },
+        master_customer: {
+          select: {
+            customer_id: true,
+            customer_name: true,
+            is_active: true,
+          },
+        },
         _count: {
           select: {
             t_order_item: true,
@@ -45,6 +52,18 @@ export async function POST(request: NextRequest) {
         select: { channel_id: true },
       });
       invariant(channel, "Channel was not found.");
+    }
+
+    if (payload.customer_id != null) {
+      const customer = await prisma.master_customer.findUnique({
+        where: { customer_id: payload.customer_id },
+        select: {
+          customer_id: true,
+          is_active: true,
+        },
+      });
+      invariant(customer, "Customer was not found.");
+      invariant(customer.is_active, "Sales orders require an active customer.");
     }
 
     if (payload.parent_order_no) {

@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,11 @@ const columnHelper = createColumnHelper<VendorRecord>();
 export default function WarehouseVendorsPage() {
   const hooks = useWarehouseVendors();
   const { vendorsQuery, vendorForm, vendorModal, editingVendor } = hooks;
+  const vendorRows = vendorsQuery.data ?? [];
+  const totalVendors = vendorRows.length;
+  const activeVendors = vendorRows.filter((row) => row.is_active).length;
+  const vendorsWithPo = vendorRows.filter((row) => (row._count?.purchase_orders ?? 0) > 0).length;
+  const totalLinkedPos = vendorRows.reduce((sum, row) => sum + (row._count?.purchase_orders ?? 0), 0);
 
   const columns = [
     columnHelper.accessor("vendor_code", {
@@ -69,9 +75,16 @@ export default function WarehouseVendorsPage() {
     <PageShell
       eyebrow="Warehouse"
       title="Vendors"
-      description="Manage master vendor records reused across purchase orders and inbound receiving."
+      description="Kelola master vendor untuk mempercepat input PO dan proses inbound."
     >
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-4">
+          <MetricCard title="Total vendors" value={String(totalVendors)} subtitle="Jumlah vendor yang terlihat." />
+          <MetricCard title="Vendor aktif" value={String(activeVendors)} subtitle="Vendor yang dapat digunakan." />
+          <MetricCard title="Vendors with PO" value={String(vendorsWithPo)} subtitle="Vendor yang sudah punya PO terkait." />
+          <MetricCard title="Linked POs" value={String(totalLinkedPos)} subtitle="Total PO terkait (visible)." />
+        </div>
+
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openVendorModal()}>
             <Plus className="size-4" />

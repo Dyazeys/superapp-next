@@ -70,7 +70,7 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
     children: [
       { label: "Sales Orders", href: "/sales/orders", icon: ReceiptText },
       { label: "Sales Order Items", href: "/sales/order-items", icon: ReceiptText },
-      { label: "Channels", href: "/sales/channels", icon: ReceiptText },
+      { label: "Customers", href: "/sales/customers", icon: Users },
     ],
   },
   {
@@ -103,7 +103,6 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Adjustments", href: "/payout/adjustments", icon: Landmark },
     ],
   },
-  { label: "Customers", href: "/customers", icon: Users },
   { label: "Workspace", href: "/workspace", icon: PanelLeft, badge: "UI" },
   { label: "Dashboard", href: "/dashboard", icon: Sparkles, badge: "Ready" },
 ];

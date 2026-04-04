@@ -5,10 +5,18 @@ import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-q
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { useModalState } from "@/hooks/use-modal-state";
 import { salesApi } from "@/features/sales/api";
-import { salesOrderItemSchema, salesOrderSchema, type SalesOrderInput, type SalesOrderItemInput } from "@/schemas/sales-module";
-import type { ChannelLookupRecord, SalesOrderItemRecord, SalesOrderRecord } from "@/types/sales";
+import {
+  salesCustomerSchema,
+  salesOrderItemSchema,
+  salesOrderSchema,
+  type SalesCustomerInput,
+  type SalesOrderInput,
+  type SalesOrderItemInput,
+} from "@/schemas/sales-module";
+import type { ChannelLookupRecord, SalesCustomerRecord, SalesOrderItemRecord, SalesOrderRecord } from "@/types/sales";
 
 type ProductLookupRecord = {
   sku: string;
@@ -26,6 +34,8 @@ type SalesOrderItemFormValues = Omit<SalesOrderItemInput, "qty"> & {
   qty: unknown;
 };
 
+type SalesCustomerFormValues = z.input<typeof salesCustomerSchema>;
+
 type SalesOrdersHook = {
   ordersQuery: UseQueryResult<SalesOrderRecord[]>;
   orderForm: UseFormReturn<SalesOrderFormValues, unknown, SalesOrderInput>;
@@ -34,6 +44,16 @@ type SalesOrdersHook = {
   openOrderModal: (order?: SalesOrderRecord) => void;
   saveOrder: (values: SalesOrderInput) => Promise<SalesOrderRecord>;
   deleteOrder: (orderNo: string) => Promise<void>;
+};
+
+type SalesCustomersHook = {
+  customersQuery: UseQueryResult<SalesCustomerRecord[]>;
+  customerForm: UseFormReturn<SalesCustomerFormValues, unknown, SalesCustomerInput>;
+  customerModal: ReturnType<typeof useModalState>;
+  editingCustomer: SalesCustomerRecord | null;
+  openCustomerModal: (customer?: SalesCustomerRecord) => void;
+  saveCustomer: (values: SalesCustomerInput) => Promise<void>;
+  deleteCustomer: (customerId: number) => Promise<void>;
 };
 
 export const SALES_BOOLEAN_OPTIONS = [
@@ -45,6 +65,7 @@ export const SALES_STATUS_OPTIONS = ["PAID", "PICKUP", "OPEN", "CANCELLED"] as c
 
 const SALES_ORDER_KEY = ["sales-orders"] as const;
 const SALES_CHANNEL_KEY = ["sales-channels"] as const;
+const SALES_CUSTOMER_KEY = ["sales-customers"] as const;
 const SALES_PRODUCT_LOOKUP_KEY = ["sales-products-lookup"] as const;
 const WAREHOUSE_STOCK_BALANCE_KEY = ["warehouse-stock-balances"] as const;
 const WAREHOUSE_STOCK_MOVEMENT_KEY = ["warehouse-stock-movements"] as const;
@@ -93,6 +114,13 @@ export function useSalesChannels() {
   }) as UseQueryResult<ChannelLookupRecord[]>;
 }
 
+export function useSalesCustomers() {
+  return useQuery({
+    queryKey: SALES_CUSTOMER_KEY,
+    queryFn: salesApi.customers.list,
+  }) as UseQueryResult<SalesCustomerRecord[]>;
+}
+
 export function useSalesProductsLookup() {
   return useQuery({
     queryKey: SALES_PRODUCT_LOOKUP_KEY,
@@ -127,6 +155,7 @@ export function useSalesOrders(): SalesOrdersHook {
   const ordersQuery = useQuery({ queryKey: SALES_ORDER_KEY, queryFn: salesApi.orders.list });
   const invalidate = useBaseMutation([
     SALES_ORDER_KEY,
+    SALES_CUSTOMER_KEY,
     ["sales-order-items"],
     WAREHOUSE_STOCK_BALANCE_KEY,
     WAREHOUSE_STOCK_MOVEMENT_KEY,
@@ -183,6 +212,73 @@ export function useSalesOrders(): SalesOrdersHook {
     openOrderModal,
     saveOrder,
     deleteOrder,
+  };
+}
+
+export function useSalesCustomerMaster(): SalesCustomersHook {
+  const [editingCustomer, setEditingCustomer] = useState<SalesCustomerRecord | null>(null);
+  const customerForm = useForm<SalesCustomerFormValues, unknown, SalesCustomerInput>({
+    resolver: zodResolver(salesCustomerSchema),
+    defaultValues: {
+      customer_name: "",
+      phone: "",
+      email: "",
+      is_active: true,
+    },
+  });
+  const customerModal = useModalState();
+  const customersQuery = useSalesCustomers();
+  const invalidate = useBaseMutation([SALES_CUSTOMER_KEY, SALES_ORDER_KEY]);
+
+  const saveCustomer = async (values: SalesCustomerInput) => {
+    try {
+      if (editingCustomer) {
+        await salesApi.customers.update(editingCustomer.customer_id, values);
+      } else {
+        await salesApi.customers.create(values);
+      }
+
+      toast.success(`Customer ${editingCustomer ? "updated" : "created"}`);
+      await invalidate();
+      setEditingCustomer(null);
+      customerModal.closeModal();
+      customerForm.reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save customer");
+      throw error;
+    }
+  };
+
+  const deleteCustomer = async (customerId: number) => {
+    try {
+      await salesApi.customers.remove(customerId);
+      toast.success("Customer deleted");
+      await invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete customer");
+      throw error;
+    }
+  };
+
+  const openCustomerModal = (customer?: SalesCustomerRecord) => {
+    setEditingCustomer(customer ?? null);
+    customerForm.reset({
+      customer_name: customer?.customer_name ?? "",
+      phone: customer?.phone ?? "",
+      email: customer?.email ?? "",
+      is_active: customer?.is_active ?? true,
+    });
+    customerModal.openModal();
+  };
+
+  return {
+    customersQuery,
+    customerForm,
+    customerModal,
+    editingCustomer,
+    openCustomerModal,
+    saveCustomer,
+    deleteCustomer,
   };
 }
 

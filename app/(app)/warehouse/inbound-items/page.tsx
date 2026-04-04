@@ -7,6 +7,7 @@ import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,7 +37,14 @@ export default function WarehouseInboundItemsPage() {
     actionPending,
   } = useWarehouseInboundItems(currentInboundId ?? undefined);
 
-  const selectedInbound = (inboundQuery.data ?? []).find((record) => record.id === currentInboundId) ?? null;
+
+  const inboundItemRows = inboundItemsQuery.data ?? [];
+  const totalItemRows = inboundItemRows.length;
+  const distinctInventory = new Set(inboundItemRows.map((row) => row.inv_code)).size;
+  const totalReceived = inboundItemRows.reduce((sum, row) => sum + Number(row.qty_received || 0), 0);
+  const totalPassed = inboundItemRows.reduce((sum, row) => sum + Number(row.qty_passed_qc || 0), 0);
+  const totalRejected = inboundItemRows.reduce((sum, row) => sum + Number(row.qty_rejected_qc || 0), 0);
+  const totalValue = inboundItemRows.reduce((sum, row) => sum + Number(row.qty_passed_qc || 0) * Number(row.unit_cost || 0), 0);
 
   const rows = useMemo(() => {
     const base = inboundItemsQuery.data ?? [];
@@ -197,7 +205,7 @@ export default function WarehouseInboundItemsPage() {
     <PageShell
       eyebrow="Warehouse"
       title="Inbound Items"
-      description="Manage inbound line items inline, preserving the existing stock logic that posts passed QC quantities."
+      description="Kelola item inbound dan pastikan qty lulus QC menjadi penambah stok sesuai alur yang sudah ada."
     >
       <datalist id="warehouse-inbound-item-inventory-codes">
         {(inventoryQuery.data ?? []).map((inventory) => (
@@ -207,15 +215,27 @@ export default function WarehouseInboundItemsPage() {
         ))}
       </datalist>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-5">
+          <MetricCard title="Total item rows" value={String(totalItemRows)} subtitle="Baris item untuk inbound terpilih." />
+          <MetricCard title="Inventory codes" value={String(distinctInventory)} subtitle="Jumlah kode inventory unik." />
+          <MetricCard title="Qty received" value={totalReceived.toLocaleString("id-ID")} subtitle="Total qty diterima." />
+          <MetricCard title="Qty passed QC" value={totalPassed.toLocaleString("id-ID")} subtitle="Qty yang mem-posting stok." />
+          <MetricCard
+            title="Value (passed)"
+            value={totalValue.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle={`Rejected: ${totalRejected.toLocaleString("id-ID")}`}
+          />
+        </div>
+
         <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div className="space-y-2">
-            <label htmlFor="warehouse-inbound-selection" className="text-sm font-medium text-muted-foreground">
+          <div className="space-y-1.5">
+            <label htmlFor="warehouse-inbound-selection" className="text-xs font-medium tracking-[0.02em] text-foreground/80">
               Selected inbound
             </label>
             <select
               id="warehouse-inbound-selection"
-              className="min-w-[320px] rounded-2xl border border-input bg-background px-3 py-2 text-sm"
+              className="min-w-[320px] rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm shadow-slate-900/5"
               value={selectedInboundId ?? currentInboundId ?? ""}
               disabled={inboundQuery.isLoading}
               onChange={(event) => setSelectedInboundId(event.target.value || null)}
@@ -226,11 +246,7 @@ export default function WarehouseInboundItemsPage() {
                 </option>
               ))}
             </select>
-            <p className="text-sm text-muted-foreground">
-              {selectedInbound
-                ? `${selectedInbound.purchase_orders?.po_number ?? "No PO"} · ${selectedInbound._count?.inbound_items ?? 0} item rows`
-                : "Choose an inbound delivery to manage its item rows."}
-            </p>
+
           </div>
           {currentInboundId ? (
             <Button size="sm" disabled={actionPending} onClick={startNewInboundItem}>

@@ -5,6 +5,7 @@ import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
+import { MetricCard } from "@/components/layout/stats-card";
 import { useAccountingAccounts } from "@/features/accounting/use-accounting-module";
 import type { AccountingAccountRecord } from "@/types/accounting";
 
@@ -12,6 +13,11 @@ const columnHelper = createColumnHelper<AccountingAccountRecord>();
 
 export default function AccountingAccountsPage() {
   const accountsQuery = useAccountingAccounts();
+  const accountRows = accountsQuery.data ?? [];
+  const totalAccounts = accountRows.length;
+  const activeAccounts = accountRows.filter((row) => row.is_active).length;
+  const parentAccounts = accountRows.filter((row) => row.accounts != null).length;
+  const totalJournalLines = accountRows.reduce((sum, row) => sum + (row._count?.journal_lines ?? 0), 0);
 
   const columns = [
     columnHelper.accessor("code", {
@@ -51,12 +57,20 @@ export default function AccountingAccountsPage() {
     <PageShell
       eyebrow="Accounting"
       title="Accounts"
-      description="Review the chart of accounts and hierarchy from the existing accounting schema."
+      description="Lihat chart of accounts (COA) untuk memastikan struktur akun dan relasi parent tetap jelas."
     >
       {accountsQuery.isError ? (
         <EmptyState title="Failed to load accounts" description={accountsQuery.error.message} />
       ) : (
-        <DataTable columns={columns} data={accountsQuery.data ?? []} emptyMessage="No accounts found." />
+        <div className="space-y-5">
+          <div className="grid gap-4 md:grid-cols-4">
+            <MetricCard title="Total accounts" value={String(totalAccounts)} subtitle="Jumlah akun yang terlihat." />
+            <MetricCard title="Akun aktif" value={String(activeAccounts)} subtitle="Akun yang aktif." />
+            <MetricCard title="Has parent" value={String(parentAccounts)} subtitle="Akun yang memiliki parent." />
+            <MetricCard title="Journal lines" value={String(totalJournalLines)} subtitle="Total pemakaian akun di jurnal (visible)." />
+          </div>
+          <DataTable columns={columns} data={accountsQuery.data ?? []} emptyMessage="No accounts found." />
+        </div>
       )}
     </PageShell>
   );
