@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ type ModalFormShellProps = {
   submitLabel?: string;
   children: React.ReactNode;
   isSubmitting?: boolean;
-  onSubmit?: () => void;
+  onSubmit?: () => void | Promise<void>;
 };
 
 export function ModalFormShell({
@@ -31,6 +32,22 @@ export function ModalFormShell({
   isSubmitting,
   onSubmit,
 }: ModalFormShellProps) {
+  const [internalSubmitting, setInternalSubmitting] = useState(false);
+  const submitPending = Boolean(isSubmitting || internalSubmitting);
+
+  const handleSubmit = async () => {
+    if (!onSubmit || submitPending) {
+      return;
+    }
+
+    try {
+      setInternalSubmitting(true);
+      await onSubmit();
+    } finally {
+      setInternalSubmitting(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[680px]">
@@ -40,8 +57,8 @@ export function ModalFormShell({
         </DialogHeader>
         <div className="space-y-4">{children}</div>
         <DialogFooter showCloseButton>
-          <Button onClick={onSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Working..." : submitLabel}
+          <Button onClick={handleSubmit} disabled={submitPending}>
+            {submitPending ? "Working..." : submitLabel}
           </Button>
         </DialogFooter>
       </DialogContent>

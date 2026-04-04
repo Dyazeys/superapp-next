@@ -1,0 +1,21 @@
+development : The term 'development' is not recognized as the name of a cmdlet, function, script file, or operable 
+program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:15
++ $env:NODE_ENV=development; Set-Location E:\deploy\superapp-next; npm  ...
++               ~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (development:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+ 
+Error: spawn EPERM
+    at ChildProcess.spawn (node:internal/child_process:421:11)
+    at spawn (node:child_process:796:9)
+    at fork (node:child_process:174:10)
+    at E:\Deploy\superapp-next\node_modules\next\dist\cli\next-dev.js:253:45
+    at new Promise (<anonymous>)
+    at startServer (E:\Deploy\superapp-next\node_modules\next\dist\cli\next-dev.js:221:16)
+    at runDevServer (E:\Deploy\superapp-next\node_modules\next\dist\cli\next-dev.js:355:23)
+    at Module.nextDev (E:\Deploy\superapp-next\node_modules\next\dist\cli\next-dev.js:363:11) {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'spawn'
+}

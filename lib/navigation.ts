@@ -1,5 +1,6 @@
 import {
   ChartBar,
+  Landmark,
   LayoutGrid,
   PanelLeft,
   Package2,
@@ -68,7 +69,8 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
     badge: "Migrated",
     children: [
       { label: "Sales Orders", href: "/sales/orders", icon: ReceiptText },
-      { label: "Sales Stock Posting", href: "/sales/stock-posting", icon: ReceiptText },
+      { label: "Sales Order Items", href: "/sales/order-items", icon: ReceiptText },
+      { label: "Channels", href: "/sales/channels", icon: ReceiptText },
     ],
   },
   {
@@ -87,8 +89,18 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
     icon: ShieldCheck,
     children: [
       { label: "Accounts", href: "/accounting/accounts", icon: ShieldCheck },
-      { label: "Journal", href: "/accounting/journal", icon: ShieldCheck },
-      { label: "Expenses", href: "/accounting/expenses", icon: ShieldCheck },
+      { label: "Journals", href: "/accounting/journals", icon: ShieldCheck },
+      { label: "Journal Entries", href: "/accounting/journal-entries", icon: ShieldCheck },
+    ],
+  },
+  {
+    label: "Payout",
+    href: "/payout",
+    icon: Landmark,
+    children: [
+      { label: "Overview", href: "/payout", icon: Landmark },
+      { label: "Records", href: "/payout/records", icon: Landmark },
+      { label: "Adjustments", href: "/payout/adjustments", icon: Landmark },
     ],
   },
   { label: "Customers", href: "/customers", icon: Users },

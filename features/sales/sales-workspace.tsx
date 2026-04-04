@@ -46,7 +46,7 @@ function toDateTimeInput(value: string | null | undefined) {
 function emptyItemDraft(orderNo: string): SalesOrderItemInput {
   return {
     order_no: orderNo,
-    sku: null,
+    sku: "",
     qty: 1,
     unit_price: "0",
     discount_item: "0",
@@ -221,7 +221,7 @@ export function SalesWorkspace() {
     return [{
       id: -1,
       order_no: itemDraft.order_no,
-      sku: itemDraft.sku ?? null,
+      sku: itemDraft.sku || null,
       qty: itemDraft.qty,
       unit_price: itemDraft.unit_price,
       discount_item: itemDraft.discount_item,
@@ -240,7 +240,7 @@ export function SalesWorkspace() {
       itemColumnHelper.accessor("sku", {
         header: "SKU",
         cell: ({ row, getValue }) => isEditingItemRow(row.original.id) ? (
-          <Input list="sales-product-skus" value={itemDraft?.sku ?? getValue() ?? ""} onChange={(e) => setItemDraft((current) => current ? { ...current, sku: e.target.value || null } : current)} className="h-8 min-w-[170px]" />
+          <Input list="sales-product-skus" value={itemDraft?.sku ?? getValue() ?? ""} onChange={(e) => setItemDraft((current) => current ? { ...current, sku: e.target.value } : current)} className="h-8 min-w-[170px]" />
         ) : (
           <div><p className="font-medium">{getValue() ?? "-"}</p><p className="text-xs text-muted-foreground">{row.original.master_product?.product_name ?? ""}</p></div>
         ),
@@ -288,7 +288,7 @@ export function SalesWorkspace() {
           </div>
         ) : (
           <div className="flex justify-end gap-2">
-            <Button size="icon-xs" variant="outline" onClick={() => { setEditingItemId(row.original.id); setItemDraft({ order_no: row.original.order_no ?? selectedOrderNo ?? "", sku: row.original.sku, qty: row.original.qty, unit_price: row.original.unit_price, discount_item: row.original.discount_item }); }}><Pencil className="size-3.5" /></Button>
+            <Button size="icon-xs" variant="outline" onClick={() => { setEditingItemId(row.original.id); setItemDraft({ order_no: row.original.order_no ?? selectedOrderNo ?? "", sku: row.original.sku ?? "", qty: row.original.qty, unit_price: row.original.unit_price, discount_item: row.original.discount_item }); }}><Pencil className="size-3.5" /></Button>
             <Button size="icon-xs" variant="outline" onClick={() => selectedOrderNo && deleteItemMutation.mutate({ orderNo: selectedOrderNo, id: row.original.id })}><Trash2 className="size-3.5" /></Button>
           </div>
         ),

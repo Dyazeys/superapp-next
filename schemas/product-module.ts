@@ -3,7 +3,9 @@ import { z } from "zod";
 const decimalInput = z
   .union([z.string(), z.number()])
   .transform((value) => String(value))
-  .refine((value) => !Number.isNaN(Number(value)), "Enter a valid number");
+  .refine((value) => value.trim().length > 0, "Enter a valid number")
+  .refine((value) => Number.isFinite(Number(value)), "Enter a valid number")
+  .refine((value) => Number(value) >= 0, "Value cannot be negative");
 
 export const productCategorySchema = z.object({
   category_code: z.string().min(1, "Category code is required").max(50),
@@ -51,6 +53,30 @@ export const productBomSchema = z.object({
   notes: z.string().optional().nullable(),
   sequence_no: z.coerce.number().int().min(1),
   is_active: z.boolean(),
+}).superRefine((value, context) => {
+  if (Number(value.qty) <= 0) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["qty"],
+      message: "Quantity must be greater than zero",
+    });
+  }
+
+  if (value.is_stock_tracked && !value.inv_code) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["inv_code"],
+      message: "Tracked BOM rows require an inventory reference",
+    });
+  }
+
+  if (value.component_type === "INVENTORY" && !value.inv_code) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["inv_code"],
+      message: "Inventory BOM rows require an inventory reference",
+    });
+  }
 });
 
 export type ProductCategoryInput = z.infer<typeof productCategorySchema>;

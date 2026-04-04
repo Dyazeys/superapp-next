@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { purchaseOrderSchema } from "@/schemas/warehouse-module";
 
@@ -8,32 +9,47 @@ function asDateOnly(value: string) {
 }
 
 export async function GET() {
-  const purchaseOrders = await prisma.purchase_orders.findMany({
-    orderBy: [{ order_date: "desc" }, { po_number: "asc" }],
-    include: {
-      master_vendor: true,
-      _count: {
-        select: {
-          inbound_deliveries: true,
+  try {
+    const purchaseOrders = await prisma.purchase_orders.findMany({
+      orderBy: [{ order_date: "desc" }, { po_number: "asc" }],
+      include: {
+        master_vendor: true,
+        _count: {
+          select: {
+            inbound_deliveries: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  return NextResponse.json(toJsonValue(purchaseOrders));
+    return NextResponse.json(toJsonValue(purchaseOrders));
+  } catch (error) {
+    return jsonError(error, "Failed to load purchase orders.");
+  }
 }
 
 export async function POST(request: NextRequest) {
-  const payload = purchaseOrderSchema.parse(await request.json());
+  try {
+    const payload = purchaseOrderSchema.parse(await request.json());
 
-  const purchaseOrder = await prisma.purchase_orders.create({
-    data: {
-      po_number: payload.po_number,
-      vendor_code: payload.vendor_code,
-      order_date: asDateOnly(payload.order_date),
-      status: payload.status,
-    },
-  });
+    const vendor = await prisma.master_vendor.findUnique({
+      where: { vendor_code: payload.vendor_code },
+      select: { vendor_code: true, is_active: true },
+    });
+    invariant(vendor, "Vendor was not found.");
+    invariant(vendor.is_active, "Purchase orders require an active vendor.");
 
-  return NextResponse.json(toJsonValue(purchaseOrder), { status: 201 });
+    const purchaseOrder = await prisma.purchase_orders.create({
+      data: {
+        po_number: payload.po_number,
+        vendor_code: payload.vendor_code,
+        order_date: asDateOnly(payload.order_date),
+        status: payload.status,
+      },
+    });
+
+    return NextResponse.json(toJsonValue(purchaseOrder), { status: 201 });
+  } catch (error) {
+    return jsonError(error, "Failed to create purchase order.");
+  }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { syncAdjustmentMovement } from "@/lib/warehouse-stock";
 import { adjustmentSchema } from "@/schemas/warehouse-module";
@@ -9,34 +10,9 @@ function asDateOnly(value: string) {
 }
 
 export async function GET() {
-  const adjustments = await prisma.adjustments.findMany({
-    orderBy: [{ adjustment_date: "desc" }, { created_at: "desc" }],
-    include: {
-      master_inventory: {
-        select: {
-          inv_code: true,
-          inv_name: true,
-        },
-      },
-    },
-  });
-
-  return NextResponse.json(toJsonValue(adjustments));
-}
-
-export async function POST(request: NextRequest) {
-  const payload = adjustmentSchema.parse(await request.json());
-
-  const adjustment = await prisma.$transaction(async (tx) => {
-    const created = await tx.adjustments.create({
-      data: {
-        adjustment_date: asDateOnly(payload.adjustment_date),
-        inv_code: payload.inv_code,
-        adj_type: payload.adj_type,
-        qty: payload.qty,
-        reason: payload.reason,
-        approved_by: payload.approved_by || null,
-      },
+  try {
+    const adjustments = await prisma.adjustments.findMany({
+      orderBy: [{ adjustment_date: "desc" }, { created_at: "desc" }],
       include: {
         master_inventory: {
           select: {
@@ -47,10 +23,50 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    await syncAdjustmentMovement(tx, created.id);
+    return NextResponse.json(toJsonValue(adjustments));
+  } catch (error) {
+    return jsonError(error, "Failed to load adjustments.");
+  }
+}
 
-    return created;
-  });
+export async function POST(request: NextRequest) {
+  try {
+    const payload = adjustmentSchema.parse(await request.json());
 
-  return NextResponse.json(toJsonValue(adjustment), { status: 201 });
+    const inventory = await prisma.master_inventory.findUnique({
+      where: { inv_code: payload.inv_code },
+      select: { inv_code: true, is_active: true },
+    });
+    invariant(inventory, "Inventory code was not found.");
+    invariant(inventory.is_active, "Adjustments require an active inventory item.");
+
+    const adjustment = await prisma.$transaction(async (tx) => {
+      const created = await tx.adjustments.create({
+        data: {
+          adjustment_date: asDateOnly(payload.adjustment_date),
+          inv_code: payload.inv_code,
+          adj_type: payload.adj_type,
+          qty: payload.qty,
+          reason: payload.reason,
+          approved_by: payload.approved_by || null,
+        },
+        include: {
+          master_inventory: {
+            select: {
+              inv_code: true,
+              inv_name: true,
+            },
+          },
+        },
+      });
+
+      await syncAdjustmentMovement(tx, created.id);
+
+      return created;
+    });
+
+    return NextResponse.json(toJsonValue(adjustment), { status: 201 });
+  } catch (error) {
+    return jsonError(error, "Failed to create adjustment.");
+  }
 }

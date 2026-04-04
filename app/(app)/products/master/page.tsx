@@ -92,8 +92,9 @@ export default function ProductMasterPage() {
         onOpenChange={productModal.setOpen}
         title={editingProduct ? "Edit product" : "Create product"}
         description="Manage product records with shared category and inventory references."
+        isSubmitting={productForm.formState.isSubmitting}
         onSubmit={() => {
-          void productForm.handleSubmit((values: MasterProductInput) => hooks.saveProduct(values))();
+          return productForm.handleSubmit((values: MasterProductInput) => hooks.saveProduct(values))();
         }}
       >
         <div className="grid gap-4 md:grid-cols-2">

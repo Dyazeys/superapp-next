@@ -99,21 +99,32 @@ export function useProductCategories(): ProductCategoriesHook {
   const invalidate = useBaseMutation([["product-categories"]]);
 
   const save = async (values: ProductCategoryInput) => {
-    const action = editingCategory
-      ? productApi.categories.update(editingCategory.category_code, values)
-      : productApi.categories.create(values);
-    await action;
-    toast.success(`Category ${editingCategory ? "updated" : "created"}`);
-    await invalidate();
-    setEditingCategory(null);
-    modal.closeModal();
-    form.reset();
+    try {
+      const action = editingCategory
+        ? productApi.categories.update(editingCategory.category_code, values)
+        : productApi.categories.create(values);
+      await action;
+      toast.success(`Category ${editingCategory ? "updated" : "created"}`);
+      await invalidate();
+      setEditingCategory(null);
+      modal.closeModal();
+      form.reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save category");
+      throw error;
+    }
   };
 
-  const remove = (code: string) => productApi.categories.remove(code).then(async () => {
-    toast.success("Category deleted");
-    await invalidate();
-  });
+  const remove = async (code: string) => {
+    try {
+      await productApi.categories.remove(code);
+      toast.success("Category deleted");
+      await invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete category");
+      throw error;
+    }
+  };
 
   const open = (category?: ProductCategoryRecord) => {
     setEditingCategory(category ?? null);
@@ -148,21 +159,32 @@ export function useProductInventory(): ProductInventoryHook {
   const invalidate = useBaseMutation([["product-inventory"]]);
 
   const save = async (values: MasterInventoryInput) => {
-    const action = editingInventory
-      ? productApi.inventory.update(editingInventory.inv_code, values)
-      : productApi.inventory.create(values);
-    await action;
-    toast.success(`Inventory ${editingInventory ? "updated" : "created"}`);
-    await invalidate();
-    setEditingInventory(null);
-    modal.closeModal();
-    form.reset();
+    try {
+      const action = editingInventory
+        ? productApi.inventory.update(editingInventory.inv_code, values)
+        : productApi.inventory.create(values);
+      await action;
+      toast.success(`Inventory ${editingInventory ? "updated" : "created"}`);
+      await invalidate();
+      setEditingInventory(null);
+      modal.closeModal();
+      form.reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save inventory");
+      throw error;
+    }
   };
 
-  const remove = (code: string) => productApi.inventory.remove(code).then(async () => {
-    toast.success("Inventory deleted");
-    await invalidate();
-  });
+  const remove = async (code: string) => {
+    try {
+      await productApi.inventory.remove(code);
+      toast.success("Inventory deleted");
+      await invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete inventory");
+      throw error;
+    }
+  };
 
   const open = (inventory?: MasterInventoryRecord) => {
     setEditingInventory(inventory ?? null);
@@ -215,22 +237,33 @@ export function useProductMaster(): ProductMasterHook {
   const invalidate = useBaseMutation([["product-products"]]);
 
   const save = async (values: MasterProductInput) => {
-    const action = editingProduct
-      ? productApi.products.update(editingProduct.sku, values)
-      : productApi.products.create(values);
-    const result = await action;
-    toast.success(`Product ${editingProduct ? "updated" : "created"}`);
-    await invalidate();
-    modal.closeModal();
-    setEditingProduct(null);
-    form.reset();
-    return result;
+    try {
+      const action = editingProduct
+        ? productApi.products.update(editingProduct.sku, values)
+        : productApi.products.create(values);
+      const result = await action;
+      toast.success(`Product ${editingProduct ? "updated" : "created"}`);
+      await invalidate();
+      modal.closeModal();
+      setEditingProduct(null);
+      form.reset();
+      return result;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save product");
+      throw error;
+    }
   };
 
-  const remove = (sku: string) => productApi.products.remove(sku).then(async () => {
-    toast.success("Product deleted");
-    await invalidate();
-  });
+  const remove = async (sku: string) => {
+    try {
+      await productApi.products.remove(sku);
+      toast.success("Product deleted");
+      await invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete product");
+      throw error;
+    }
+  };
 
   const open = (product?: MasterProductRecord) => {
     setEditingProduct(product ?? null);
@@ -269,6 +302,7 @@ export function useProductMaster(): ProductMasterHook {
 export function useProductBom(selectedSku?: string) {
   const [editingBomId, setEditingBomId] = useState<string | null>(null);
   const [bomDraft, setBomDraft] = useState<ProductBomInput | null>(null);
+  const [actionPending, setActionPending] = useState(false);
   const query = useQuery({
     queryKey: ["product-bom", selectedSku],
     queryFn: () => (selectedSku ? productApi.products.bom.list(selectedSku) : Promise.resolve([])),
@@ -278,26 +312,44 @@ export function useProductBom(selectedSku?: string) {
 
   const save = async (payload: ProductBomInput) => {
     if (!selectedSku) throw new Error("Select a product first");
-    const validated = productBomSchema.parse({ ...payload, sku: selectedSku });
-    const body = Object.fromEntries(Object.entries(validated).filter(([key]) => key !== "sku")) as Omit<
-      ProductBomInput,
-      "sku"
-    >;
-    const action = editingBomId
-      ? productApi.products.bom.update(selectedSku, editingBomId, body)
-      : productApi.products.bom.create(selectedSku, body);
-    await action;
-    toast.success(`BOM row ${editingBomId ? "updated" : "created"}`);
-    await invalidate();
-    setEditingBomId(null);
-    setBomDraft(null);
+    if (actionPending) return;
+
+    try {
+      setActionPending(true);
+      const validated = productBomSchema.parse({ ...payload, sku: selectedSku });
+      const body = Object.fromEntries(Object.entries(validated).filter(([key]) => key !== "sku")) as Omit<
+        ProductBomInput,
+        "sku"
+      >;
+      const action = editingBomId
+        ? productApi.products.bom.update(selectedSku, editingBomId, body)
+        : productApi.products.bom.create(selectedSku, body);
+      await action;
+      toast.success(`BOM row ${editingBomId ? "updated" : "created"}`);
+      await invalidate();
+      setEditingBomId(null);
+      setBomDraft(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save BOM row");
+      throw error;
+    } finally {
+      setActionPending(false);
+    }
   };
 
   const remove = async (id: string) => {
-    if (!selectedSku) return;
-    await productApi.products.bom.remove(selectedSku, id);
-    toast.success("BOM row deleted");
-    await invalidate();
+    if (!selectedSku || actionPending) return;
+    try {
+      setActionPending(true);
+      await productApi.products.bom.remove(selectedSku, id);
+      toast.success("BOM row deleted");
+      await invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete BOM row");
+      throw error;
+    } finally {
+      setActionPending(false);
+    }
   };
 
   return {
@@ -308,6 +360,7 @@ export function useProductBom(selectedSku?: string) {
     setBomDraft,
     saveBom: save,
     deleteBom: remove,
+    actionPending,
   };
 }
 

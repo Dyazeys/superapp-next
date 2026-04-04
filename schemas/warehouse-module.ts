@@ -3,7 +3,9 @@ import { z } from "zod";
 const decimalInput = z
   .union([z.string(), z.number()])
   .transform((value) => String(value))
-  .refine((value) => !Number.isNaN(Number(value)), "Enter a valid number");
+  .refine((value) => value.trim().length > 0, "Enter a valid number")
+  .refine((value) => Number.isFinite(Number(value)), "Enter a valid number")
+  .refine((value) => Number(value) >= 0, "Value cannot be negative");
 
 const dateInput = z
   .string()
@@ -53,6 +55,14 @@ export const inboundItemSchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ["qty_passed_qc"],
       message: "Passed and rejected QC cannot exceed received quantity",
+    });
+  }
+
+  if (value.qty_received === 0 && (value.qty_passed_qc > 0 || value.qty_rejected_qc > 0)) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["qty_received"],
+      message: "Received quantity must be greater than zero when QC quantities exist",
     });
   }
 });

@@ -71,8 +71,9 @@ export default function ProductCategoriesPage() {
         onOpenChange={categoryModal.setOpen}
         title={editingCategory ? "Edit category" : "Create category"}
         description="Manage product categories"
+        isSubmitting={categoryForm.formState.isSubmitting}
         onSubmit={() => {
-          void categoryForm.handleSubmit((values: ProductCategoryInput) => hooks.saveCategory(values))();
+          return categoryForm.handleSubmit((values: ProductCategoryInput) => hooks.saveCategory(values))();
         }}
       >
         <div className="grid gap-4 md:grid-cols-2">

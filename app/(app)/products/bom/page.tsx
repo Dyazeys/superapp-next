@@ -43,9 +43,8 @@ export default function ProductBomPage() {
   const { productsQuery } = useProductMaster();
   const { inventoryQuery } = useProductInventory();
   const { selectedSku, currentSku, setSelectedSku } = useProductSelection(productsQuery.data);
-  const { bomQuery, editingBomId, setEditingBomId, bomDraft, setBomDraft, saveBom, deleteBom } = useProductBom(
-    currentSku ?? undefined
-  );
+  const { bomQuery, editingBomId, setEditingBomId, bomDraft, setBomDraft, saveBom, deleteBom, actionPending } =
+    useProductBom(currentSku ?? undefined);
 
   const rows = useMemo(() => {
     const base = bomQuery.data ?? [];
@@ -219,12 +218,13 @@ export default function ProductBomPage() {
       cell: ({ row }) =>
         isEditingRow(row.original.id) ? (
           <div className="flex justify-end gap-2">
-            <Button size="icon-xs" variant="outline" onClick={() => bomDraft && saveBom(bomDraft)}>
+            <Button size="icon-xs" variant="outline" disabled={actionPending} onClick={() => bomDraft && saveBom(bomDraft)}>
               <Save className="size-3.5" />
             </Button>
             <Button
               size="icon-xs"
               variant="outline"
+              disabled={actionPending}
               onClick={() => {
                 setEditingBomId(null);
                 setBomDraft(null);
@@ -238,6 +238,7 @@ export default function ProductBomPage() {
             <Button
               size="icon-xs"
               variant="outline"
+              disabled={actionPending}
               onClick={() => {
                 setEditingBomId(row.original.id);
                 setBomDraft(toBomDraft(row.original));
@@ -245,7 +246,7 @@ export default function ProductBomPage() {
             >
               <Pencil className="size-3.5" />
             </Button>
-            <Button size="icon-xs" variant="outline" onClick={() => deleteBom(row.original.id)}>
+            <Button size="icon-xs" variant="outline" disabled={actionPending} onClick={() => deleteBom(row.original.id)}>
               <Trash2 className="size-3.5" />
             </Button>
           </div>
@@ -290,6 +291,7 @@ export default function ProductBomPage() {
               id="product-selection"
               className="min-w-[280px] rounded-2xl border border-input bg-background px-3 py-2 text-sm"
               value={selectedSku ?? currentSku ?? ""}
+              disabled={productsQuery.isLoading}
               onChange={(event) => setSelectedSku(event.target.value || null)}
             >
               {(productsQuery.data ?? []).map((product) => (
@@ -307,6 +309,7 @@ export default function ProductBomPage() {
           {currentSku ? (
             <Button
               size="sm"
+              disabled={actionPending}
               onClick={() => {
                 setEditingBomId(null);
                 setBomDraft(createEmptyBomDraft(currentSku));
@@ -317,7 +320,13 @@ export default function ProductBomPage() {
             </Button>
           ) : null}
         </div>
-        {currentSku ? (
+        {productsQuery.isError ? (
+          <EmptyState title="Failed to load products" description={productsQuery.error.message} />
+        ) : inventoryQuery.isError ? (
+          <EmptyState title="Failed to load inventory" description={inventoryQuery.error.message} />
+        ) : bomQuery.isError ? (
+          <EmptyState title="Failed to load BOM rows" description={bomQuery.error.message} />
+        ) : currentSku ? (
           <DataTable columns={columns} data={rows} emptyMessage="No BOM rows yet." />
         ) : (
           <EmptyState title="Select a product" description="Choose a product to manage its BOM rows." />

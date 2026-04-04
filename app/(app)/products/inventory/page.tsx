@@ -74,8 +74,9 @@ export default function ProductInventoryPage() {
         onOpenChange={inventoryModal.setOpen}
         title={editingInventory ? "Edit inventory" : "Create inventory"}
         description="Manage inventory references used across products and BOM rows."
+        isSubmitting={inventoryForm.formState.isSubmitting}
         onSubmit={() => {
-          void inventoryForm.handleSubmit((values: MasterInventoryInput) => hooks.saveInventory(values))();
+          return inventoryForm.handleSubmit((values: MasterInventoryInput) => hooks.saveInventory(values))();
         }}
       >
         <div className="grid gap-4 md:grid-cols-2">
