@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: superapp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: superapp
+      POSTGRES_USER: superapp
+      POSTGRES_PASSWORD: superapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - superapp-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superapp -d superapp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  superapp-postgres-data:
+    name: superapp-postgres-data

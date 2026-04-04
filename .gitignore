@@ -23,6 +23,7 @@ yarn-error.log*
 # env
 .env*
 !.env.example
+/backups/
 
 # typescript
 *.tsbuildinfo
