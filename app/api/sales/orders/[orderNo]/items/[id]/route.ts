@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { deleteSalesOrderItemJournal, syncSalesOrderItemJournal } from "@/lib/sales-journal";
 import { removeSalesOrderItemMovements, syncSalesOrderItemMovements } from "@/lib/warehouse-stock";
 import { salesOrderItemSchema } from "@/schemas/sales-module";
 
@@ -75,6 +76,7 @@ export async function PATCH(
       });
 
       await syncSalesOrderItemMovements(tx, itemId);
+      await syncSalesOrderItemJournal(tx, itemId);
 
       return updated;
     });
@@ -95,6 +97,7 @@ export async function DELETE(
 
     await prisma.$transaction(async (tx) => {
       await removeSalesOrderItemMovements(tx, itemId, orderNo);
+      await deleteSalesOrderItemJournal(tx, itemId);
 
       await tx.t_order_item.delete({
         where: { id: itemId },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { deleteSalesOrderItemJournal, syncSalesOrderJournals } from "@/lib/sales-journal";
 import { removeSalesOrderItemMovements, syncSalesOrderMovements } from "@/lib/warehouse-stock";
 import { salesOrderSchema } from "@/schemas/sales-module";
 
@@ -61,8 +62,14 @@ export async function PATCH(
         },
       });
 
-      if (payload.order_date !== undefined || payload.is_historical !== undefined) {
+      if (
+        payload.order_date !== undefined ||
+        payload.is_historical !== undefined ||
+        payload.channel_id !== undefined ||
+        payload.ref_no !== undefined
+      ) {
         await syncSalesOrderMovements(tx, orderNo);
+        await syncSalesOrderJournals(tx, orderNo);
       }
 
       return updated;
@@ -89,6 +96,7 @@ export async function DELETE(
 
       for (const item of items) {
         await removeSalesOrderItemMovements(tx, item.id);
+        await deleteSalesOrderItemJournal(tx, item.id);
       }
 
       await tx.t_order_item.deleteMany({

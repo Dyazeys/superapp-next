@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { syncSalesOrderItemJournal } from "@/lib/sales-journal";
 import { syncSalesOrderItemMovements } from "@/lib/warehouse-stock";
 import { salesOrderItemSchema } from "@/schemas/sales-module";
 
@@ -93,6 +94,7 @@ export async function POST(
       });
 
       await syncSalesOrderItemMovements(tx, created.id);
+      await syncSalesOrderItemJournal(tx, created.id);
 
       return created;
     });
