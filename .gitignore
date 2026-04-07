@@ -19,6 +19,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.db-tunnel.err.log
+.db-tunnel.out.log
+.next-dev-check.err.log
+.next-dev-check.out.log
 
 # env
 .env*
