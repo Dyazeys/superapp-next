@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "db:tunnel": "node ./scripts/db-tunnel.mjs",
     "prisma:pull": "prisma db pull --force",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"

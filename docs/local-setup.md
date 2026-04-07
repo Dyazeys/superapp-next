@@ -1,49 +1,129 @@
 # Local Setup
 
-This project keeps local development portable between Windows and Mac by using the same Docker PostgreSQL container name, credentials, and backup workflow on every machine.
+This project supports two local development modes on both Windows and Mac:
+
+- remote VPS database through an SSH tunnel
+- fully local Docker PostgreSQL
+
+The current repo default in `.env.example` is the VPS tunnel mode on `127.0.0.1:55432`.
 
 ## First-time setup
 
-1. Install Docker Desktop and Node.js.
-2. Copy `.env.example` to `.env`.
-3. Review `.env` and set a unique `NEXTAUTH_SECRET` for your machine.
-4. Start the local database:
-
-```bash
-docker compose up -d postgres
-```
-
-5. Install app dependencies and generate Prisma client:
+1. Install Node.js 20+.
+2. Install Git.
+3. Install OpenSSH client.
+   Mac: `ssh` is already available by default.
+4. Copy `.env.example` to `.env`.
+5. Set a unique `NEXTAUTH_SECRET` in `.env`.
+6. Install app dependencies and generate Prisma client:
 
 ```bash
 npm install
 npm run prisma:generate
 ```
 
-## Local environment
+## Option A: Use the VPS database through SSH tunnel
 
-The default local database values are:
+This is the closest setup to the current Windows machine.
+
+### `.env` values for tunnel mode
+
+The repo default is already set for this mode:
 
 - Host: `127.0.0.1`
-- Port: `5432`
-- Database: `superapp`
-- Username: `superapp`
-- Password: `superapp`
-- Container: `superapp-postgres`
+- Port: `55432`
+- Database: `superapp_db`
+- Username: `superapp_app`
+- Password: set in your local `.env`
 
-The Docker volume is named `superapp-postgres-data` so the database persists locally until you intentionally remove that volume.
+### SSH key
 
-## Run the app
+Expected default key path:
 
-After the database is running and `.env` exists:
+- Mac/Linux: `~/.ssh/id_ed25519`
+- Windows PowerShell helper: `$HOME/.ssh/id_ed25519`
+
+If your Mac uses a different key path, export this before opening the tunnel:
+
+```bash
+export DB_TUNNEL_KEY_PATH="$HOME/.ssh/your_key_name"
+```
+
+### Open the tunnel
+
+The command is now cross-platform:
+
+```bash
+npm run db:tunnel
+```
+
+Optional environment overrides:
+
+- `DB_TUNNEL_LOCAL_PORT`
+- `DB_TUNNEL_REMOTE_HOST`
+- `DB_TUNNEL_REMOTE_USER`
+- `DB_TUNNEL_REMOTE_DB_HOST`
+- `DB_TUNNEL_REMOTE_DB_PORT`
+- `DB_TUNNEL_KEY_PATH`
+
+Example on Mac:
+
+```bash
+DB_TUNNEL_KEY_PATH="$HOME/.ssh/id_ed25519" npm run db:tunnel
+```
+
+Keep that terminal open while developing.
+
+### Run the app against the VPS database
+
+In a second terminal:
 
 ```bash
 npm run dev
 ```
 
-## Backup before switching devices
+## Option B: Use a fully local Docker database
 
-Create a SQL backup into `backups/` before moving to another machine.
+Use this only if you want an isolated local DB instead of the VPS DB.
+
+1. Override `.env` so it points to local Postgres:
+
+```env
+DATABASE_URL="postgresql://superapp:superapp@127.0.0.1:5432/superapp"
+PRISMA_DATABASE_URL="postgresql://superapp:superapp@127.0.0.1:5432/superapp"
+```
+
+2. Start the database:
+
+```bash
+docker compose up -d postgres
+```
+
+3. Run the app:
+
+```bash
+npm run dev
+```
+
+## Mac migration checklist
+
+When moving from the current Windows machine to a Mac and you want the same behavior:
+
+1. Clone the repo on the Mac.
+2. Copy `.env` securely from the Windows machine to the Mac.
+3. Ensure the SSH private key used for the VPS tunnel exists on the Mac.
+4. Run `npm install`.
+5. Run `npm run prisma:generate`.
+6. Start the DB tunnel with `npm run db:tunnel`.
+7. Start the app with `npm run dev`.
+
+If all of the above match, the Mac setup will behave the same as the current Windows setup because both use the same repo, the same `.env`, and the same VPS database.
+
+## Backup and restore for local Docker mode
+
+These scripts are for local Docker PostgreSQL, not for the VPS tunnel.
+
+### Backup
 
 Windows PowerShell:
 
@@ -59,10 +139,10 @@ bash scripts/db-backup.sh
 
 Each command creates a timestamped `.sql` file under `backups/`.
 
-## Restore on another device
+### Restore
 
 1. Copy the chosen SQL backup file into the new machine's `backups/` folder.
-2. Start the local database:
+2. Start the local Docker database:
 
 ```bash
 docker compose up -d postgres
@@ -82,14 +162,9 @@ Mac/Linux:
 bash scripts/db-restore.sh backups/superapp-YYYYMMDD-HHMMSS.sql
 ```
 
-4. Start the app:
-
-```bash
-npm run dev
-```
-
 ## Notes
 
 - `.env` is local-only and should not be committed.
 - `backups/` is local-only and should not be committed.
-- The restore scripts load a full SQL dump into the local Docker database, so use them intentionally against your local development container.
+- The Docker backup and restore scripts only target the local container database.
+- If you use tunnel mode, the app depends on the SSH tunnel terminal remaining open.
