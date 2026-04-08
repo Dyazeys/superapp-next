@@ -7,6 +7,7 @@ const SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE = "SALES_ORDER_ITEM";
 const SALES_ORDER_ITEM_JOURNAL_NAMESPACE = "superapp:journal:sales-order-item:v1";
 const HPP_ACCOUNT_CODE = "51101";
 const INVENTORY_ACCOUNT_CODE = "13101";
+const DEFAULT_REVENUE_ACCOUNT_CODE = "41106";
 
 function deterministicSalesOrderItemReferenceId(orderItemId: number) {
   const hash = createHash("sha1").update(`${SALES_ORDER_ITEM_JOURNAL_NAMESPACE}:${orderItemId}`).digest("hex").slice(0, 32);
@@ -23,21 +24,6 @@ function deterministicSalesOrderItemReferenceId(orderItemId: number) {
     chars.slice(16, 20).join(""),
     chars.slice(20, 32).join(""),
   ].join("-");
-}
-
-function revenueAccountCodeForChannel(channel: { slug: string | null; channel_name: string }) {
-  const slug = (channel.slug ?? "").toLowerCase();
-  const name = channel.channel_name.toLowerCase();
-
-  if (slug === "shopee" || name === "shopee") return "41101";
-  if (slug === "tokopedia" || slug === "tiktok" || name.includes("tokopedia") || name.includes("tiktok")) return "41102";
-  if (slug === "akulaku" || name === "akulaku") return "41103";
-  if (slug === "lazada" || name === "lazada") return "41104";
-  if (slug === "web-rimc" || name.includes("web")) return "41105";
-  if (slug === "kustomfest" || name.includes("event")) return "41108";
-  if (slug.includes("dropship")) return "41107";
-
-  return "41106";
 }
 
 async function findAccountIdByCode(tx: Tx, code: string) {
@@ -79,8 +65,8 @@ export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
             select: {
               channel_id: true,
               channel_name: true,
-              slug: true,
               piutang_account_id: true,
+              revenue_account_id: true,
             },
           },
         },
@@ -99,7 +85,7 @@ export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
     return;
   }
 
-  const revenueAccountId = await findAccountIdByCode(tx, revenueAccountCodeForChannel(channel));
+  const revenueAccountId = channel.revenue_account_id ?? (await findAccountIdByCode(tx, DEFAULT_REVENUE_ACCOUNT_CODE));
   if (!revenueAccountId) {
     await deleteSalesOrderItemJournalByReferenceId(tx, referenceId);
     return;

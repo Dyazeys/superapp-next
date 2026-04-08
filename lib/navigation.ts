@@ -101,6 +101,7 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Overview", href: "/payout", icon: Landmark },
       { label: "Records", href: "/payout/records", icon: Landmark },
       { label: "Adjustments", href: "/payout/adjustments", icon: Landmark },
+      { label: "Transfers", href: "/payout/transfers", icon: Landmark },
     ],
   },
   { label: "Workspace", href: "/workspace", icon: PanelLeft, badge: "UI" },

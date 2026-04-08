@@ -16,6 +16,9 @@ export async function PATCH(
       where: { channel_id: Number(channelId) },
       data: {
         category_id: payload.category_id,
+        piutang_account_id: payload.piutang_account_id,
+        revenue_account_id: payload.revenue_account_id,
+        saldo_account_id: payload.saldo_account_id,
         channel_name: payload.channel_name,
         slug: payload.slug === undefined ? undefined : payload.slug || null,
         is_marketplace: payload.is_marketplace,

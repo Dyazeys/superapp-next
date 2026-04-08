@@ -5,6 +5,7 @@ import { useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-q
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { useState } from "react";
 import { toast } from "sonner";
+import { accountingApi } from "@/features/accounting/api";
 import { channelApi } from "@/features/channel/api";
 import { useModalState } from "@/hooks/use-modal-state";
 import {
@@ -12,9 +13,11 @@ import {
   channelGroupSchema,
   channelSchema,
   type ChannelCategoryInput,
+  type ChannelFormInput,
   type ChannelGroupInput,
   type ChannelInput,
 } from "@/schemas/channel-module";
+import type { AccountingAccountRecord } from "@/types/accounting";
 import type { ChannelCategoryRecord, ChannelGroupRecord, ChannelRecord } from "@/types/channel";
 
 type ChannelCategoryFormValues = {
@@ -22,12 +25,7 @@ type ChannelCategoryFormValues = {
   category_name: string;
 };
 
-type ChannelFormValues = {
-  category_id: number | null | undefined;
-  channel_name: string;
-  slug?: string | null;
-  is_marketplace?: boolean;
-};
+type ChannelFormValues = ChannelFormInput;
 
 type ChannelGroupHook = {
   groupsQuery: UseQueryResult<ChannelGroupRecord[]>;
@@ -103,6 +101,13 @@ export function useChannelCategoriesLookup() {
     queryKey: CHANNEL_CATEGORY_KEY,
     queryFn: channelApi.categories.list,
   }) as UseQueryResult<ChannelCategoryRecord[]>;
+}
+
+export function useAccountingAccountsLookup() {
+  return useQuery({
+    queryKey: ["accounting-accounts"],
+    queryFn: accountingApi.accounts.list,
+  }) as UseQueryResult<AccountingAccountRecord[]>;
 }
 
 export function useChannelGroups(): ChannelGroupHook {
@@ -240,6 +245,9 @@ export function useChannels(): ChannelHook {
       category_id: null,
       channel_name: "",
       slug: "",
+      piutang_account_id: null,
+      revenue_account_id: null,
+      saldo_account_id: null,
       is_marketplace: false,
     },
   });
@@ -283,6 +291,9 @@ export function useChannels(): ChannelHook {
       category_id: channel?.category_id ?? null,
       channel_name: channel?.channel_name ?? "",
       slug: channel?.slug ?? "",
+      piutang_account_id: channel?.piutang_account_id ?? null,
+      revenue_account_id: channel?.revenue_account_id ?? null,
+      saldo_account_id: channel?.saldo_account_id ?? null,
       is_marketplace: channel?.is_marketplace ?? false,
     });
     channelModal.openModal();

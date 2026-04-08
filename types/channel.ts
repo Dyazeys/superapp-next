@@ -21,6 +21,9 @@ export type ChannelCategoryRecord = {
 export type ChannelRecord = {
   channel_id: number;
   category_id: number | null;
+  piutang_account_id: string | null;
+  revenue_account_id: string | null;
+  saldo_account_id: string | null;
   channel_name: string;
   slug: string | null;
   is_marketplace: boolean;

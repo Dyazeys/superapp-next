@@ -21,8 +21,15 @@ yarn-error.log*
 .pnpm-debug.log*
 .db-tunnel.err.log
 .db-tunnel.out.log
+.db-tunnel-session.log
 .next-dev-check.err.log
 .next-dev-check.out.log
+.next-start.err.log
+.next-start.out.log
+.next-start-test.err.log
+.next-start-test.out.log
+.next-start-test-*.err.log
+.next-start-test-*.out.log
 
 # env
 .env*

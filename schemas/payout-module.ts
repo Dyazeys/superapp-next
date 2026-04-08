@@ -56,5 +56,14 @@ export const payoutAdjustmentSchema = z.object({
   amount: decimalInput,
 });
 
+export const payoutTransferSchema = z.object({
+  payout_id: z.coerce.number().int().positive("Payout is required"),
+  transfer_date: dateInput,
+  amount: decimalInput,
+  bank_account_id: z.string().uuid("Bank account is required"),
+  notes: z.string().optional().nullable(),
+});
+
 export type PayoutInput = z.infer<typeof payoutSchema>;
 export type PayoutAdjustmentInput = z.infer<typeof payoutAdjustmentSchema>;
+export type PayoutTransferInput = z.infer<typeof payoutTransferSchema>;

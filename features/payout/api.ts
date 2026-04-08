@@ -1,9 +1,11 @@
-import type { PayoutAdjustmentInput, PayoutInput } from "@/schemas/payout-module";
+import type { PayoutAdjustmentInput, PayoutInput, PayoutTransferInput } from "@/schemas/payout-module";
 import type {
   PayoutAdjustmentRecord,
+  PayoutBankAccountRecord,
   PayoutChannelRecord,
   PayoutOrderLookupRecord,
   PayoutRecord,
+  PayoutTransferRecord,
 } from "@/types/payout";
 import { requestJson } from "@/lib/request";
 
@@ -13,6 +15,9 @@ export const payoutApi = {
   },
   channels: {
     list: () => requestJson<PayoutChannelRecord[]>("/api/sales/channels"),
+  },
+  bankAccounts: {
+    list: () => requestJson<PayoutBankAccountRecord[]>("/api/payout/bank-accounts"),
   },
   records: {
     list: () => requestJson<PayoutRecord[]>("/api/payout/records"),
@@ -48,6 +53,23 @@ export const payoutApi = {
       }),
     remove: (id: number) =>
       requestJson<{ ok: true }>(`/api/payout/adjustments/${id}`, {
+        method: "DELETE",
+      }),
+  },
+  transfers: {
+    list: () => requestJson<PayoutTransferRecord[]>("/api/payout/transfers"),
+    create: (payload: PayoutTransferInput) =>
+      requestJson<PayoutTransferRecord>("/api/payout/transfers", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    update: (id: string, payload: Partial<PayoutTransferInput>) =>
+      requestJson<PayoutTransferRecord>(`/api/payout/transfers/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    remove: (id: string) =>
+      requestJson<{ ok: true }>(`/api/payout/transfers/${id}`, {
         method: "DELETE",
       }),
   },

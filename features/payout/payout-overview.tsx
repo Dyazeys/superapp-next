@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Landmark, ReceiptText } from "lucide-react";
+import { ArrowRight, Building2, Landmark, ReceiptText } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import { formatCompactCurrency, formatMoney } from "@/lib/format";
 import { sumPayoutDeductions, usePayoutAdjustments, usePayouts } from "@/features/payout/use-payout-module";
@@ -22,7 +22,7 @@ export function PayoutOverview() {
   );
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
       <WorkspacePanel title="Payout records" description="Kelola header payout menggunakan tabel payout yang sudah ada.">
         <Link
           href="/payout/records"
@@ -46,6 +46,21 @@ export function PayoutOverview() {
           <span className="flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <Landmark className="size-4" />
+            </span>
+            Buka halaman
+          </span>
+          <ArrowRight className="size-4" />
+        </Link>
+      </WorkspacePanel>
+
+      <WorkspacePanel title="Bank transfers" description="Catat perpindahan saldo channel ke rekening bank secara manual.">
+        <Link
+          href="/payout/transfers"
+          className="flex items-center justify-between rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm font-medium transition-colors hover:border-slate-400 hover:bg-slate-50"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+              <Building2 className="size-4" />
             </span>
             Buka halaman
           </span>

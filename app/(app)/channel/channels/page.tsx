@@ -15,6 +15,7 @@ import {
   CHANNEL_BOOLEAN_OPTIONS,
   parseChannelBooleanInput,
   parseOptionalInt,
+  useAccountingAccountsLookup,
   useChannelCategoriesLookup,
   useChannels,
 } from "@/features/channel/use-channel-module";
@@ -26,6 +27,7 @@ const columnHelper = createColumnHelper<ChannelRecord>();
 export default function ChannelChannelsPage() {
   const hooks = useChannels();
   const categoriesQuery = useChannelCategoriesLookup();
+  const accountsQuery = useAccountingAccountsLookup();
   const { channelsQuery, channelForm, channelModal, editingChannel } = hooks;
   const channelRows = channelsQuery.data ?? [];
   const totalChannels = channelRows.length;
@@ -54,6 +56,10 @@ export default function ChannelChannelsPage() {
     columnHelper.accessor("slug", {
       header: "Slug",
       cell: (info) => info.getValue() ?? "-",
+    }),
+    columnHelper.accessor("revenue_account_id", {
+      header: "Revenue Account",
+      cell: (info) => info.getValue() ?? "Default 41106",
     }),
     columnHelper.accessor("is_marketplace", {
       header: "Type",
@@ -132,6 +138,34 @@ export default function ChannelChannelsPage() {
               onChange={(event) => channelForm.setValue("category_id", parseOptionalInt(event.target.value))}
             />
           </FormField>
+          <FormField label="Piutang Account ID" htmlFor="channel_piutang_account_id" error={channelForm.formState.errors.piutang_account_id?.message}>
+            <Input
+              id="channel_piutang_account_id"
+              list="channel-account-ids"
+              {...channelForm.register("piutang_account_id")}
+              value={channelForm.watch("piutang_account_id") ?? ""}
+            />
+          </FormField>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField label="Revenue Account ID" htmlFor="channel_revenue_account_id" error={channelForm.formState.errors.revenue_account_id?.message}>
+            <Input
+              id="channel_revenue_account_id"
+              list="channel-account-ids"
+              {...channelForm.register("revenue_account_id")}
+              value={channelForm.watch("revenue_account_id") ?? ""}
+            />
+          </FormField>
+          <FormField label="Saldo Account ID" htmlFor="channel_saldo_account_id" error={channelForm.formState.errors.saldo_account_id?.message}>
+            <Input
+              id="channel_saldo_account_id"
+              list="channel-account-ids"
+              {...channelForm.register("saldo_account_id")}
+              value={channelForm.watch("saldo_account_id") ?? ""}
+            />
+          </FormField>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Marketplace" htmlFor="channel_is_marketplace">
             <Input
               id="channel_is_marketplace"
@@ -153,6 +187,13 @@ export default function ChannelChannelsPage() {
           {CHANNEL_BOOLEAN_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
+            </option>
+          ))}
+        </datalist>
+        <datalist id="channel-account-ids">
+          {(accountsQuery.data ?? []).map((account) => (
+            <option key={account.id} value={account.id}>
+              {account.code} - {account.name}
             </option>
           ))}
         </datalist>

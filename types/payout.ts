@@ -5,6 +5,13 @@ export type PayoutChannelRecord = {
   is_marketplace: boolean;
 };
 
+export type PayoutBankAccountRecord = {
+  id: string;
+  code: string;
+  name: string;
+  normal_balance: string;
+};
+
 export type PayoutOrderLookupRecord = {
   order_no: string;
   order_date: string;
@@ -34,6 +41,19 @@ export type PayoutRecord = {
   payout_status: string | null;
   created_at: string;
   t_order?: PayoutOrderLookupRecord | null;
+};
+
+export type PayoutTransferRecord = {
+  id: string;
+  payout_id: number;
+  transfer_date: string;
+  amount: string;
+  bank_account_id: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string | null;
+  t_payout?: PayoutRecord | null;
+  accounts?: PayoutBankAccountRecord | null;
 };
 
 export type PayoutAdjustmentRecord = {

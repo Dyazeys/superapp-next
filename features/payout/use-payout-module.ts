@@ -13,16 +13,21 @@ import {
   payoutSchema,
   type PayoutAdjustmentInput,
   type PayoutInput,
+  payoutTransferSchema,
+  type PayoutTransferInput,
 } from "@/schemas/payout-module";
 import type {
   PayoutAdjustmentRecord,
+  PayoutBankAccountRecord,
   PayoutChannelRecord,
   PayoutOrderLookupRecord,
   PayoutRecord,
+  PayoutTransferRecord,
 } from "@/types/payout";
 
 type PayoutFormValues = z.input<typeof payoutSchema>;
 type PayoutAdjustmentFormValues = z.input<typeof payoutAdjustmentSchema>;
+type PayoutTransferFormValues = z.input<typeof payoutTransferSchema>;
 
 type PayoutsHook = {
   payoutsQuery: UseQueryResult<PayoutRecord[]>;
@@ -44,10 +49,22 @@ type PayoutAdjustmentsHook = {
   deleteAdjustment: (id: number) => Promise<void>;
 };
 
+type PayoutTransfersHook = {
+  transfersQuery: UseQueryResult<PayoutTransferRecord[]>;
+  transferForm: UseFormReturn<PayoutTransferFormValues, unknown, PayoutTransferInput>;
+  transferModal: ReturnType<typeof useModalState>;
+  editingTransfer: PayoutTransferRecord | null;
+  openTransferModal: (transfer?: PayoutTransferRecord) => void;
+  saveTransfer: (values: PayoutTransferInput) => Promise<PayoutTransferRecord>;
+  deleteTransfer: (id: string) => Promise<void>;
+};
+
 const PAYOUT_RECORD_KEY = ["payout-records"] as const;
 const PAYOUT_ADJUSTMENT_KEY = ["payout-adjustments"] as const;
 const PAYOUT_ORDER_LOOKUP_KEY = ["payout-order-lookup"] as const;
 const PAYOUT_CHANNEL_LOOKUP_KEY = ["payout-channel-lookup"] as const;
+const PAYOUT_BANK_ACCOUNT_LOOKUP_KEY = ["payout-bank-account-lookup"] as const;
+const PAYOUT_TRANSFER_KEY = ["payout-transfers"] as const;
 
 function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) {
   const queryClient = useQueryClient();
@@ -116,6 +133,13 @@ export function usePayoutChannels() {
     queryKey: PAYOUT_CHANNEL_LOOKUP_KEY,
     queryFn: payoutApi.channels.list,
   }) as UseQueryResult<PayoutChannelRecord[]>;
+}
+
+export function usePayoutBankAccounts() {
+  return useQuery({
+    queryKey: PAYOUT_BANK_ACCOUNT_LOOKUP_KEY,
+    queryFn: payoutApi.bankAccounts.list,
+  }) as UseQueryResult<PayoutBankAccountRecord[]>;
 }
 
 export function usePayouts(): PayoutsHook {
@@ -293,5 +317,77 @@ export function usePayoutAdjustments(ref?: string): PayoutAdjustmentsHook {
     openAdjustmentModal,
     saveAdjustment,
     deleteAdjustment,
+  };
+}
+
+export function usePayoutTransfers(): PayoutTransfersHook {
+  const [editingTransfer, setEditingTransfer] = useState<PayoutTransferRecord | null>(null);
+  const transferModal = useModalState();
+  const transferForm = useForm<PayoutTransferFormValues, unknown, PayoutTransferInput>({
+    resolver: zodResolver(payoutTransferSchema),
+    defaultValues: {
+      payout_id: 0,
+      transfer_date: "",
+      amount: "0",
+      bank_account_id: "",
+      notes: "",
+    },
+  });
+  const transfersQuery = useQuery({
+    queryKey: PAYOUT_TRANSFER_KEY,
+    queryFn: payoutApi.transfers.list,
+  });
+  const invalidate = useBaseMutation([PAYOUT_TRANSFER_KEY, PAYOUT_RECORD_KEY]);
+
+  const saveTransfer = async (values: PayoutTransferInput) => {
+    try {
+      const action = editingTransfer
+        ? payoutApi.transfers.update(editingTransfer.id, values)
+        : payoutApi.transfers.create(values);
+      const transfer = await action;
+
+      toast.success(`Payout transfer ${editingTransfer ? "updated" : "created"}`);
+      await invalidate();
+      setEditingTransfer(null);
+      transferModal.closeModal();
+      transferForm.reset();
+      return transfer;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to save payout transfer");
+      throw error;
+    }
+  };
+
+  const deleteTransfer = async (id: string) => {
+    try {
+      await payoutApi.transfers.remove(id);
+      toast.success("Payout transfer deleted");
+      await invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to delete payout transfer");
+      throw error;
+    }
+  };
+
+  const openTransferModal = (transfer?: PayoutTransferRecord) => {
+    setEditingTransfer(transfer ?? null);
+    transferForm.reset({
+      payout_id: transfer?.payout_id ?? 0,
+      transfer_date: toDateInput(transfer?.transfer_date),
+      amount: transfer?.amount ?? "0",
+      bank_account_id: transfer?.bank_account_id ?? "",
+      notes: transfer?.notes ?? "",
+    });
+    transferModal.openModal();
+  };
+
+  return {
+    transfersQuery,
+    transferForm,
+    transferModal,
+    editingTransfer,
+    openTransferModal,
+    saveTransfer,
+    deleteTransfer,
   };
 }
