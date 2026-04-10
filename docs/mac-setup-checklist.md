@@ -8,50 +8,71 @@ Gunakan checklist ini saat setup project `superapp-next` di Mac agar perilakunya
 - Environment yang dipakai: file `.env` yang sama seperti di PC Windows
 - Database yang dipakai: database VPS yang sama, lewat SSH tunnel lokal `127.0.0.1:55432`
 
-## Checklist
+## Sebelum mulai
 
-1. Clone repository `superapp-next`.
-2. Pastikan Node.js 20+ sudah terinstall.
-3. Pastikan Git dan OpenSSH client tersedia di Mac.
-4. Salin file `.env` dari PC Windows ke folder repo di Mac.
-5. Pastikan private key SSH untuk akses VPS tersedia di `~/.ssh/id_ed25519`.
-6. Jika path key berbeda, set:
+- [ ] Siapkan akses repo GitHub `superapp-next`
+- [ ] Siapkan file `.env` yang dipakai di PC Windows
+- [ ] Siapkan private key SSH untuk akses VPS
+- [ ] Pastikan tahu user/host VPS yang dipakai untuk DB tunnel
+
+## Checklist setup di Mac
+
+- [ ] Clone repository `superapp-next`
+- [ ] Pastikan Node.js 20+ sudah terinstall
+- [ ] Pastikan Git tersedia
+- [ ] Pastikan OpenSSH client tersedia di Mac
+- [ ] Salin file `.env` dari PC Windows ke folder repo di Mac
+- [ ] Pastikan private key SSH untuk akses VPS tersedia di `~/.ssh/id_ed25519`
+- [ ] Jika path key berbeda, set environment variable berikut:
 
 ```bash
 export DB_TUNNEL_KEY_PATH="$HOME/.ssh/nama_key_anda"
 ```
 
-7. Dari root project, jalankan:
+- [ ] Dari root project, jalankan:
 
 ```bash
 npm install
 npm run prisma:generate
 ```
 
-8. Buka tunnel database VPS:
+- [ ] Buka tunnel database VPS:
 
 ```bash
 npm run db:tunnel
 ```
 
-9. Biarkan terminal tunnel tetap hidup.
-10. Di terminal kedua, jalankan app:
+- [ ] Biarkan terminal tunnel tetap hidup
+- [ ] Di terminal kedua, jalankan app:
 
 ```bash
 npm run dev
 ```
 
-11. Verifikasi app bisa akses database:
-- halaman data sales/payout/accounting bisa terbuka
-- tidak ada error koneksi database
-- perubahan data dari Mac terlihat sama dengan data di PC Windows
+## Verifikasi setelah app jalan
+
+- [ ] Halaman sales bisa terbuka
+- [ ] Halaman payout bisa terbuka
+- [ ] Halaman accounting bisa terbuka
+- [ ] Tidak ada error koneksi database
+- [ ] Data yang terlihat sama dengan data di PC Windows
+- [ ] Perubahan data dari Mac masuk ke database yang sama
+
+## Quick commands
+
+```bash
+npm install
+npm run prisma:generate
+npm run db:tunnel
+npm run dev
+```
 
 ## Jika tunnel tidak jalan
 
-1. Cek key SSH benar.
-2. Cek user/host VPS masih benar.
-3. Cek port lokal `55432` tidak dipakai proses lain.
-4. Jika perlu override:
+- [ ] Cek key SSH benar
+- [ ] Cek user/host VPS masih benar
+- [ ] Cek port lokal `55432` tidak dipakai proses lain
+- [ ] Jika perlu, jalankan dengan override:
 
 ```bash
 DB_TUNNEL_KEY_PATH="$HOME/.ssh/id_ed25519" \

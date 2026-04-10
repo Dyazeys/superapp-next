@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Building2, Landmark, ReceiptText } from "lucide-react";
+import { AlertTriangle, ArrowRight, Building2, Landmark, ReceiptText } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import { formatCompactCurrency, formatMoney } from "@/lib/format";
 import { sumPayoutDeductions, usePayoutAdjustments, usePayouts } from "@/features/payout/use-payout-module";
@@ -61,6 +61,21 @@ export function PayoutOverview() {
           <span className="flex items-center gap-3">
             <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
               <Building2 className="size-4" />
+            </span>
+            Buka halaman
+          </span>
+          <ArrowRight className="size-4" />
+        </Link>
+      </WorkspacePanel>
+
+      <WorkspacePanel title="Reconciliation" description="Bandingkan piutang, payout, saldo, dan transfer bank secara read-only per channel.">
+        <Link
+          href="/payout/reconciliation"
+          className="flex items-center justify-between rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm font-medium transition-colors hover:border-slate-400 hover:bg-slate-50"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+              <AlertTriangle className="size-4" />
             </span>
             Buka halaman
           </span>

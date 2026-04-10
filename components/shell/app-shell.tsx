@@ -54,6 +54,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/payout": "Ringkasan payout, adjustment, dan nilai bersih berdasarkan data yang ada.",
       "/payout/records": "Kelola header payout dan cek nilai gross/net.",
       "/payout/adjustments": "Kelola adjustment payout sesuai referensi yang sudah ada.",
+      "/payout/transfers": "Catat perpindahan saldo channel ke rekening bank secara manual.",
+      "/payout/reconciliation": "Bandingkan piutang, payout, saldo, dan transfer bank per channel secara read-only.",
     };
 
     return contexts[pathname] ?? contexts[navMatch?.href ?? ""] ?? "Ruang kerja ERP untuk operasional harian.";

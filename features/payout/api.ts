@@ -4,6 +4,7 @@ import type {
   PayoutBankAccountRecord,
   PayoutChannelRecord,
   PayoutOrderLookupRecord,
+  PayoutReconciliationReport,
   PayoutRecord,
   PayoutTransferRecord,
 } from "@/types/payout";
@@ -72,5 +73,8 @@ export const payoutApi = {
       requestJson<{ ok: true }>(`/api/payout/transfers/${id}`, {
         method: "DELETE",
       }),
+  },
+  reconciliation: {
+    list: () => requestJson<PayoutReconciliationReport>("/api/payout/reconciliation"),
   },
 };
