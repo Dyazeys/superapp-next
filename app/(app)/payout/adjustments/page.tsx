@@ -87,7 +87,7 @@ export default function PayoutAdjustmentsPage() {
     <PageShell
       eyebrow="Payout"
       title="Payout Adjustments"
-      description="Kelola payout adjustments untuk koreksi nilai payout sesuai data yang sudah ada."
+      description="Kelola payout adjustments untuk koreksi nilai payout. Setiap adjustment baru akan posting jurnal payout adjustment secara otomatis."
     >
       <datalist id="payout-adjustment-refs">
         {(orderLookupQuery.data ?? []).map((order) =>
@@ -127,7 +127,7 @@ export default function PayoutAdjustmentsPage() {
         open={hooks.adjustmentModal.open}
         onOpenChange={hooks.adjustmentModal.setOpen}
         title={hooks.editingAdjustment ? "Edit payout adjustment" : "Create payout adjustment"}
-        description="Maintain payout adjustment rows only. No posting or accounting automation is added here."
+        description="Adjustment akan sinkron ke jurnal payout adjustment dan ikut dihitung di reconciliation payout."
         isSubmitting={hooks.adjustmentForm.formState.isSubmitting}
         onSubmit={() => {
           return hooks.adjustmentForm.handleSubmit((values: PayoutAdjustmentInput) => hooks.saveAdjustment(values))();

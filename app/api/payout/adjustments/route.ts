@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
-import { invariant, jsonError } from "@/lib/api-error";
+import { jsonError } from "@/lib/api-error";
+import { resolvePayoutAdjustmentChannelId } from "@/lib/payout-adjustment-channel";
 import { toJsonValue } from "@/lib/json";
+import { syncPayoutAdjustmentJournal } from "@/lib/payout-adjustment-journal";
 import { payoutAdjustmentSchema } from "@/schemas/payout-module";
 
 function asDateOnly(value: string) {
@@ -59,40 +61,39 @@ export async function POST(request: NextRequest) {
   try {
     const payload = payoutAdjustmentSchema.parse(await request.json());
 
-    if (payload.ref) {
-      const order = await prisma.t_order.findFirst({
-        where: { ref_no: payload.ref },
-        select: { ref_no: true },
+    const adjustment = await prisma.$transaction(async (tx) => {
+      const resolvedChannelId = await resolvePayoutAdjustmentChannelId(tx, {
+        channelId: payload.channel_id ?? null,
+        ref: payload.ref ?? null,
+        marketplace: payload.marketplace ?? null,
+        post: payload.post ?? null,
       });
-      invariant(order, "Sales reference was not found.");
-    }
 
-    if (payload.channel_id != null) {
-      const channel = await prisma.m_channel.findUnique({
-        where: { channel_id: payload.channel_id },
-        select: { channel_id: true },
+      const created = await tx.t_adjustments.create({
+        data: {
+          ref: payload.ref || null,
+          payout_date: asDateOnly(payload.payout_date),
+          adjustment_date: payload.adjustment_date ? asDateOnly(payload.adjustment_date) : null,
+          channel_id: resolvedChannelId,
+          adjustment_type: payload.adjustment_type || null,
+          reason: payload.reason || null,
+          amount: payload.amount,
+        },
       });
-      invariant(channel, "Channel was not found.");
-    }
 
-    const adjustment = await prisma.t_adjustments.create({
-      data: {
-        ref: payload.ref || null,
-        payout_date: asDateOnly(payload.payout_date),
-        adjustment_date: payload.adjustment_date ? asDateOnly(payload.adjustment_date) : null,
-        channel_id: payload.channel_id ?? null,
-        adjustment_type: payload.adjustment_type || null,
-        reason: payload.reason || null,
-        amount: payload.amount,
-      },
-      include: {
-        m_channel: {
-          select: payoutChannelSelect,
+      await syncPayoutAdjustmentJournal(tx, created.adjustment_id);
+
+      return tx.t_adjustments.findUniqueOrThrow({
+        where: { adjustment_id: created.adjustment_id },
+        include: {
+          m_channel: {
+            select: payoutChannelSelect,
+          },
+          t_order: {
+            select: payoutOrderSelect,
+          },
         },
-        t_order: {
-          select: payoutOrderSelect,
-        },
-      },
+      });
     });
 
     return NextResponse.json(toJsonValue(adjustment), { status: 201 });

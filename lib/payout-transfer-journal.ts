@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { invariant } from "@/lib/api-error";
+import { upsertJournalEntryReplacingLines } from "@/lib/accounting-journal-upsert";
 
 type Tx = Prisma.TransactionClient;
 
@@ -16,62 +17,25 @@ async function upsertPayoutTransferJournal(
     amount: number;
   }
 ) {
-  const existing = await tx.journal_entries.findFirst({
-    where: {
-      reference_type: PAYOUT_TRANSFER_JOURNAL_REFERENCE_TYPE,
-      reference_id: params.referenceId,
-    },
-    select: { id: true },
-  });
-
-  const lines = [
-    {
-      account_id: params.bankAccountId,
-      debit: params.amount.toFixed(2),
-      credit: "0.00",
-      memo: "Payout transfer debit bank account",
-    },
-    {
-      account_id: params.saldoAccountId,
-      debit: "0.00",
-      credit: params.amount.toFixed(2),
-      memo: "Payout transfer credit saldo channel",
-    },
-  ];
-
-  if (!existing) {
-    await tx.journal_entries.create({
-      data: {
-        transaction_date: params.transferDate,
-        reference_type: PAYOUT_TRANSFER_JOURNAL_REFERENCE_TYPE,
-        reference_id: params.referenceId,
-        description: params.description,
-        journal_lines: {
-          create: lines,
-        },
+  await upsertJournalEntryReplacingLines(tx, {
+    referenceType: PAYOUT_TRANSFER_JOURNAL_REFERENCE_TYPE,
+    referenceId: params.referenceId,
+    transactionDate: params.transferDate,
+    description: params.description,
+    lines: [
+      {
+        accountId: params.bankAccountId,
+        debit: params.amount.toFixed(2),
+        credit: "0.00",
+        memo: "Payout transfer debit bank account",
       },
-    });
-    return;
-  }
-
-  await tx.journal_entries.update({
-    where: { id: existing.id },
-    data: {
-      transaction_date: params.transferDate,
-      description: params.description,
-      updated_at: new Date(),
-    },
-  });
-
-  await tx.journal_lines.deleteMany({
-    where: { journal_entry_id: existing.id },
-  });
-
-  await tx.journal_lines.createMany({
-    data: lines.map((line) => ({
-      ...line,
-      journal_entry_id: existing.id,
-    })),
+      {
+        accountId: params.saldoAccountId,
+        debit: "0.00",
+        credit: params.amount.toFixed(2),
+        memo: "Payout transfer credit saldo channel",
+      },
+    ],
   });
 }
 

@@ -57,6 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/payout/adjustments": "Kelola adjustment payout sesuai referensi yang sudah ada.",
       "/payout/transfers": "Catat perpindahan saldo channel ke rekening bank secara manual.",
       "/payout/reconciliation": "Bandingkan piutang, payout, saldo, dan transfer bank per channel secara read-only.",
+      "/master-data/import": "Upload CSV untuk import master data secara terkontrol dengan validasi kolom dan ringkasan hasil.",
     };
 
     return contexts[pathname] ?? contexts[navMatch?.href ?? ""] ?? "Ruang kerja ERP untuk operasional harian.";

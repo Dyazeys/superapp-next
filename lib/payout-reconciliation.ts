@@ -99,6 +99,7 @@ type ReconciliationSqlFilters = {
   params: string[];
   journalDateFilterSql: string;
   payoutDateFilterSql: string;
+  adjustmentDateFilterSql: string;
   transferDateFilterSql: string;
 };
 
@@ -110,6 +111,7 @@ function buildSqlFilters(filter?: PayoutReconciliationDateFilter): Reconciliatio
       params: [],
       journalDateFilterSql: "TRUE",
       payoutDateFilterSql: "TRUE",
+      adjustmentDateFilterSql: "TRUE",
       transferDateFilterSql: "TRUE",
     };
   }
@@ -118,6 +120,7 @@ function buildSqlFilters(filter?: PayoutReconciliationDateFilter): Reconciliatio
     params: [filter.fromDate, filter.toDate],
     journalDateFilterSql: "je.transaction_date::date BETWEEN $1::date AND $2::date",
     payoutDateFilterSql: "p.payout_date::date BETWEEN $1::date AND $2::date",
+    adjustmentDateFilterSql: "a.payout_date::date BETWEEN $1::date AND $2::date",
     transferDateFilterSql: "pt.transfer_date::date BETWEEN $1::date AND $2::date",
   };
 }
@@ -126,6 +129,7 @@ function applySqlFilters(query: string, filters: ReconciliationSqlFilters) {
   return query
     .replace(/__JOURNAL_DATE_FILTER__/g, filters.journalDateFilterSql)
     .replace(/__PAYOUT_DATE_FILTER__/g, filters.payoutDateFilterSql)
+    .replace(/__ADJUSTMENT_DATE_FILTER__/g, filters.adjustmentDateFilterSql)
     .replace(/__TRANSFER_DATE_FILTER__/g, filters.transferDateFilterSql);
 }
 
@@ -216,6 +220,18 @@ const RECONCILIATION_QUERY_TEMPLATE = `
       AND (__PAYOUT_DATE_FILTER__)
     GROUP BY o.channel_id
   ),
+  adjustment_totals AS (
+    SELECT
+      COALESCE(a.channel_id, o.channel_id) AS channel_id,
+      COUNT(*)::int AS adjustment_count,
+      COALESCE(SUM(a.amount), 0)::numeric(18,2) AS total_adjustment
+    FROM payout.t_adjustments a
+    LEFT JOIN sales.t_order o
+      ON o.ref_no = a.ref
+    WHERE COALESCE(a.channel_id, o.channel_id) IS NOT NULL
+      AND (__ADJUSTMENT_DATE_FILTER__)
+    GROUP BY COALESCE(a.channel_id, o.channel_id)
+  ),
   transfer_totals AS (
     SELECT
       o.channel_id,
@@ -250,7 +266,7 @@ const RECONCILIATION_QUERY_TEMPLATE = `
     COALESCE(sl.total_saldo, 0)::text AS total_saldo,
     COALESCE(tt.total_bank_transfer, 0)::text AS total_bank_transfer,
     (COALESCE(sl.total_saldo, 0) - COALESCE(tt.total_bank_transfer, 0))::numeric(18,2)::text AS saldo_vs_bank_transfer_diff,
-    COALESCE(pt.payout_count, 0)::int AS payout_count,
+    (COALESCE(pt.payout_count, 0) + COALESCE(at.adjustment_count, 0))::int AS payout_count,
     COALESCE(tt.transfer_count, 0)::int AS transfer_count
   FROM channel_base cb
   LEFT JOIN piutang_ledger pl
@@ -259,6 +275,8 @@ const RECONCILIATION_QUERY_TEMPLATE = `
     ON sl.channel_id = cb.channel_id
   LEFT JOIN payout_totals pt
     ON pt.channel_id = cb.channel_id
+  LEFT JOIN adjustment_totals at
+    ON at.channel_id = cb.channel_id
   LEFT JOIN transfer_totals tt
     ON tt.channel_id = cb.channel_id
   ORDER BY cb.channel_name ASC, cb.channel_id ASC;
@@ -278,6 +296,16 @@ const RECONCILIATION_SUMMARY_QUERY_TEMPLATE = `
     WHERE o.channel_id IS NULL
       AND (__PAYOUT_DATE_FILTER__)
   ),
+  adjustment_without_channel AS (
+    SELECT
+      COUNT(*)::int AS adjustment_without_channel_count,
+      COALESCE(SUM(a.amount), 0)::numeric(18,2)::text AS adjustment_without_channel_amount
+    FROM payout.t_adjustments a
+    LEFT JOIN sales.t_order o
+      ON o.ref_no = a.ref
+    WHERE COALESCE(a.channel_id, o.channel_id) IS NULL
+      AND (__ADJUSTMENT_DATE_FILTER__)
+  ),
   transfer_without_channel AS (
     SELECT
       COUNT(*)::int AS transfer_without_channel_count,
@@ -292,12 +320,13 @@ const RECONCILIATION_SUMMARY_QUERY_TEMPLATE = `
   )
   SELECT
     COUNT(*)::text AS channel_count,
-    MAX(pwc.payout_without_channel_count)::text AS payout_without_channel_count,
-    MAX(pwc.payout_without_channel_amount) AS payout_without_channel_amount,
+    (MAX(pwc.payout_without_channel_count) + MAX(awc.adjustment_without_channel_count))::text AS payout_without_channel_count,
+    (MAX(pwc.payout_without_channel_amount)::numeric + MAX(awc.adjustment_without_channel_amount)::numeric)::numeric(18,2)::text AS payout_without_channel_amount,
     MAX(twc.transfer_without_channel_count)::text AS transfer_without_channel_count,
     MAX(twc.transfer_without_channel_amount) AS transfer_without_channel_amount
   FROM channels
   CROSS JOIN payout_without_channel pwc
+  CROSS JOIN adjustment_without_channel awc
   CROSS JOIN transfer_without_channel twc;
 `;
 
@@ -347,6 +376,28 @@ const PAYOUT_POSTED_BREAKDOWN_QUERY_TEMPLATE = `
   ORDER BY o.channel_id, p.ref;
 `;
 
+const ADJUSTMENT_POSTED_BREAKDOWN_QUERY_TEMPLATE = `
+  SELECT
+    COALESCE(a.channel_id, o.channel_id) AS channel_id,
+    COALESCE(a.ref, 'ADJ#' || a.adjustment_id::text) AS ref,
+    COALESCE(SUM(jl.credit - jl.debit), 0)::numeric(18,2)::text AS payout_posted
+  FROM payout.t_adjustments a
+  LEFT JOIN sales.t_order o
+    ON o.ref_no = a.ref
+  JOIN channel.m_channel c
+    ON c.channel_id = COALESCE(a.channel_id, o.channel_id)
+  JOIN accounting.journal_entries je
+    ON je.reference_type = 'PAYOUT_ADJUSTMENT'
+   AND je.description LIKE ('PAYOUT adjustment posting for adjustment ' || a.adjustment_id || ' %')
+  JOIN accounting.journal_lines jl
+    ON jl.journal_entry_id = je.id
+   AND jl.account_id = c.piutang_account_id
+  WHERE COALESCE(a.channel_id, o.channel_id) IS NOT NULL
+    AND (__JOURNAL_DATE_FILTER__)
+  GROUP BY COALESCE(a.channel_id, o.channel_id), COALESCE(a.ref, 'ADJ#' || a.adjustment_id::text)
+  ORDER BY COALESCE(a.channel_id, o.channel_id), COALESCE(a.ref, 'ADJ#' || a.adjustment_id::text);
+`;
+
 function buildReconciliationQueries(filter?: PayoutReconciliationDateFilter) {
   const filters = buildSqlFilters(filter);
   const reconciliationQuery = applySqlFilters(RECONCILIATION_QUERY_TEMPLATE, filters);
@@ -359,12 +410,14 @@ function buildReconciliationQueries(filter?: PayoutReconciliationDateFilter) {
   );
   const salesBreakdownQuery = applySqlFilters(SALES_POSTED_BREAKDOWN_QUERY_TEMPLATE, filters);
   const payoutBreakdownQuery = applySqlFilters(PAYOUT_POSTED_BREAKDOWN_QUERY_TEMPLATE, filters);
+  const adjustmentBreakdownQuery = applySqlFilters(ADJUSTMENT_POSTED_BREAKDOWN_QUERY_TEMPLATE, filters);
 
   return {
     reconciliationQuery,
     summaryQuery,
     salesBreakdownQuery,
     payoutBreakdownQuery,
+    adjustmentBreakdownQuery,
     params: filters.params,
   };
 }
@@ -644,16 +697,18 @@ export async function getPayoutReconciliationReport(
   filter?: PayoutReconciliationDateFilter
 ): Promise<PayoutReconciliationReport> {
   const queries = buildReconciliationQueries(filter);
-  const [channelsResult, summaryResult, salesBreakdownResult, payoutBreakdownResult] = await Promise.all([
+  const [channelsResult, summaryResult, salesBreakdownResult, payoutBreakdownResult, adjustmentBreakdownResult] = await Promise.all([
     pgPool.query<QueryRow>(queries.reconciliationQuery, queries.params),
     pgPool.query<SummaryRow>(queries.summaryQuery, queries.params),
     pgPool.query<BreakdownRow>(queries.salesBreakdownQuery, queries.params),
     pgPool.query<BreakdownRow>(queries.payoutBreakdownQuery, queries.params),
+    pgPool.query<BreakdownRow>(queries.adjustmentBreakdownQuery, queries.params),
   ]);
 
   const summary = summaryResult.rows[0];
+  const combinedPayoutBreakdowns = [...payoutBreakdownResult.rows, ...adjustmentBreakdownResult.rows];
   const channels = channelsResult.rows.map((row) => {
-    const breakdown = buildRefBreakdowns(row.channel_id, salesBreakdownResult.rows, payoutBreakdownResult.rows);
+    const breakdown = buildRefBreakdowns(row.channel_id, salesBreakdownResult.rows, combinedPayoutBreakdowns);
 
     return classifyMismatch({
       ...row,

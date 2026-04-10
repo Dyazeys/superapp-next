@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { invariant } from "@/lib/api-error";
+import { upsertJournalEntryReplacingLines } from "@/lib/accounting-journal-upsert";
 
 type Tx = Prisma.TransactionClient;
 
@@ -48,51 +49,13 @@ async function upsertPayoutSettlementJournal(
     }>;
   }
 ) {
-  const existing = await tx.journal_entries.findFirst({
-    where: {
-      reference_type: PAYOUT_JOURNAL_REFERENCE_TYPE,
-      reference_id: params.referenceId,
-    },
-    select: { id: true },
-  });
-
-  if (!existing) {
-    await tx.journal_entries.create({
-      data: {
-        transaction_date: params.payoutDate,
-        reference_type: PAYOUT_JOURNAL_REFERENCE_TYPE,
-        reference_id: params.referenceId,
-        description: params.description,
-        journal_lines: {
-          create: params.lines.map((line) => ({
-            account_id: line.accountId,
-            debit: line.debit.toFixed(2),
-            credit: line.credit.toFixed(2),
-            memo: line.memo,
-          })),
-        },
-      },
-    });
-    return;
-  }
-
-  await tx.journal_entries.update({
-    where: { id: existing.id },
-    data: {
-      transaction_date: params.payoutDate,
-      description: params.description,
-      updated_at: new Date(),
-    },
-  });
-
-  await tx.journal_lines.deleteMany({
-    where: { journal_entry_id: existing.id },
-  });
-
-  await tx.journal_lines.createMany({
-    data: params.lines.map((line) => ({
-      journal_entry_id: existing.id,
-      account_id: line.accountId,
+  await upsertJournalEntryReplacingLines(tx, {
+    referenceType: PAYOUT_JOURNAL_REFERENCE_TYPE,
+    referenceId: params.referenceId,
+    transactionDate: params.payoutDate,
+    description: params.description,
+    lines: params.lines.map((line) => ({
+      accountId: line.accountId,
       debit: line.debit.toFixed(2),
       credit: line.credit.toFixed(2),
       memo: line.memo,

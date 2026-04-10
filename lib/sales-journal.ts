@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import type { Prisma } from "@prisma/client";
+import { upsertJournalEntryReplacingLines } from "@/lib/accounting-journal-upsert";
 
 type Tx = Prisma.TransactionClient;
 
@@ -131,29 +132,24 @@ export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
     }
   }
 
-  const existing = await tx.journal_entries.findFirst({
-    where: {
-      reference_type: SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE,
-      reference_id: referenceId,
-    },
-    select: { id: true },
-  });
-
   const description = `SALES posting for order ${item.order_no} item ${item.id} sku ${item.sku}${item.t_order.ref_no ? ` ref ${item.t_order.ref_no}` : ""}`;
-  const lines: Prisma.journal_linesCreateManyInput[] = [];
+  const lines: Array<{
+    accountId: string;
+    debit: string;
+    credit: string;
+    memo: string;
+  }> = [];
 
   if (revenueAmount > 0) {
     lines.push(
       {
-        journal_entry_id: existing?.id ?? "",
-        account_id: channel.piutang_account_id,
+        accountId: channel.piutang_account_id,
         debit: revenueAmount.toFixed(2),
         credit: "0.00",
         memo: `Sales receivable for order ${item.order_no} item ${item.id}`,
       },
       {
-        journal_entry_id: existing?.id ?? "",
-        account_id: revenueAccountId,
+        accountId: revenueAccountId,
         debit: "0.00",
         credit: revenueAmount.toFixed(2),
         memo: `Sales revenue for order ${item.order_no} item ${item.id}`,
@@ -164,15 +160,13 @@ export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
   if (needsHppPosting && hppAccountId && inventoryAccountId) {
     lines.push(
       {
-        journal_entry_id: existing?.id ?? "",
-        account_id: hppAccountId,
+        accountId: hppAccountId,
         debit: hppAmount.toFixed(2),
         credit: "0.00",
         memo: `HPP for order ${item.order_no} item ${item.id}`,
       },
       {
-        journal_entry_id: existing?.id ?? "",
-        account_id: inventoryAccountId,
+        accountId: inventoryAccountId,
         debit: "0.00",
         credit: hppAmount.toFixed(2),
         memo: `Inventory release for order ${item.order_no} item ${item.id}`,
@@ -180,43 +174,16 @@ export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
     );
   }
 
-  if (!existing) {
-    await tx.journal_entries.create({
-      data: {
-        transaction_date: item.t_order.order_date,
-        reference_type: SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE,
-        reference_id: referenceId,
-        description,
-        journal_lines: {
-          create: lines.map(({ account_id, debit, credit, memo }) => ({
-            account_id,
-            debit,
-            credit,
-            memo,
-          })),
-        },
-      },
-    });
-    return;
-  }
-
-  await tx.journal_entries.update({
-    where: { id: existing.id },
-    data: {
-      transaction_date: item.t_order.order_date,
-      description,
-      updated_at: new Date(),
-    },
-  });
-
-  await tx.journal_lines.deleteMany({
-    where: { journal_entry_id: existing.id },
-  });
-
-  await tx.journal_lines.createMany({
-    data: lines.map((line) => ({
-      ...line,
-      journal_entry_id: existing.id,
+  await upsertJournalEntryReplacingLines(tx, {
+    referenceType: SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE,
+    referenceId,
+    transactionDate: item.t_order.order_date,
+    description,
+    lines: lines.map((line) => ({
+      accountId: line.accountId,
+      debit: line.debit,
+      credit: line.credit,
+      memo: line.memo,
     })),
   });
 }

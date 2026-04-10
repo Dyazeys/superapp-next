@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
-import { invariant, jsonError } from "@/lib/api-error";
+import { jsonError } from "@/lib/api-error";
+import { resolvePayoutAdjustmentChannelId } from "@/lib/payout-adjustment-channel";
 import { toJsonValue } from "@/lib/json";
+import { deletePayoutAdjustmentJournal, syncPayoutAdjustmentJournal } from "@/lib/payout-adjustment-journal";
 import { payoutAdjustmentSchema } from "@/schemas/payout-module";
 
 function asDateOnly(value: string) {
@@ -39,47 +41,55 @@ export async function PATCH(
   try {
     const { id } = await params;
     const payload = payoutAdjustmentSchema.partial().parse(await request.json());
+    const adjustmentId = Number(id);
 
-    if (payload.ref) {
-      const order = await prisma.t_order.findFirst({
-        where: { ref_no: payload.ref },
-        select: { ref_no: true },
-      });
-      invariant(order, "Sales reference was not found.");
-    }
-
-    if (payload.channel_id != null) {
-      const channel = await prisma.m_channel.findUnique({
-        where: { channel_id: payload.channel_id },
-        select: { channel_id: true },
-      });
-      invariant(channel, "Channel was not found.");
-    }
-
-    const adjustment = await prisma.t_adjustments.update({
-      where: { adjustment_id: Number(id) },
-      data: {
-        ref: payload.ref === undefined ? undefined : payload.ref || null,
-        payout_date: payload.payout_date === undefined ? undefined : asDateOnly(payload.payout_date),
-        adjustment_date:
-          payload.adjustment_date === undefined
-            ? undefined
-            : payload.adjustment_date
-              ? asDateOnly(payload.adjustment_date)
-              : null,
-        channel_id: payload.channel_id === undefined ? undefined : payload.channel_id ?? null,
-        adjustment_type: payload.adjustment_type === undefined ? undefined : payload.adjustment_type || null,
-        reason: payload.reason === undefined ? undefined : payload.reason || null,
-        amount: payload.amount,
-      },
-      include: {
-        m_channel: {
-          select: payoutChannelSelect,
+    const adjustment = await prisma.$transaction(async (tx) => {
+      const current = await tx.t_adjustments.findUniqueOrThrow({
+        where: { adjustment_id: adjustmentId },
+        select: {
+          ref: true,
+          channel_id: true,
         },
-        t_order: {
-          select: payoutOrderSelect,
+      });
+
+      const resolvedChannelId = await resolvePayoutAdjustmentChannelId(tx, {
+        channelId: payload.channel_id === undefined ? current.channel_id : payload.channel_id,
+        ref: payload.ref === undefined ? current.ref : payload.ref,
+        marketplace: payload.marketplace ?? null,
+        post: payload.post ?? null,
+      });
+
+      await tx.t_adjustments.update({
+        where: { adjustment_id: adjustmentId },
+        data: {
+          ref: payload.ref === undefined ? undefined : payload.ref || null,
+          payout_date: payload.payout_date === undefined ? undefined : asDateOnly(payload.payout_date),
+          adjustment_date:
+            payload.adjustment_date === undefined
+              ? undefined
+              : payload.adjustment_date
+                ? asDateOnly(payload.adjustment_date)
+                : null,
+          channel_id: resolvedChannelId,
+          adjustment_type: payload.adjustment_type === undefined ? undefined : payload.adjustment_type || null,
+          reason: payload.reason === undefined ? undefined : payload.reason || null,
+          amount: payload.amount,
         },
-      },
+      });
+
+      await syncPayoutAdjustmentJournal(tx, adjustmentId);
+
+      return tx.t_adjustments.findUniqueOrThrow({
+        where: { adjustment_id: adjustmentId },
+        include: {
+          m_channel: {
+            select: payoutChannelSelect,
+          },
+          t_order: {
+            select: payoutOrderSelect,
+          },
+        },
+      });
     });
 
     return NextResponse.json(toJsonValue(adjustment));
@@ -94,9 +104,14 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const adjustmentId = Number(id);
 
-    await prisma.t_adjustments.delete({
-      where: { adjustment_id: Number(id) },
+    await prisma.$transaction(async (tx) => {
+      await deletePayoutAdjustmentJournal(tx, adjustmentId);
+
+      await tx.t_adjustments.delete({
+        where: { adjustment_id: adjustmentId },
+      });
     });
 
     return NextResponse.json({ ok: true });

@@ -48,6 +48,8 @@ export const payoutSchema = z.object({
 
 export const payoutAdjustmentSchema = z.object({
   ref: z.string().max(100).optional().nullable(),
+  marketplace: z.string().max(100).optional().nullable(),
+  post: z.string().max(100).optional().nullable(),
   payout_date: dateInput,
   adjustment_date: optionalDateInput,
   channel_id: z.coerce.number().int().optional().nullable(),

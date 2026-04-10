@@ -1,0 +1,2 @@
+sku,category_code,sku_name,product_name,color,color_code,size,variations,busa_code,inv_main,inv_acc,is_bundling,is_active,price_mp,price_non_mp,total_hpp
+SF-001,SOFA,SF001-LATTE,Sofa Latte,Latte,LT,3-Seater,Premium,,INV-SOFA-MAIN,INV-SOFA-ACC,false,true,4500000,4700000,3200000
