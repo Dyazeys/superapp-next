@@ -3,6 +3,7 @@ import type {
   PayoutAdjustmentRecord,
   PayoutBankAccountRecord,
   PayoutChannelRecord,
+  PayoutReconciliationFilter,
   PayoutOrderLookupRecord,
   PayoutReconciliationReport,
   PayoutRecord,
@@ -75,6 +76,15 @@ export const payoutApi = {
       }),
   },
   reconciliation: {
-    list: () => requestJson<PayoutReconciliationReport>("/api/payout/reconciliation"),
+    list: (filter: PayoutReconciliationFilter) => {
+      const searchParams = new URLSearchParams({ period: filter.period });
+
+      if (filter.period === "custom") {
+        if (filter.fromDate) searchParams.set("fromDate", filter.fromDate);
+        if (filter.toDate) searchParams.set("toDate", filter.toDate);
+      }
+
+      return requestJson<PayoutReconciliationReport>(`/api/payout/reconciliation?${searchParams.toString()}`);
+    },
   },
 };

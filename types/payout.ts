@@ -143,3 +143,11 @@ export type PayoutReconciliationReport = {
   };
   channels: PayoutReconciliationChannelRecord[];
 };
+
+export type PayoutReconciliationPeriodPreset = "all" | "this_month" | "custom";
+
+export type PayoutReconciliationFilter = {
+  period: PayoutReconciliationPeriodPreset;
+  fromDate?: string;
+  toDate?: string;
+};

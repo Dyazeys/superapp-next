@@ -36,7 +36,7 @@ function areaTone(
 }
 
 export default function PayoutReconciliationPage() {
-  const reconciliationQuery = usePayoutReconciliation();
+  const reconciliationQuery = usePayoutReconciliation({ period: "all" });
   const report = reconciliationQuery.data;
   const channels = report?.channels ?? [];
   const rules = report?.rules ?? [];

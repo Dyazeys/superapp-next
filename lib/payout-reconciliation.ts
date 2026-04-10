@@ -1,5 +1,6 @@
 import "server-only";
 import { pgPool } from "@/db/postgres";
+import type { PayoutReconciliationFilter } from "@/types/payout";
 
 type PayoutReconciliationMismatch = {
   area: "PIUTANG_VS_PAYOUT" | "SALDO_VS_BANK_TRANSFER" | "MAPPING";
@@ -94,7 +95,41 @@ type BreakdownRow = {
   payout_posted?: string;
 };
 
-const RECONCILIATION_QUERY = `
+type ReconciliationSqlFilters = {
+  params: string[];
+  journalDateFilterSql: string;
+  payoutDateFilterSql: string;
+  transferDateFilterSql: string;
+};
+
+type PayoutReconciliationDateFilter = Pick<PayoutReconciliationFilter, "fromDate" | "toDate">;
+
+function buildSqlFilters(filter?: PayoutReconciliationDateFilter): ReconciliationSqlFilters {
+  if (!filter?.fromDate || !filter?.toDate) {
+    return {
+      params: [],
+      journalDateFilterSql: "TRUE",
+      payoutDateFilterSql: "TRUE",
+      transferDateFilterSql: "TRUE",
+    };
+  }
+
+  return {
+    params: [filter.fromDate, filter.toDate],
+    journalDateFilterSql: "je.transaction_date::date BETWEEN $1::date AND $2::date",
+    payoutDateFilterSql: "p.payout_date::date BETWEEN $1::date AND $2::date",
+    transferDateFilterSql: "pt.transfer_date::date BETWEEN $1::date AND $2::date",
+  };
+}
+
+function applySqlFilters(query: string, filters: ReconciliationSqlFilters) {
+  return query
+    .replace(/__JOURNAL_DATE_FILTER__/g, filters.journalDateFilterSql)
+    .replace(/__PAYOUT_DATE_FILTER__/g, filters.payoutDateFilterSql)
+    .replace(/__TRANSFER_DATE_FILTER__/g, filters.transferDateFilterSql);
+}
+
+const RECONCILIATION_QUERY_TEMPLATE = `
   WITH channel_base AS (
     SELECT
       c.channel_id,
@@ -127,9 +162,13 @@ const RECONCILIATION_QUERY = `
       COALESCE(
         SUM(
           CASE
-            WHEN UPPER(COALESCE(cb.piutang_normal_balance, 'DEBIT')) IN ('CREDIT', 'KREDIT')
-              THEN COALESCE(jl.credit, 0) - COALESCE(jl.debit, 0)
-            ELSE COALESCE(jl.debit, 0) - COALESCE(jl.credit, 0)
+            WHEN __JOURNAL_DATE_FILTER__ THEN
+              CASE
+                WHEN UPPER(COALESCE(cb.piutang_normal_balance, 'DEBIT')) IN ('CREDIT', 'KREDIT')
+                  THEN COALESCE(jl.credit, 0) - COALESCE(jl.debit, 0)
+                ELSE COALESCE(jl.debit, 0) - COALESCE(jl.credit, 0)
+              END
+            ELSE 0
           END
         ),
         0
@@ -137,6 +176,8 @@ const RECONCILIATION_QUERY = `
     FROM channel_base cb
     LEFT JOIN accounting.journal_lines jl
       ON jl.account_id = cb.piutang_account_id
+    LEFT JOIN accounting.journal_entries je
+      ON je.id = jl.journal_entry_id
     GROUP BY cb.channel_id
   ),
   saldo_ledger AS (
@@ -145,9 +186,13 @@ const RECONCILIATION_QUERY = `
       COALESCE(
         SUM(
           CASE
-            WHEN UPPER(COALESCE(cb.saldo_normal_balance, 'DEBIT')) IN ('CREDIT', 'KREDIT')
-              THEN COALESCE(jl.credit, 0) - COALESCE(jl.debit, 0)
-            ELSE COALESCE(jl.debit, 0) - COALESCE(jl.credit, 0)
+            WHEN __JOURNAL_DATE_FILTER__ THEN
+              CASE
+                WHEN UPPER(COALESCE(cb.saldo_normal_balance, 'DEBIT')) IN ('CREDIT', 'KREDIT')
+                  THEN COALESCE(jl.credit, 0) - COALESCE(jl.debit, 0)
+                ELSE COALESCE(jl.debit, 0) - COALESCE(jl.credit, 0)
+              END
+            ELSE 0
           END
         ),
         0
@@ -155,6 +200,8 @@ const RECONCILIATION_QUERY = `
     FROM channel_base cb
     LEFT JOIN accounting.journal_lines jl
       ON jl.account_id = cb.saldo_account_id
+    LEFT JOIN accounting.journal_entries je
+      ON je.id = jl.journal_entry_id
     GROUP BY cb.channel_id
   ),
   payout_totals AS (
@@ -166,6 +213,7 @@ const RECONCILIATION_QUERY = `
     JOIN sales.t_order o
       ON o.ref_no = p.ref
     WHERE o.channel_id IS NOT NULL
+      AND (__PAYOUT_DATE_FILTER__)
     GROUP BY o.channel_id
   ),
   transfer_totals AS (
@@ -179,6 +227,7 @@ const RECONCILIATION_QUERY = `
     JOIN sales.t_order o
       ON o.ref_no = p.ref
     WHERE o.channel_id IS NOT NULL
+      AND (__TRANSFER_DATE_FILTER__)
     GROUP BY o.channel_id
   )
   SELECT
@@ -215,9 +264,9 @@ const RECONCILIATION_QUERY = `
   ORDER BY cb.channel_name ASC, cb.channel_id ASC;
 `;
 
-const RECONCILIATION_SUMMARY_QUERY = `
+const RECONCILIATION_SUMMARY_QUERY_TEMPLATE = `
   WITH channels AS (
-    ${RECONCILIATION_QUERY.trim().replace(/;$/, "")}
+    __RECONCILIATION_QUERY__
   ),
   payout_without_channel AS (
     SELECT
@@ -227,6 +276,7 @@ const RECONCILIATION_SUMMARY_QUERY = `
     LEFT JOIN sales.t_order o
       ON o.ref_no = p.ref
     WHERE o.channel_id IS NULL
+      AND (__PAYOUT_DATE_FILTER__)
   ),
   transfer_without_channel AS (
     SELECT
@@ -238,6 +288,7 @@ const RECONCILIATION_SUMMARY_QUERY = `
     LEFT JOIN sales.t_order o
       ON o.ref_no = p.ref
     WHERE o.channel_id IS NULL
+      AND (__TRANSFER_DATE_FILTER__)
   )
   SELECT
     COUNT(*)::text AS channel_count,
@@ -250,7 +301,7 @@ const RECONCILIATION_SUMMARY_QUERY = `
   CROSS JOIN transfer_without_channel twc;
 `;
 
-const SALES_POSTED_BREAKDOWN_QUERY = `
+const SALES_POSTED_BREAKDOWN_QUERY_TEMPLATE = `
   SELECT
     o.channel_id,
     o.ref_no AS ref,
@@ -268,11 +319,12 @@ const SALES_POSTED_BREAKDOWN_QUERY = `
    AND jl.account_id = c.piutang_account_id
   WHERE o.channel_id IS NOT NULL
     AND o.ref_no IS NOT NULL
+    AND (__JOURNAL_DATE_FILTER__)
   GROUP BY o.channel_id, o.ref_no
   ORDER BY o.channel_id, o.ref_no;
 `;
 
-const PAYOUT_POSTED_BREAKDOWN_QUERY = `
+const PAYOUT_POSTED_BREAKDOWN_QUERY_TEMPLATE = `
   SELECT
     o.channel_id,
     p.ref,
@@ -290,9 +342,32 @@ const PAYOUT_POSTED_BREAKDOWN_QUERY = `
    AND jl.account_id = c.piutang_account_id
   WHERE o.channel_id IS NOT NULL
     AND p.ref IS NOT NULL
+    AND (__JOURNAL_DATE_FILTER__)
   GROUP BY o.channel_id, p.ref
   ORDER BY o.channel_id, p.ref;
 `;
+
+function buildReconciliationQueries(filter?: PayoutReconciliationDateFilter) {
+  const filters = buildSqlFilters(filter);
+  const reconciliationQuery = applySqlFilters(RECONCILIATION_QUERY_TEMPLATE, filters);
+  const summaryQuery = applySqlFilters(
+    RECONCILIATION_SUMMARY_QUERY_TEMPLATE.replace(
+      "__RECONCILIATION_QUERY__",
+      reconciliationQuery.trim().replace(/;$/, "")
+    ),
+    filters
+  );
+  const salesBreakdownQuery = applySqlFilters(SALES_POSTED_BREAKDOWN_QUERY_TEMPLATE, filters);
+  const payoutBreakdownQuery = applySqlFilters(PAYOUT_POSTED_BREAKDOWN_QUERY_TEMPLATE, filters);
+
+  return {
+    reconciliationQuery,
+    summaryQuery,
+    salesBreakdownQuery,
+    payoutBreakdownQuery,
+    params: filters.params,
+  };
+}
 
 const RECONCILIATION_RULES: PayoutReconciliationReport["rules"] = [
   {
@@ -565,12 +640,15 @@ function classifyMismatch(row: QueryRow & { ref_breakdowns: PayoutReconciliation
   };
 }
 
-export async function getPayoutReconciliationReport(): Promise<PayoutReconciliationReport> {
+export async function getPayoutReconciliationReport(
+  filter?: PayoutReconciliationDateFilter
+): Promise<PayoutReconciliationReport> {
+  const queries = buildReconciliationQueries(filter);
   const [channelsResult, summaryResult, salesBreakdownResult, payoutBreakdownResult] = await Promise.all([
-    pgPool.query<QueryRow>(RECONCILIATION_QUERY),
-    pgPool.query<SummaryRow>(RECONCILIATION_SUMMARY_QUERY),
-    pgPool.query<BreakdownRow>(SALES_POSTED_BREAKDOWN_QUERY),
-    pgPool.query<BreakdownRow>(PAYOUT_POSTED_BREAKDOWN_QUERY),
+    pgPool.query<QueryRow>(queries.reconciliationQuery, queries.params),
+    pgPool.query<SummaryRow>(queries.summaryQuery, queries.params),
+    pgPool.query<BreakdownRow>(queries.salesBreakdownQuery, queries.params),
+    pgPool.query<BreakdownRow>(queries.payoutBreakdownQuery, queries.params),
   ]);
 
   const summary = summaryResult.rows[0];

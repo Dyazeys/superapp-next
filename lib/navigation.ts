@@ -91,6 +91,7 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Accounts", href: "/accounting/accounts", icon: ShieldCheck },
       { label: "Journals", href: "/accounting/journals", icon: ShieldCheck },
       { label: "Journal Entries", href: "/accounting/journal-entries", icon: ShieldCheck },
+      { label: "Channel Report", href: "/accounting/channel-report", icon: ShieldCheck },
     ],
   },
   {

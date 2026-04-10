@@ -51,6 +51,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/accounting/journals": "Lihat daftar jurnal untuk pengecekan sumber pencatatan.",
       "/accounting/journal-entries": "Lihat detail debit/kredit untuk rekonsiliasi cepat.",
       "/accounting/accounts": "Lihat COA dan relasi parent untuk struktur akun.",
+      "/accounting/channel-report": "Ringkasan accounting per channel berbasis jurnal: sales, payout, saldo, transfer, outstanding, dan status.",
       "/payout": "Ringkasan payout, adjustment, dan nilai bersih berdasarkan data yang ada.",
       "/payout/records": "Kelola header payout dan cek nilai gross/net.",
       "/payout/adjustments": "Kelola adjustment payout sesuai referensi yang sudah ada.",
