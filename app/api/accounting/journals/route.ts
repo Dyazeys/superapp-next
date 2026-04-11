@@ -18,12 +18,13 @@ export async function GET() {
       take: 200,
     });
 
-    const journals = journalEntries.map((entry) => {
+    type JournalEntry = (typeof journalEntries)[number];
+    const journals = journalEntries.map((entry: JournalEntry) => {
       const totalDebit = entry.journal_lines
-        .reduce((sum, line) => sum + Number(line.debit), 0)
+        .reduce((sum: number, line: JournalEntry["journal_lines"][number]) => sum + Number(line.debit), 0)
         .toFixed(2);
       const totalCredit = entry.journal_lines
-        .reduce((sum, line) => sum + Number(line.credit), 0)
+        .reduce((sum: number, line: JournalEntry["journal_lines"][number]) => sum + Number(line.credit), 0)
         .toFixed(2);
 
       return {
