@@ -3,7 +3,7 @@ import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { deletePayoutSettlementJournal, syncPayoutSettlementJournal } from "@/lib/payout-journal";
-import { payoutSchema } from "@/schemas/payout-module";
+import { payoutPatchSchema } from "@/schemas/payout-module";
 
 function asDateOnly(value: string) {
   return new Date(`${value}T00:00:00.000Z`);
@@ -32,7 +32,9 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const payload = payoutSchema.partial().parse(await request.json());
+    const rawPayload = await request.json();
+    const payload = payoutPatchSchema.parse(rawPayload);
+    const has = (key: string) => Object.prototype.hasOwnProperty.call(rawPayload, key);
     const payoutId = Number(id);
 
     const payout = await prisma.$transaction(async (tx) => {
@@ -47,21 +49,21 @@ export async function PATCH(
       await tx.t_payout.update({
         where: { payout_id: payoutId },
         data: {
-          ref: payload.ref === undefined ? undefined : payload.ref || null,
-          payout_date: payload.payout_date === undefined ? undefined : asDateOnly(payload.payout_date),
-          qty_produk: payload.qty_produk,
-          hpp: payload.hpp,
-          total_price: payload.total_price,
-          seller_discount: payload.seller_discount,
-          fee_admin: payload.fee_admin,
-          fee_service: payload.fee_service,
-          fee_order_process: payload.fee_order_process,
-          fee_program: payload.fee_program,
-          fee_transaction: payload.fee_transaction,
-          fee_affiliate: payload.fee_affiliate,
-          shipping_cost: payload.shipping_cost,
-          omset: payload.omset,
-          payout_status: payload.payout_status === undefined ? undefined : payload.payout_status || null,
+          ref: has("ref") ? payload.ref || null : undefined,
+          payout_date: has("payout_date") ? (payload.payout_date ? asDateOnly(payload.payout_date) : undefined) : undefined,
+          qty_produk: has("qty_produk") ? payload.qty_produk : undefined,
+          hpp: has("hpp") ? payload.hpp : undefined,
+          total_price: has("total_price") ? payload.total_price : undefined,
+          seller_discount: has("seller_discount") ? payload.seller_discount : undefined,
+          fee_admin: has("fee_admin") ? payload.fee_admin : undefined,
+          fee_service: has("fee_service") ? payload.fee_service : undefined,
+          fee_order_process: has("fee_order_process") ? payload.fee_order_process : undefined,
+          fee_program: has("fee_program") ? payload.fee_program : undefined,
+          fee_transaction: has("fee_transaction") ? payload.fee_transaction : undefined,
+          fee_affiliate: has("fee_affiliate") ? payload.fee_affiliate : undefined,
+          shipping_cost: has("shipping_cost") ? payload.shipping_cost : undefined,
+          omset: has("omset") ? payload.omset : undefined,
+          payout_status: has("payout_status") ? payload.payout_status || null : undefined,
         },
       });
 

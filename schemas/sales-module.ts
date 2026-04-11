@@ -37,6 +37,18 @@ export const salesOrderSchema = z.object({
   is_historical: z.boolean().default(false),
 });
 
+export const salesOrderPatchSchema = z.object({
+  order_no: z.string().min(1, "Order number is required").max(50).optional(),
+  order_date: dateInput.optional(),
+  ref_no: z.string().max(100).optional().nullable(),
+  parent_order_no: z.string().max(50).optional().nullable(),
+  channel_id: z.coerce.number().int().optional().nullable(),
+  customer_id: z.coerce.number().int().optional().nullable(),
+  total_amount: decimalInput.optional(),
+  status: z.string().min(1, "Status is required").max(50).optional(),
+  is_historical: z.boolean().optional(),
+});
+
 export const salesCustomerSchema = z.object({
   customer_name: z.string().trim().min(1, "Customer name is required").max(255),
   phone: nullableTrimmedString(50),
@@ -63,6 +75,26 @@ export const salesOrderItemSchema = z.object({
   }
 });
 
+export const salesOrderItemPatchSchema = z.object({
+  order_no: z.string().min(1, "Order number is required").max(50).optional(),
+  sku: z.string().min(1, "SKU is required").max(100).optional(),
+  qty: z.coerce.number().int().min(1).optional(),
+  unit_price: decimalInput.optional(),
+  discount_item: decimalInput.optional(),
+}).superRefine((value, context) => {
+  if (value.discount_item !== undefined && value.qty !== undefined && value.unit_price !== undefined) {
+    if (Number(value.discount_item) > value.qty * Number(value.unit_price)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["discount_item"],
+        message: "Discount cannot exceed the line gross amount",
+      });
+    }
+  }
+});
+
 export type SalesOrderInput = z.infer<typeof salesOrderSchema>;
+export type SalesOrderPatchInput = z.infer<typeof salesOrderPatchSchema>;
 export type SalesCustomerInput = z.infer<typeof salesCustomerSchema>;
 export type SalesOrderItemInput = z.infer<typeof salesOrderItemSchema>;
+export type SalesOrderItemPatchInput = z.infer<typeof salesOrderItemPatchSchema>;

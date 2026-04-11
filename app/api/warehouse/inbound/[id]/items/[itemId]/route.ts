@@ -3,7 +3,7 @@ import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { removeInboundItemMovement, syncInboundItemMovement } from "@/lib/warehouse-stock";
-import { inboundItemSchema } from "@/schemas/warehouse-module";
+import { inboundItemPatchSchema } from "@/schemas/warehouse-module";
 
 export async function PATCH(
   request: NextRequest,
@@ -11,12 +11,25 @@ export async function PATCH(
 ) {
   try {
     const { itemId } = await params;
-    const payload = inboundItemSchema.partial().parse(await request.json());
+    const payload = inboundItemPatchSchema.parse(await request.json());
 
     const item = await prisma.$transaction(async (tx) => {
       const current = await tx.inbound_items.findUniqueOrThrow({
         where: { id: itemId },
       });
+      const nextQtyReceived = payload.qty_received ?? current.qty_received;
+      const nextQtyPassedQc = payload.qty_passed_qc ?? current.qty_passed_qc;
+      const nextQtyRejectedQc = payload.qty_rejected_qc ?? current.qty_rejected_qc;
+
+      invariant(
+        nextQtyPassedQc + nextQtyRejectedQc <= nextQtyReceived,
+        "Passed and rejected QC cannot exceed received quantity."
+      );
+
+      invariant(
+        nextQtyReceived > 0 || (nextQtyPassedQc === 0 && nextQtyRejectedQc === 0),
+        "Received quantity must be greater than zero when QC quantities exist."
+      );
 
       const nextInvCode = payload.inv_code ?? current.inv_code;
       const inventory = await tx.master_inventory.findUnique({

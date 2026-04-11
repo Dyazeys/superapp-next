@@ -119,9 +119,12 @@ When moving from the current Windows machine to a Mac and you want the same beha
 
 If all of the above match, the Mac setup will behave the same as the current Windows setup because both use the same repo, the same `.env`, and the same VPS database.
 
-## Backup and restore for local Docker mode
+## Backup and restore (Docker + VPS tunnel fallback)
 
-These scripts are for local Docker PostgreSQL, not for the VPS tunnel.
+PowerShell scripts now support two modes:
+
+- Docker mode (if `superapp-postgres` container is running)
+- SSH fallback mode (if Docker is unavailable, uses VPS PostgreSQL via `ssh`)
 
 ### Backup
 
@@ -138,11 +141,12 @@ bash scripts/db-backup.sh
 ```
 
 Each command creates a timestamped `.sql` file under `backups/`.
+If Docker is down, the script automatically falls back to SSH mode (requires `~/.ssh/id_ed25519` by default).
 
 ### Restore
 
 1. Copy the chosen SQL backup file into the new machine's `backups/` folder.
-2. Start the local Docker database:
+2. For Docker mode, start the local database:
 
 ```bash
 docker compose up -d postgres
@@ -162,9 +166,11 @@ Mac/Linux:
 bash scripts/db-restore.sh backups/superapp-YYYYMMDD-HHMMSS.sql
 ```
 
+For PowerShell on tunnel/VPS mode, the same command works and will auto-fallback to SSH if Docker is not available.
+
 ## Notes
 
 - `.env` is local-only and should not be committed.
 - `backups/` is local-only and should not be committed.
-- The Docker backup and restore scripts only target the local container database.
+- PowerShell backup/restore scripts can use Docker or SSH fallback automatically.
 - If you use tunnel mode, the app depends on the SSH tunnel terminal remaining open.

@@ -4,7 +4,7 @@ import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { deleteSalesOrderItemJournal, syncSalesOrderJournals } from "@/lib/sales-journal";
 import { removeSalesOrderItemMovements, syncSalesOrderMovements } from "@/lib/warehouse-stock";
-import { salesOrderSchema } from "@/schemas/sales-module";
+import { salesOrderPatchSchema } from "@/schemas/sales-module";
 
 function asDateTime(value: string) {
   return new Date(value);
@@ -16,7 +16,9 @@ export async function PATCH(
 ) {
   try {
     const { orderNo } = await params;
-    const payload = salesOrderSchema.partial().parse(await request.json());
+    const rawPayload = await request.json();
+    const payload = salesOrderPatchSchema.parse(rawPayload);
+    const has = (key: string) => Object.prototype.hasOwnProperty.call(rawPayload, key);
 
     if (payload.channel_id != null) {
       const channel = await prisma.m_channel.findUnique({
@@ -51,22 +53,22 @@ export async function PATCH(
       const updated = await tx.t_order.update({
         where: { order_no: orderNo },
         data: {
-          order_date: payload.order_date === undefined ? undefined : asDateTime(payload.order_date),
-          ref_no: payload.ref_no === undefined ? undefined : payload.ref_no || null,
-          parent_order_no: payload.parent_order_no === undefined ? undefined : payload.parent_order_no || null,
-          channel_id: payload.channel_id === undefined ? undefined : payload.channel_id ?? null,
-          customer_id: payload.customer_id === undefined ? undefined : payload.customer_id ?? null,
-          total_amount: payload.total_amount,
-          status: payload.status,
-          is_historical: payload.is_historical,
+          order_date: has("order_date") ? (payload.order_date ? asDateTime(payload.order_date) : undefined) : undefined,
+          ref_no: has("ref_no") ? payload.ref_no || null : undefined,
+          parent_order_no: has("parent_order_no") ? payload.parent_order_no || null : undefined,
+          channel_id: has("channel_id") ? payload.channel_id ?? null : undefined,
+          customer_id: has("customer_id") ? payload.customer_id ?? null : undefined,
+          total_amount: has("total_amount") ? payload.total_amount : undefined,
+          status: has("status") ? payload.status : undefined,
+          is_historical: has("is_historical") ? payload.is_historical : undefined,
         },
       });
 
       if (
-        payload.order_date !== undefined ||
-        payload.is_historical !== undefined ||
-        payload.channel_id !== undefined ||
-        payload.ref_no !== undefined
+        has("order_date") ||
+        has("is_historical") ||
+        has("channel_id") ||
+        has("ref_no")
       ) {
         await syncSalesOrderMovements(tx, orderNo);
         await syncSalesOrderJournals(tx, orderNo);

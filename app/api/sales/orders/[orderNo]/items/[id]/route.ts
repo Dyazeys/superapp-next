@@ -5,7 +5,7 @@ import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { deleteSalesOrderItemJournal, syncSalesOrderItemJournal } from "@/lib/sales-journal";
 import { removeSalesOrderItemMovements, syncSalesOrderItemMovements } from "@/lib/warehouse-stock";
-import { salesOrderItemSchema } from "@/schemas/sales-module";
+import { salesOrderItemPatchSchema } from "@/schemas/sales-module";
 
 type Tx = Prisma.TransactionClient;
 
@@ -44,7 +44,9 @@ export async function PATCH(
 ) {
   try {
     const { orderNo, id } = await params;
-    const payload = salesOrderItemSchema.partial().parse(await request.json());
+    const rawPayload = await request.json();
+    const payload = salesOrderItemPatchSchema.parse(rawPayload);
+    const has = (key: string) => Object.prototype.hasOwnProperty.call(rawPayload, key);
     const itemId = Number(id);
 
     const item = await prisma.$transaction(async (tx) => {
@@ -60,10 +62,10 @@ export async function PATCH(
       const updated = await tx.t_order_item.update({
         where: { id: itemId },
         data: {
-          sku: payload.sku,
-          qty: payload.qty,
-          unit_price: payload.unit_price,
-          discount_item: payload.discount_item,
+          sku: has("sku") ? payload.sku : undefined,
+          qty: has("qty") ? payload.qty : undefined,
+          unit_price: has("unit_price") ? payload.unit_price : undefined,
+          discount_item: has("discount_item") ? payload.discount_item : undefined,
         },
         include: {
           master_product: {

@@ -46,6 +46,34 @@ export const payoutSchema = z.object({
   }
 });
 
+export const payoutPatchSchema = z.object({
+  ref: z.string().max(100).optional().nullable(),
+  payout_date: dateInput.optional(),
+  qty_produk: z.coerce.number().int().min(1, "Quantity must be at least 1").optional(),
+  hpp: decimalInput.optional(),
+  total_price: decimalInput.optional(),
+  seller_discount: decimalInput.optional(),
+  fee_admin: decimalInput.optional(),
+  fee_service: decimalInput.optional(),
+  fee_order_process: decimalInput.optional(),
+  fee_program: decimalInput.optional(),
+  fee_transaction: decimalInput.optional(),
+  fee_affiliate: decimalInput.optional(),
+  shipping_cost: decimalInput.optional(),
+  omset: decimalInput.optional(),
+  payout_status: z.string().max(20).optional().nullable(),
+}).superRefine((value, context) => {
+  if (value.omset !== undefined && value.total_price !== undefined) {
+    if (Number(value.omset) > Number(value.total_price)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["omset"],
+        message: "Net payout cannot exceed gross amount",
+      });
+    }
+  }
+});
+
 export const payoutAdjustmentSchema = z.object({
   ref: z.string().max(100).optional().nullable(),
   marketplace: z.string().max(100).optional().nullable(),
@@ -67,5 +95,6 @@ export const payoutTransferSchema = z.object({
 });
 
 export type PayoutInput = z.infer<typeof payoutSchema>;
+export type PayoutPatchInput = z.infer<typeof payoutPatchSchema>;
 export type PayoutAdjustmentInput = z.infer<typeof payoutAdjustmentSchema>;
 export type PayoutTransferInput = z.infer<typeof payoutTransferSchema>;

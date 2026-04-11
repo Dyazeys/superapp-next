@@ -67,6 +67,21 @@ export const inboundItemSchema = z.object({
   }
 });
 
+export const inboundItemPatchSchema = z.object({
+  inbound_id: z.string().min(1, "Inbound is required").optional(),
+  inv_code: z.string().min(1, "Inventory code is required").max(100).optional(),
+  qty_received: z.coerce.number().int().min(0).optional(),
+  qty_passed_qc: z.coerce.number().int().min(0).optional(),
+  qty_rejected_qc: z.coerce.number().int().min(0).optional(),
+  unit_cost: z
+    .union([decimalInput, z.literal(""), z.null(), z.undefined()])
+    .transform((value) => {
+      if (value === null || value === undefined || value === "") return null;
+      return String(value);
+    })
+    .optional(),
+});
+
 export const adjustmentSchema = z.object({
   adjustment_date: dateInput,
   inv_code: z.string().min(1, "Inventory code is required").max(100),
@@ -80,4 +95,5 @@ export type VendorInput = z.infer<typeof vendorSchema>;
 export type PurchaseOrderInput = z.infer<typeof purchaseOrderSchema>;
 export type InboundDeliveryInput = z.infer<typeof inboundDeliverySchema>;
 export type InboundItemInput = z.infer<typeof inboundItemSchema>;
+export type InboundItemPatchInput = z.infer<typeof inboundItemPatchSchema>;
 export type AdjustmentInput = z.infer<typeof adjustmentSchema>;
