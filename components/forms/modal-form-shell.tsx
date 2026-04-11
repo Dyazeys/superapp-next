@@ -50,7 +50,7 @@ export function ModalFormShell({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 sm:max-w-[680px]">
+      <DialogContent className="gap-0 sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>

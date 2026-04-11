@@ -13,21 +13,27 @@
 }
 
 :root {
-  --font-sans: "Segoe UI Variable", Aptos, "Trebuchet MS", sans-serif;
+  --font-sans: "Aptos", "Segoe UI Variable", "Trebuchet MS", sans-serif;
   --font-geist-mono: "Cascadia Code", Consolas, monospace;
-  --background: #f5f6f8;
+  --background: #f4f7fb;
   --foreground: #0f172a;
   --card: #ffffff;
   --card-foreground: #0f172a;
-  --border: #e2e8f0;
+  --border: #dbe3ef;
   --input: #f8fafc;
-  --muted: #94a3b8;
-  --primary: #0f172a;
-  --stroke: #d1d5db;
+  --muted: #64748b;
+  --primary: #1e293b;
+  --stroke: #d0d9e6;
   --sidebar: #ffffff;
-  --sidebar-border: #e5e7eb;
+  --sidebar-border: #dde4ee;
   --sidebar-foreground: #1f2937;
-  --radius: 1rem;
+  --ring: #8aa2c9;
+  --secondary: #eaf0f8;
+  --secondary-foreground: #1e293b;
+  --accent: #edf3fb;
+  --accent-foreground: #1e293b;
+  --primary-foreground: #ffffff;
+  --radius: 1.125rem;
 }
 
 .dark {
@@ -45,7 +51,10 @@
   }
   body {
     @apply min-h-screen bg-background text-foreground;
-    background: var(--background);
+    background:
+      radial-gradient(circle at 15% -10%, rgba(148, 163, 184, 0.15), transparent 35%),
+      radial-gradient(circle at 85% -20%, rgba(30, 58, 138, 0.08), transparent 36%),
+      var(--background);
   }
   html {
     @apply font-sans;

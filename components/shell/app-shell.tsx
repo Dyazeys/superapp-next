@@ -1,11 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { IconRail } from "@/components/shell/icon-rail";
 import { ModuleSidebar } from "@/components/shell/module-sidebar";
 import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
-import { PanelLeftOpen } from "lucide-react";
+import { Bell, CalendarDays, Mail, PanelLeftOpen } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -13,6 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [activeTop, setActiveTop] = useState(TOP_NAV_ITEMS[0].id);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
+  const activeTopItem = TOP_NAV_ITEMS.find((item) => item.id === activeTop) ?? TOP_NAV_ITEMS[0];
 
   const sidebarModules = activeTop === "erp" ? ERP_MODULE_ITEMS : [];
 
@@ -22,7 +25,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const childMatch = navMatch?.children?.find(
     (child) => pathname === child.href || pathname.startsWith(`${child.href}/`)
   );
-  const pageTitle = childMatch?.label ?? navMatch?.label ?? "Workspace";
+  const pageTitle = childMatch?.label ?? navMatch?.label ?? activeTopItem.label;
+  const headerModuleTitle = navMatch?.label ?? activeTopItem.label;
 
   const pageContext = (() => {
     const contexts: Record<string, string> = {
@@ -60,8 +64,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/master-data/import": "Upload CSV untuk import master data secara terkontrol dengan validasi kolom dan ringkasan hasil.",
     };
 
-    return contexts[pathname] ?? contexts[navMatch?.href ?? ""] ?? "Ruang kerja ERP untuk operasional harian.";
+    return (
+      contexts[pathname] ??
+      contexts[navMatch?.href ?? ""] ??
+      `Ruang kerja ${activeTopItem.label} untuk operasional harian.`
+    );
   })();
+  const todayLabel = new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date());
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
@@ -76,43 +89,92 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen min-w-0 flex-1 overflow-hidden">
         <div
           className={cn(
-            "h-screen shrink-0 border-r border-slate-200 transition-[width] duration-200",
-            sidebarCollapsed ? "w-0" : "w-[280px]"
+            "h-screen shrink-0 transition-[width] duration-200",
+            sidebarCollapsed ? "w-[84px]" : "w-[280px]"
           )}
         >
-          {!sidebarCollapsed && (
+          {sidebarCollapsed ? (
+            <aside className="flex h-screen flex-col bg-slate-50/60 p-3">
+              <div className="flex-1 space-y-2 overflow-y-auto rounded-2xl bg-white p-2 shadow-sm">
+                <Button
+                  variant="outline"
+                  size="icon-sm"
+                  onClick={() => setSidebarCollapsed(false)}
+                  aria-label="Show modules"
+                  className="h-11 w-full rounded-xl"
+                >
+                  <PanelLeftOpen className="size-5" />
+                </Button>
+                {sidebarModules.map((module) => {
+                  const active =
+                    pathname === module.href || pathname.startsWith(`${module.href}/`);
+                  const Icon = module.icon;
+
+                  return (
+                    <Link
+                      key={module.href}
+                      href={module.href}
+                      title={module.label}
+                      aria-label={module.label}
+                      className={cn(
+                        "flex h-11 items-center justify-center rounded-xl transition-all duration-200",
+                        active
+                          ? "bg-slate-900 text-white shadow-sm shadow-slate-900/20"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                      )}
+                    >
+                      <Icon className="size-5" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </aside>
+          ) : (
             <ModuleSidebar
               collapsed={sidebarCollapsed}
               modules={sidebarModules}
+              moduleTitle={activeTopItem.label}
               onToggle={() => setSidebarCollapsed(true)}
             />
           )}
         </div>
 
-        <div className="flex h-screen min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 border-b border-border/70 bg-background px-4 py-4 sm:px-6 lg:px-8">
-            <div className="mx-auto flex w-full max-w-[1600px] items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
-                  {activeTop.toUpperCase()}
-                  {navMatch ? ` / ${navMatch.label}` : ""}
-                  {childMatch ? ` / ${childMatch.label}` : ""}
-                </p>
-                <h1 className="mt-1 truncate text-2xl font-semibold tracking-tight">{pageTitle}</h1>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{pageContext}</p>
+        <div className="flex h-screen min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.03)_0%,rgba(255,255,255,0)_52%)]">
+          <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-background/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
+            <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex min-h-9 flex-1 items-center gap-3">
+                  <h2 className="truncate text-lg font-semibold text-slate-900">{headerModuleTitle}</h2>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm">
+                    <CalendarDays className="size-3.5 text-slate-500" />
+                    {todayLabel}
+                  </div>
+                  <Button variant="outline" size="icon-sm" aria-label="Mail">
+                    <Mail className="size-4" />
+                  </Button>
+                  <Button variant="outline" size="icon-sm" aria-label="Notifications">
+                    <Bell className="size-4" />
+                  </Button>
+                  <Avatar size="lg">
+                    <AvatarFallback>OP</AvatarFallback>
+                  </Avatar>
+                </div>
               </div>
 
-              {sidebarCollapsed ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSidebarCollapsed(false)}
-                  aria-label="Show modules"
-                >
-                  <PanelLeftOpen className="size-4" />
-                  Tampilkan menu
-                </Button>
-              ) : null}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.22em] text-muted-foreground">
+                  {activeTopItem.label.toUpperCase()}
+                  {navMatch ? ` / ${navMatch.label}` : ""}
+                  {childMatch ? ` / ${childMatch.label}` : ""}
+                  </p>
+                  <h1 className="mt-1 truncate text-2xl font-semibold tracking-tight">{pageTitle}</h1>
+                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{pageContext}</p>
+                </div>
+              </div>
             </div>
           </header>
 

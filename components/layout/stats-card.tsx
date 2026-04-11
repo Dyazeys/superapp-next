@@ -11,17 +11,17 @@ type StatsCardProps = {
 
 export function StatsCard({ title, value, trend, icon }: StatsCardProps) {
   return (
-    <Card className="border-slate-200 bg-card/90">
+    <Card className="border-slate-200/80 bg-white/95">
       <CardContent className="flex items-start justify-between gap-4 p-5">
         <div>
           <p className="text-sm text-slate-500">{title}</p>
-          <p className="mt-3 text-3xl font-bold tracking-tight">{value}</p>
-          <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-accent/30 px-3 py-1 text-xs font-medium text-accent-foreground">
+          <p className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{value}</p>
+          <div className="mt-3 inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
             <ArrowUpRight className="size-3" />
             {trend}
           </div>
         </div>
-        <div className="rounded-2xl bg-primary/10 p-3 text-primary">{icon}</div>
+        <div className="rounded-2xl border border-slate-200/80 bg-slate-50 p-3 text-slate-700">{icon}</div>
       </CardContent>
     </Card>
   );
@@ -37,14 +37,14 @@ type MetricCardProps = {
 
 export function MetricCard({ title, value, subtitle, icon, className }: MetricCardProps) {
   return (
-    <Card size="sm" className={cn("border-l-4 border-l-slate-300 bg-card/90", className)}>
+    <Card size="sm" className={cn("bg-white/95", className)}>
       <CardContent className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-500">{title}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{title}</p>
           <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{value}</p>
-          {subtitle ? <p className="mt-1 text-xs leading-5 text-slate-500">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-1 text-xs leading-5 text-slate-600">{subtitle}</p> : null}
         </div>
-        {icon ? <div className="rounded-xl bg-muted/50 p-2 text-foreground/80">{icon}</div> : null}
+        {icon ? <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-2 text-foreground/80">{icon}</div> : null}
       </CardContent>
     </Card>
   );

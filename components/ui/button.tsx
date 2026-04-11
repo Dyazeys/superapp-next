@@ -11,11 +11,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "border-slate-900 bg-slate-900 text-white shadow-sm shadow-slate-900/20 hover:bg-slate-800 hover:shadow-md hover:shadow-slate-900/20",
+          "border-slate-900 bg-slate-900 text-white shadow-sm shadow-slate-900/20 hover:bg-slate-800 hover:shadow-md hover:shadow-slate-900/25",
         outline:
-          "border-slate-300 bg-background text-slate-700 shadow-sm shadow-slate-900/5 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 aria-expanded:bg-slate-50 aria-expanded:text-slate-900 dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border-slate-300 bg-white text-slate-700 shadow-sm shadow-slate-900/5 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 aria-expanded:bg-slate-50 aria-expanded:text-slate-900 dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "border border-slate-300 bg-background text-slate-700 shadow-sm shadow-slate-900/5 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 aria-expanded:bg-slate-50 aria-expanded:text-slate-900",
+          "border border-slate-300 bg-white text-slate-700 shadow-sm shadow-slate-900/5 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 aria-expanded:bg-slate-50 aria-expanded:text-slate-900",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:

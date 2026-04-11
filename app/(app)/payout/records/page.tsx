@@ -11,6 +11,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import { formatMoney, formatShortDate } from "@/lib/format";
 import {
   payoutStatusTone,
@@ -140,13 +141,13 @@ export default function PayoutRecordsPage() {
         </div>
 
         <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div className="space-y-1.5">
+          <div className="w-full space-y-1.5 md:max-w-[620px]">
             <label htmlFor="payout-record-selection" className="text-xs font-medium tracking-[0.02em] text-foreground/80">
               Selected payout
             </label>
-            <select
+            <SelectNative
               id="payout-record-selection"
-              className="min-w-[360px] rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm shadow-slate-900/5"
+              className="w-full"
               value={selectedPayoutId ?? currentPayoutId ?? ""}
               onChange={(event) => setSelectedPayoutId(event.target.value ? Number(event.target.value) : null)}
             >
@@ -155,7 +156,7 @@ export default function PayoutRecordsPage() {
                   {formatShortDate(payout.payout_date)} / {payout.ref ?? "No ref"} / {payout.payout_status ?? "Unknown"}
                 </option>
               ))}
-            </select>
+            </SelectNative>
             <p className="text-xs leading-5 text-muted-foreground">
               {selectedPayout
                 ? `${selectedPayout.t_order?.order_no ?? "No order"} / gross ${formatMoney(Number(selectedPayout.total_price))} / net ${formatMoney(Number(selectedPayout.omset))}`

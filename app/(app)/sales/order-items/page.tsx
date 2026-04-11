@@ -10,6 +10,7 @@ import { PageShell } from "@/components/foundation/page-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import {
   createEmptySalesItemDraft,
   useSalesOrderItems,
@@ -222,13 +223,13 @@ export default function SalesOrderItemsPage() {
         </div>
 
         <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div className="space-y-1.5">
+          <div className="w-full space-y-1.5 md:max-w-[520px]">
             <label htmlFor="sales-order-selection" className="text-xs font-medium tracking-[0.02em] text-foreground/80">
               Selected order
             </label>
-            <select
+            <SelectNative
               id="sales-order-selection"
-              className="min-w-[320px] rounded-2xl border border-input bg-background px-3 py-2 text-sm shadow-sm shadow-slate-900/5"
+              className="w-full"
               value={selectedOrderNo ?? currentOrderNo ?? ""}
               disabled={ordersQuery.isLoading}
               onChange={(event) => setSelectedOrderNo(event.target.value || null)}
@@ -238,7 +239,7 @@ export default function SalesOrderItemsPage() {
                   {order.order_no} - {order.status}
                 </option>
               ))}
-            </select>
+            </SelectNative>
 
           </div>
           {currentOrderNo ? (

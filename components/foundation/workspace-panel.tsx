@@ -8,12 +8,12 @@ type WorkspacePanelProps = {
 
 export function WorkspacePanel({ title, description, children }: WorkspacePanelProps) {
   return (
-    <Card className="bg-card/90">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description ? <CardDescription>{description}</CardDescription> : null}
+    <Card className="bg-white/90">
+      <CardHeader className="border-b border-slate-200/80 pb-4">
+        <CardTitle className="text-slate-900">{title}</CardTitle>
+        {description ? <CardDescription className="text-slate-600">{description}</CardDescription> : null}
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="pt-4">{children}</CardContent>
     </Card>
   );
 }
