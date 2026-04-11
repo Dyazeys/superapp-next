@@ -1,0 +1,12 @@
+node_modules
+.next
+.next-build
+.next-prod
+backups
+docs/reports
+*.log
+.git
+.gitignore
+.env
+.env.*
+!.env.example
