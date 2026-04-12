@@ -7,6 +7,9 @@ import { MetricCard } from "@/components/layout/stats-card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getDashboardOverview } from "@/lib/dashboard";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function formatCompactIdr(value: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",

@@ -1,19 +1,26 @@
 import "server-only";
 import { z } from "zod";
 
+const nodeEnv = z.enum(["development", "test", "production"]).default("development").parse(process.env.NODE_ENV);
+const isProduction = nodeEnv === "production";
+
+const localDbDefault = "postgresql://superapp:superapp@127.0.0.1:5432/superapp";
+
 const serverEnvSchema = z.object({
-  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
-  DATABASE_URL: z.string().min(1).default("postgresql://superapp:superapp@127.0.0.1:5432/superapp"),
-  PRISMA_DATABASE_URL: z.string().min(1).default("postgresql://superapp:superapp@127.0.0.1:5432/superapp"),
+  NODE_ENV: z.enum(["development", "test", "production"]),
+  DATABASE_URL: isProduction ? z.string().min(1) : z.string().min(1).default(localDbDefault),
+  PRISMA_DATABASE_URL: isProduction ? z.string().min(1) : z.string().min(1).default(localDbDefault),
   PRISMA_INTROSPECT_SCHEMAS: z.string().min(1).default("auth,channel,product,warehouse,sales,payout,accounting"),
-  NEXTAUTH_URL: z.string().url().default("http://localhost:3000"),
-  NEXTAUTH_SECRET: z.string().min(16).default("replace-with-a-long-random-secret"),
-  DEMO_ADMIN_EMAIL: z.string().email().default("admin@superapp-next.local"),
-  DEMO_ADMIN_PASSWORD: z.string().min(8).default("ChangeMe123!"),
+  NEXTAUTH_URL: isProduction ? z.string().url() : z.string().url().default("http://localhost:3000"),
+  NEXTAUTH_SECRET: isProduction
+    ? z.string().min(32)
+    : z.string().min(16).default("replace-with-a-long-random-secret"),
+  DEMO_ADMIN_EMAIL: isProduction ? z.string().email() : z.string().email().default("ops-auth@superapp.internal"),
+  DEMO_ADMIN_PASSWORD: isProduction ? z.string().min(16) : z.string().min(16).default("DevOnly-Replace-Me-123!"),
 });
 
-export const env = serverEnvSchema.parse({
-  NODE_ENV: process.env.NODE_ENV,
+const parsedEnv = serverEnvSchema.parse({
+  NODE_ENV: nodeEnv,
   DATABASE_URL: process.env.DATABASE_URL,
   PRISMA_DATABASE_URL: process.env.PRISMA_DATABASE_URL,
   PRISMA_INTROSPECT_SCHEMAS: process.env.PRISMA_INTROSPECT_SCHEMAS,
@@ -22,3 +29,15 @@ export const env = serverEnvSchema.parse({
   DEMO_ADMIN_EMAIL: process.env.DEMO_ADMIN_EMAIL,
   DEMO_ADMIN_PASSWORD: process.env.DEMO_ADMIN_PASSWORD,
 });
+
+if (isProduction) {
+  if (parsedEnv.DEMO_ADMIN_PASSWORD === "ChangeMe123!") {
+    throw new Error("DEMO_ADMIN_PASSWORD must be rotated in production.");
+  }
+
+  if (parsedEnv.DEMO_ADMIN_EMAIL === "admin@superapp-next.local") {
+    throw new Error("DEMO_ADMIN_EMAIL default value is not allowed in production.");
+  }
+}
+
+export const env = parsedEnv;
