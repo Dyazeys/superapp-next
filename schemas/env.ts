@@ -18,7 +18,7 @@ const serverEnvSchema = z.object({
     ? z.string().min(32)
     : z.string().min(16).default("replace-with-a-long-random-secret"),
   DEMO_ADMIN_EMAIL: enforceRequiredProdEnv ? z.string().email() : z.string().email().default("ops-auth@superapp.internal"),
-  DEMO_ADMIN_PASSWORD: enforceRequiredProdEnv ? z.string().min(16) : z.string().min(16).default("DevOnly-Replace-Me-123!"),
+  DEMO_ADMIN_PASSWORD: enforceRequiredProdEnv ? z.string().min(16) : z.string().min(8).default("DevOnly-Replace-Me-123!"),
 });
 
 const parsedEnv = serverEnvSchema.parse({

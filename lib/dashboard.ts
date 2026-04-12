@@ -85,121 +85,16 @@ function getDayRange(offset: number, now: Date) {
   return { start, end };
 }
 
-export async function getDashboardOverview(): Promise<DashboardOverview> {
-  const now = new Date();
-  const weekStart = new Date(now.getTime() - 6 * ONE_DAY_MS);
-  weekStart.setHours(0, 0, 0, 0);
-
-  const monthStart = new Date(now.getTime() - 29 * ONE_DAY_MS);
-  monthStart.setHours(0, 0, 0, 0);
-
-  const [
-    totalOrders,
-    weekOrders,
-    activeSku,
-    activeCustomers,
-    revenueAggregate,
-    weekOrderRows,
-    recentOrders,
-    recentStockMovements,
-    payoutCount,
-    journalCount,
-  ] = await Promise.all([
-    prisma.t_order.count(),
-    prisma.t_order.count({ where: { order_date: { gte: weekStart } } }),
-    prisma.master_product.count({ where: { is_active: true } }),
-    prisma.master_customer.count({ where: { is_active: true } }),
-    prisma.t_order.aggregate({
-      _sum: {
-        total_amount: true,
-      },
-      where: {
-        order_date: {
-          gte: monthStart,
-        },
-      },
-    }),
-    prisma.t_order.findMany({
-      where: {
-        order_date: {
-          gte: weekStart,
-        },
-      },
-      select: {
-        order_date: true,
-        total_amount: true,
-      },
-    }),
-    prisma.t_order.findMany({
-      take: 3,
-      orderBy: [{ updated_at: "desc" }, { order_no: "desc" }],
-      select: {
-        order_no: true,
-        status: true,
-        total_amount: true,
-        updated_at: true,
-      },
-    }),
-    prisma.stock_movements.findMany({
-      take: 2,
-      orderBy: [{ movement_date: "desc" }, { id: "desc" }],
-      select: {
-        id: true,
-        inv_code: true,
-        reference_type: true,
-        qty_change: true,
-        movement_date: true,
-      },
-    }),
-    prisma.t_payout.count(),
-    prisma.journal_entries.count(),
-  ]);
-
-  const revenueByDay = new Map<string, number>();
-  for (const row of weekOrderRows) {
-    const key = row.order_date.toISOString().slice(0, 10);
-    revenueByDay.set(key, (revenueByDay.get(key) ?? 0) + toNumber(row.total_amount));
-  }
-
+function buildEmptyOverview(now: Date): DashboardOverview {
   const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short" });
   const revenueSeries: DashboardRevenuePoint[] = Array.from({ length: 7 }, (_, index) => {
     const offset = 6 - index;
     const { start } = getDayRange(offset, now);
-    const dayKey = start.toISOString().slice(0, 10);
-
     return {
       name: dayFormatter.format(start),
-      revenue: revenueByDay.get(dayKey) ?? 0,
+      revenue: 0,
     };
   });
-
-  const orderActivities: DashboardActivity[] = recentOrders.map((order) => ({
-    id: `order-${order.order_no}`,
-    title: `Sales order ${order.order_no} updated`,
-    description: `Status ${order.status} with total ${toNumber(order.total_amount).toLocaleString("en-US")}.`,
-    timestamp: formatRelativeTime(order.updated_at, now),
-    at: order.updated_at,
-  }));
-
-  const stockActivities: DashboardActivity[] = recentStockMovements.map((movement) => ({
-    id: `stock-${movement.id}`,
-    title: `Stock movement ${movement.reference_type}`,
-    description: `${movement.inv_code} changed ${movement.qty_change >= 0 ? "+" : ""}${movement.qty_change}.`,
-    timestamp: formatRelativeTime(movement.movement_date, now),
-    at: movement.movement_date,
-  }));
-
-  const recentActivities = [...orderActivities, ...stockActivities]
-    .sort((a, b) => b.at.getTime() - a.at.getTime())
-    .slice(0, 5);
-
-  const readiness: DashboardReadinessItem[] = [
-    { label: "Sales orders ingested", state: totalOrders > 0 ? "done" : "next" },
-    { label: "Product master active", state: activeSku > 0 ? "done" : "next" },
-    { label: "Customer master active", state: activeCustomers > 0 ? "done" : "next" },
-    { label: "Payout records available", state: payoutCount > 0 ? "done" : "next" },
-    { label: "Accounting journals posted", state: journalCount > 0 ? "done" : "next" },
-  ];
 
   const lastUpdatedLabel = new Intl.DateTimeFormat("id-ID", {
     day: "2-digit",
@@ -213,15 +108,167 @@ export async function getDashboardOverview(): Promise<DashboardOverview> {
 
   return {
     metrics: {
-      totalOrders,
-      totalRevenue: toNumber(revenueAggregate._sum.total_amount),
-      activeSku,
-      activeCustomers,
-      weekOrders,
+      totalOrders: 0,
+      totalRevenue: 0,
+      activeSku: 0,
+      activeCustomers: 0,
+      weekOrders: 0,
     },
     revenueSeries,
-    recentActivities,
-    readiness,
+    recentActivities: [],
+    readiness: [
+      { label: "Sales orders ingested", state: "next" },
+      { label: "Product master active", state: "next" },
+      { label: "Customer master active", state: "next" },
+      { label: "Payout records available", state: "next" },
+      { label: "Accounting journals posted", state: "next" },
+    ],
     lastUpdatedLabel,
   };
+}
+
+export async function getDashboardOverview(): Promise<DashboardOverview> {
+  const now = new Date();
+  const weekStart = new Date(now.getTime() - 6 * ONE_DAY_MS);
+  weekStart.setHours(0, 0, 0, 0);
+
+  const monthStart = new Date(now.getTime() - 29 * ONE_DAY_MS);
+  monthStart.setHours(0, 0, 0, 0);
+
+  try {
+    const [
+      totalOrders,
+      weekOrders,
+      activeSku,
+      activeCustomers,
+      revenueAggregate,
+      weekOrderRows,
+      recentOrders,
+      recentStockMovements,
+      payoutCount,
+      journalCount,
+    ] = await Promise.all([
+      prisma.t_order.count(),
+      prisma.t_order.count({ where: { order_date: { gte: weekStart } } }),
+      prisma.master_product.count({ where: { is_active: true } }),
+      prisma.master_customer.count({ where: { is_active: true } }),
+      prisma.t_order.aggregate({
+        _sum: {
+          total_amount: true,
+        },
+        where: {
+          order_date: {
+            gte: monthStart,
+          },
+        },
+      }),
+      prisma.t_order.findMany({
+        where: {
+          order_date: {
+            gte: weekStart,
+          },
+        },
+        select: {
+          order_date: true,
+          total_amount: true,
+        },
+      }),
+      prisma.t_order.findMany({
+        take: 3,
+        orderBy: [{ updated_at: "desc" }, { order_no: "desc" }],
+        select: {
+          order_no: true,
+          status: true,
+          total_amount: true,
+          updated_at: true,
+        },
+      }),
+      prisma.stock_movements.findMany({
+        take: 2,
+        orderBy: [{ movement_date: "desc" }, { id: "desc" }],
+        select: {
+          id: true,
+          inv_code: true,
+          reference_type: true,
+          qty_change: true,
+          movement_date: true,
+        },
+      }),
+      prisma.t_payout.count(),
+      prisma.journal_entries.count(),
+    ]);
+
+    const revenueByDay = new Map<string, number>();
+    for (const row of weekOrderRows) {
+      const key = row.order_date.toISOString().slice(0, 10);
+      revenueByDay.set(key, (revenueByDay.get(key) ?? 0) + toNumber(row.total_amount));
+    }
+
+    const dayFormatter = new Intl.DateTimeFormat("en-US", { weekday: "short" });
+    const revenueSeries: DashboardRevenuePoint[] = Array.from({ length: 7 }, (_, index) => {
+      const offset = 6 - index;
+      const { start } = getDayRange(offset, now);
+      const dayKey = start.toISOString().slice(0, 10);
+
+      return {
+        name: dayFormatter.format(start),
+        revenue: revenueByDay.get(dayKey) ?? 0,
+      };
+    });
+
+    const orderActivities: DashboardActivity[] = recentOrders.map((order) => ({
+      id: `order-${order.order_no}`,
+      title: `Sales order ${order.order_no} updated`,
+      description: `Status ${order.status} with total ${toNumber(order.total_amount).toLocaleString("en-US")}.`,
+      timestamp: formatRelativeTime(order.updated_at, now),
+      at: order.updated_at,
+    }));
+
+    const stockActivities: DashboardActivity[] = recentStockMovements.map((movement) => ({
+      id: `stock-${movement.id}`,
+      title: `Stock movement ${movement.reference_type}`,
+      description: `${movement.inv_code} changed ${movement.qty_change >= 0 ? "+" : ""}${movement.qty_change}.`,
+      timestamp: formatRelativeTime(movement.movement_date, now),
+      at: movement.movement_date,
+    }));
+
+    const recentActivities = [...orderActivities, ...stockActivities]
+      .sort((a, b) => b.at.getTime() - a.at.getTime())
+      .slice(0, 5);
+
+    const readiness: DashboardReadinessItem[] = [
+      { label: "Sales orders ingested", state: totalOrders > 0 ? "done" : "next" },
+      { label: "Product master active", state: activeSku > 0 ? "done" : "next" },
+      { label: "Customer master active", state: activeCustomers > 0 ? "done" : "next" },
+      { label: "Payout records available", state: payoutCount > 0 ? "done" : "next" },
+      { label: "Accounting journals posted", state: journalCount > 0 ? "done" : "next" },
+    ];
+
+    const lastUpdatedLabel = new Intl.DateTimeFormat("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+      timeZone: "Asia/Jakarta",
+    }).format(now);
+
+    return {
+      metrics: {
+        totalOrders,
+        totalRevenue: toNumber(revenueAggregate._sum.total_amount),
+        activeSku,
+        activeCustomers,
+        weekOrders,
+      },
+      revenueSeries,
+      recentActivities,
+      readiness,
+      lastUpdatedLabel,
+    };
+  } catch (error) {
+    console.error("Dashboard data fallback: unable to load database data.", error);
+    return buildEmptyOverview(now);
+  }
 }

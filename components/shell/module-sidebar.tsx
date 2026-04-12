@@ -74,23 +74,25 @@ export function ModuleSidebar({ collapsed, modules, moduleTitle, onToggle }: Mod
 
   return (
     <aside className="flex h-screen flex-col bg-slate-50/60">
-      <div className="flex items-center justify-between px-5 py-4">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.32em] text-slate-500">Navigasi</p>
-          <p className="text-lg font-semibold text-slate-900">{moduleTitle}</p>
+      <div className="m-3 flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
+        <div className="mb-2 flex items-center justify-between px-3 py-2">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.32em] text-slate-500">Navigasi</p>
+            <p className="text-lg font-semibold text-slate-900">{moduleTitle}</p>
+          </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-10 rounded-xl"
+            onClick={onToggle}
+            aria-label="Collapse modules"
+          >
+            <PanelLeftClose className="size-5" />
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          size="icon"
-          className="size-10 rounded-xl"
-          onClick={onToggle}
-          aria-label="Collapse modules"
-        >
-          <PanelLeftClose className="size-5" />
-        </Button>
-      </div>
-      <div className="m-3 flex-1 space-y-1 overflow-y-auto rounded-2xl bg-white p-2 shadow-sm">
-        {modules.map((item) => renderLink(item, pathname))}
+        <div className="flex-1 space-y-1 overflow-y-auto">
+          {modules.map((item) => renderLink(item, pathname))}
+        </div>
       </div>
     </aside>
   );

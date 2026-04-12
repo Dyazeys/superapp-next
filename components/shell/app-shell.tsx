@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { IconRail } from "@/components/shell/icon-rail";
 import { ModuleSidebar } from "@/components/shell/module-sidebar";
 import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
@@ -28,7 +27,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     (child) => pathname === child.href || pathname.startsWith(`${child.href}/`)
   );
   const pageTitle = childMatch?.label ?? navMatch?.label ?? activeTopItem.label;
-  const headerModuleTitle = navMatch?.label ?? activeTopItem.label;
 
   const pageContext = (() => {
     const contexts: Record<string, string> = {
@@ -87,14 +85,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
-      <IconRail
-        activeTop={activeTop}
-        onSelect={(top) => {
-          setActiveTop(top);
-          setSidebarCollapsed(false);
-        }}
-      />
-
       <div className="flex h-screen min-w-0 flex-1 overflow-hidden">
         <div
           className={cn(
@@ -151,12 +141,46 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="flex h-screen min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.03)_0%,rgba(255,255,255,0)_52%)]">
           <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-background/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
             <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex min-h-9 flex-1 items-center gap-3">
-                  <h2 className="truncate text-lg font-semibold text-slate-900">{headerModuleTitle}</h2>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-h-9 min-w-0 flex-1 items-center gap-3">
+                  <nav className="flex w-full max-w-[800px] items-center gap-3 rounded-2xl bg-slate-900 p-1.5 text-slate-300 shadow-sm">
+                    <span className="px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300/90">
+                      Super App Menu
+                    </span>
+                    <div className="flex flex-1 items-center justify-between gap-2">
+                      {TOP_NAV_ITEMS.map((item) => {
+                        const active = activeTop === item.id;
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            title={item.label}
+                            className={cn(
+                              "inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-all duration-200",
+                              active
+                                ? "bg-white text-slate-900 shadow-sm shadow-slate-900/30"
+                                : "bg-transparent text-slate-300 hover:bg-slate-700 hover:text-white",
+                              item.disabled && "cursor-not-allowed opacity-40"
+                            )}
+                            onClick={() => {
+                              if (!item.disabled) {
+                                setActiveTop(item.id);
+                                setSidebarCollapsed(false);
+                              }
+                            }}
+                            aria-label={item.label}
+                          >
+                            <item.icon className="size-4" />
+                            <span>{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </nav>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="ml-auto flex shrink-0 items-center gap-2">
                   <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm">
                     <CalendarDays className="size-3.5 text-slate-500" />
                     {todayLabel}

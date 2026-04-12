@@ -2,7 +2,6 @@ import {
   ChartBar,
   Landmark,
   LayoutGrid,
-  Megaphone,
   PanelLeft,
   Package2,
   Upload,
@@ -15,7 +14,7 @@ import {
 import type { ComponentPropsWithoutRef, ComponentType } from "react";
 
 export type TopNavItem = {
-  id: "erp" | "crm" | "staff" | "analytics" | "marketing";
+  id: "erp" | "analytics" | "crm" | "team";
   label: string;
   icon: ComponentType<ComponentPropsWithoutRef<"svg">>;
   disabled?: boolean;
@@ -30,11 +29,10 @@ export type ModuleNavItem = {
 };
 
 export const TOP_NAV_ITEMS: TopNavItem[] = [
-  { id: "erp", label: "ERP System", icon: LayoutGrid },
+  { id: "erp", label: "ERP", icon: LayoutGrid },
   { id: "analytics", label: "Analytic", icon: ChartBar, disabled: true },
-  { id: "staff", label: "Staff", icon: ShieldCheck, disabled: true },
   { id: "crm", label: "CRM", icon: Users, disabled: true },
-  { id: "marketing", label: "Marketing Data", icon: Megaphone, disabled: true },
+  { id: "team", label: "Team", icon: ShieldCheck, disabled: true },
 ];
 
 export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
