@@ -3,20 +3,22 @@ import { z } from "zod";
 
 const nodeEnv = z.enum(["development", "test", "production"]).default("development").parse(process.env.NODE_ENV);
 const isProduction = nodeEnv === "production";
+const isProductionBuild = process.env.NEXT_PHASE === "phase-production-build";
+const enforceRequiredProdEnv = isProduction && !isProductionBuild;
 
 const localDbDefault = "postgresql://superapp:superapp@127.0.0.1:5432/superapp";
 
 const serverEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
-  DATABASE_URL: isProduction ? z.string().min(1) : z.string().min(1).default(localDbDefault),
-  PRISMA_DATABASE_URL: isProduction ? z.string().min(1) : z.string().min(1).default(localDbDefault),
+  DATABASE_URL: enforceRequiredProdEnv ? z.string().min(1) : z.string().min(1).default(localDbDefault),
+  PRISMA_DATABASE_URL: enforceRequiredProdEnv ? z.string().min(1) : z.string().min(1).default(localDbDefault),
   PRISMA_INTROSPECT_SCHEMAS: z.string().min(1).default("auth,channel,product,warehouse,sales,payout,accounting"),
-  NEXTAUTH_URL: isProduction ? z.string().url() : z.string().url().default("http://localhost:3000"),
-  NEXTAUTH_SECRET: isProduction
+  NEXTAUTH_URL: enforceRequiredProdEnv ? z.string().url() : z.string().url().default("http://localhost:3000"),
+  NEXTAUTH_SECRET: enforceRequiredProdEnv
     ? z.string().min(32)
     : z.string().min(16).default("replace-with-a-long-random-secret"),
-  DEMO_ADMIN_EMAIL: isProduction ? z.string().email() : z.string().email().default("ops-auth@superapp.internal"),
-  DEMO_ADMIN_PASSWORD: isProduction ? z.string().min(16) : z.string().min(16).default("DevOnly-Replace-Me-123!"),
+  DEMO_ADMIN_EMAIL: enforceRequiredProdEnv ? z.string().email() : z.string().email().default("ops-auth@superapp.internal"),
+  DEMO_ADMIN_PASSWORD: enforceRequiredProdEnv ? z.string().min(16) : z.string().min(16).default("DevOnly-Replace-Me-123!"),
 });
 
 const parsedEnv = serverEnvSchema.parse({
