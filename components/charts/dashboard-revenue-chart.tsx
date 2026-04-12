@@ -1,14 +1,18 @@
 "use client";
 
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { REVENUE_SERIES } from "@/lib/constants";
+import type { DashboardRevenuePoint } from "@/lib/dashboard";
 import { formatCompactCurrency } from "@/lib/format";
 
-export function DashboardRevenueChart() {
+type DashboardRevenueChartProps = {
+  series: DashboardRevenuePoint[];
+};
+
+export function DashboardRevenueChart({ series }: DashboardRevenueChartProps) {
   return (
     <div className="h-[320px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={REVENUE_SERIES} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+        <AreaChart data={series} margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
           <defs>
             <linearGradient id="erpRevenue" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="var(--color-chart-2)" stopOpacity={0.5} />

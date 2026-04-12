@@ -10,11 +10,13 @@ import { cn } from "@/lib/utils";
 import { Bell, CalendarDays, Mail, PanelLeftOpen } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { signOut, useSession } from "next-auth/react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [activeTop, setActiveTop] = useState(TOP_NAV_ITEMS[0].id);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
+  const { data: session } = useSession();
   const activeTopItem = TOP_NAV_ITEMS.find((item) => item.id === activeTop) ?? TOP_NAV_ITEMS[0];
 
   const sidebarModules = activeTop === "erp" ? ERP_MODULE_ITEMS : [];
@@ -75,6 +77,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     month: "short",
     year: "numeric",
   }).format(new Date());
+  const userName = session?.user?.name?.trim() || "Operator";
+  const userInitials = userName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("");
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
@@ -158,8 +167,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Button variant="outline" size="icon-sm" aria-label="Notifications">
                     <Bell className="size-4" />
                   </Button>
+                  <Button variant="outline" size="sm" onClick={() => signOut({ callbackUrl: "/login" })}>
+                    Sign out
+                  </Button>
                   <Avatar size="lg">
-                    <AvatarFallback>OP</AvatarFallback>
+                    <AvatarFallback>{userInitials || "OP"}</AvatarFallback>
                   </Avatar>
                 </div>
               </div>
