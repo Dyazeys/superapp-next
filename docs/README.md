@@ -9,6 +9,7 @@ Index ini membantu tim cari dokumen operasional tanpa buka satu per satu.
 - `docs/local-setup.md`
 - `docs/mac-setup-checklist.md`
 - `docs/auth-local-troubleshooting.md`
+- `docs/AGENT-ONBOARDING.md`
 - `docs/credential-registry.md`
 
 ## 2) Data & Import
