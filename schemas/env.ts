@@ -33,11 +33,14 @@ const parsedEnv = serverEnvSchema.parse({
 });
 
 if (isProduction) {
-  if (parsedEnv.DEMO_ADMIN_PASSWORD === "ChangeMe123!") {
+  const blockedDemoPasswords = new Set(["ChangeMe123!", "DevOnly-Replace-Me-123!"]);
+  const blockedDemoEmails = new Set(["admin@superapp-next.local", "ops-auth@superapp.internal"]);
+
+  if (blockedDemoPasswords.has(parsedEnv.DEMO_ADMIN_PASSWORD)) {
     throw new Error("DEMO_ADMIN_PASSWORD must be rotated in production.");
   }
 
-  if (parsedEnv.DEMO_ADMIN_EMAIL === "admin@superapp-next.local") {
+  if (blockedDemoEmails.has(parsedEnv.DEMO_ADMIN_EMAIL)) {
     throw new Error("DEMO_ADMIN_EMAIL default value is not allowed in production.");
   }
 }
