@@ -1,4 +1,5 @@
 import {
+  Bot,
   ChartBar,
   Landmark,
   LayoutGrid,
@@ -14,7 +15,7 @@ import {
 import type { ComponentPropsWithoutRef, ComponentType } from "react";
 
 export type TopNavItem = {
-  id: "erp" | "analytics" | "crm" | "team";
+  id: "erp" | "analytics" | "crm" | "team" | "assistant";
   label: string;
   icon: ComponentType<ComponentPropsWithoutRef<"svg">>;
   disabled?: boolean;
@@ -33,6 +34,7 @@ export const TOP_NAV_ITEMS: TopNavItem[] = [
   { id: "analytics", label: "Analytic", icon: ChartBar, disabled: true },
   { id: "crm", label: "CRM", icon: Users, disabled: true },
   { id: "team", label: "Team", icon: ShieldCheck, disabled: true },
+  { id: "assistant", label: "AI Assistant", icon: Bot, disabled: true },
 ];
 
 export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
