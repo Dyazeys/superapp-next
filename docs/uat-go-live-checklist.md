@@ -1,8 +1,20 @@
 # UAT & Go-Live Checklist (SuperApp Next ERP)
 
-Tanggal: `2026-04-11`  
+Tanggal update: `2026-04-13`  
 Environment: `Local UAT (localhost + DB tunnel 55432)`  
 PIC: `Codex + Tim Operasional`
+
+Dokumen terkait:
+- `docs/credential-registry.md`
+- `docs/monitoring-minimum.md`
+- `docs/rollback-sop.md`
+- `docs/known-issues.md`
+
+## Ringkasan Status
+
+- Section PASS: `2` (`Backup & Recovery`, `Monitoring & Logs`)
+- Section PARTIAL: `5`
+- Section PENDING: `1` (`UAT Sign-off`)
 
 ## 1) Environment & Access
 
@@ -11,6 +23,10 @@ PIC: `Codex + Tim Operasional`
 - [x] DB tunnel aktif (`ssh` process berjalan untuk `127.0.0.1:55432`).
 - [ ] Testing sudah dipastikan di `staging/UAT` terpisah production.
 - [ ] Akun test role terbatas sudah dibuat (bukan superadmin harian).
+
+Kredensial login:
+- Disimpan di password manager tim (jangan tulis plaintext di dokumen repo).
+- Referensi item credential ada di `docs/credential-registry.md` bagian `Auth & App Secrets`.
 
 Status: **PARTIAL**  
 Catatan: koneksi teknis valid, namun pemisahan environment dan role user perlu konfirmasi manual.
@@ -23,7 +39,7 @@ Catatan: koneksi teknis valid, namun pemisahan environment dan role user perlu k
 - [x] SOP rollback disepakati jika terjadi issue kritikal.
 
 Status: **PASS**  
-Catatan: backup sukses via mode `ssh-fallback` ke file `backups/office-superapp-latest.sql`; restore drill sukses ke DB terpisah `superapp_restore_test_20260411` (sanity query: inventory=2, product=1, sales_order=4, payout=2). SOP rollback ada di `docs/rollback-sop.md`.
+Catatan: backup sukses via mode `ssh-fallback` ke file `backups/office-superapp-latest.sql`; restore drill sukses ke DB terpisah `superapp_restore_test_20260411` (sanity query: inventory=2, product=1, sales_order=4, payout=2).
 
 ## 3) Master Data Readiness
 
@@ -35,26 +51,23 @@ Catatan: backup sukses via mode `ssh-fallback` ke file `backups/office-superapp-
 - [ ] Tidak ada duplicate/null pada field wajib.
 
 Status: **PARTIAL**  
-Catatan: folder & template siap, menunggu file nyata dari user untuk proses import.
+Catatan: folder dan template siap, menunggu file nyata dari user untuk proses import.
 
 ## 4) End-to-End Smoke Test
 
 - [x] Build aplikasi sukses (`npm run build`).
 - [x] Lint aplikasi sukses (`npm run lint`).
-- [x] API utama produk berhasil 200:
-  - `/api/product/inventory`
-  - `/api/product/products`
-  - `/api/product/categories`
-- [x] API warehouse stock balance berhasil 200:
-  - `/api/warehouse/stock-balances`
-- [x] API accounting journals berhasil 200:
-  - `/api/accounting/journals`
+- [x] API utama produk berhasil `HTTP 200` (`/api/product/inventory`, `/api/product/products`, `/api/product/categories`).
+- [x] API warehouse stock balance berhasil `HTTP 200` (`/api/warehouse/stock-balances`).
+- [x] API accounting journals berhasil `HTTP 200` (`/api/accounting/journals`).
+- [x] API sales orders berhasil `HTTP 200` (`/api/sales/orders`).
+- [x] API payout records berhasil `HTTP 200` (`/api/payout/records`).
 - [x] Sales Order + Sales Order Items create/update/delete sudah dites end-to-end.
 - [x] Warehouse flow tulis data (inbound/adjustment) sudah dites end-to-end.
 - [x] Payout flow tulis data (records/adjustments/transfers) sudah dites end-to-end.
 
 Status: **PARTIAL**  
-Catatan: smoke read endpoint lulus, skenario write end-to-end otomatis lulus (create/update/delete + cleanup data uji), UAT transaksi nyata tetap wajib.
+Catatan: smoke teknis lulus, namun UAT transaksi nyata tetap wajib.
 
 ## 5) Financial & Stock Reconciliation
 
@@ -64,7 +77,7 @@ Catatan: smoke read endpoint lulus, skenario write end-to-end otomatis lulus (cr
 - [ ] Spot check minimal 10 transaksi nyata oleh user operasional.
 
 Status: **PARTIAL**  
-Catatan: validasi struktur jurnal lulus, rekonsiliasi bisnis end-to-end menunggu sample transaksi nyata.
+Catatan: validasi struktur jurnal lulus, rekonsiliasi bisnis menunggu sample transaksi nyata.
 
 ## 6) UX & Operational Safety
 
@@ -83,7 +96,7 @@ Status: **PARTIAL**
 - [x] Daftar known issue dibagikan ke semua PIC.
 
 Status: **PASS**  
-Catatan: monitoring minimum didokumentasikan di `docs/monitoring-minimum.md`, known issues ada di `docs/known-issues.md`, dan smoke automation tersedia via `npm run go-live:check`.
+Catatan: smoke automation tersedia via `npm run go-live:check`.
 
 ## 8) UAT Sign-off
 
