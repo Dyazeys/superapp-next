@@ -67,7 +67,7 @@ const MASTER_OPTIONS: Array<{
     key: "product",
     label: "Product",
     description: "Master produk/SKU.",
-    requiredColumns: ["sku", "sku_name", "product_name", "price_mp", "price_non_mp"],
+    requiredColumns: ["sku", "sku_name", "product_name"],
     optionalColumns: [
       "category_code",
       "color",
@@ -86,7 +86,7 @@ const MASTER_OPTIONS: Array<{
     key: "inventory",
     label: "Inventory",
     description: "Master inventory/bahan.",
-    requiredColumns: ["inv_code", "inv_name", "hpp"],
+    requiredColumns: ["inv_code", "inv_name", "unit_price"],
     optionalColumns: ["description", "is_active"],
   },
   {

@@ -1,0 +1,39 @@
+category_code,category_name,Parent
+1000,Helm,
+1100,Helm Slim,1000
+1200,Helm Seri Doja,1000
+1300,Helm Wanita,1000
+1400,Helm anak,1000
+1500,Helm decal,1000
+1600,Helm Seri RIMC x Pickers,1000
+1700,Helm Fullface,1000
+1800,Helm Basic Reguler,1000
+2000,Bag,
+2100,Newspaper Bag,2000
+2200,Sling Bag,2000
+2300,Backpack,2000
+2400,Side Bag,2000
+2500,Waist Bag,2000
+2600,Tote Bag,2000
+2700,Seri RIMC x RK13,2000
+3000,Accessories,
+3100,Visor,3000
+3200,Pet,3000
+3300,Busa,3000
+4000,Apparel,
+4100,Tshirt Long,4000
+4110,Tshirt,4000
+4120,Tshirt Oblong,4000
+4130,Tshirt Oversize,4000
+4200,Kids Tshirt Long,4000
+4210,Kids Tshirt,4000
+4220,Kidst Tshirt Oblong,4000
+4300,Workpants,4000
+4400,Flannel,4000
+4500,Glove,4000
+4600,Workshirt,4000
+4610,Workshirt Long,4000
+4620,Workshirt Zipper Collar,4000
+4700,Jacket,4000
+4800,Parfume,4000
+4900,Jersey,4000

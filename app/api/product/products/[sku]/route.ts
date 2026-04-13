@@ -51,8 +51,6 @@ export async function PATCH(
         inv_acc: payload.inv_acc === undefined ? undefined : payload.inv_acc || null,
         is_bundling: payload.is_bundling,
         is_active: payload.is_active,
-        price_mp: payload.price_mp,
-        price_non_mp: payload.price_non_mp,
         total_hpp: payload.total_hpp,
       },
     });

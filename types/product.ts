@@ -35,8 +35,6 @@ export type MasterProductRecord = {
   inv_acc: string | null;
   is_bundling: boolean;
   is_active: boolean;
-  price_mp: string;
-  price_non_mp: string;
   total_hpp: string;
   created_at: string;
   updated_at: string | null;

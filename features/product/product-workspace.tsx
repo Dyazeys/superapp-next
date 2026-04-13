@@ -112,8 +112,6 @@ export function ProductWorkspace() {
       inv_acc: null,
       is_bundling: false,
       is_active: true,
-      price_mp: "0",
-      price_non_mp: "0",
       total_hpp: "0",
     },
   });
@@ -260,8 +258,6 @@ export function ProductWorkspace() {
       inv_acc: product?.inv_acc ?? null,
       is_bundling: product?.is_bundling ?? false,
       is_active: product?.is_active ?? true,
-      price_mp: product?.price_mp ?? "0",
-      price_non_mp: product?.price_non_mp ?? "0",
       total_hpp: product?.total_hpp ?? "0",
     });
     productModal.openModal();
@@ -322,7 +318,6 @@ export function ProductWorkspace() {
       productColumnHelper.accessor("product_name", { header: "Product" }),
       productColumnHelper.accessor("category_code", { header: "Category", cell: (info) => info.row.original.category_product?.category_name ?? info.getValue() ?? "-" }),
       productColumnHelper.accessor("total_hpp", { header: "Total HPP" }),
-      productColumnHelper.accessor("price_mp", { header: "MP Price" }),
       productColumnHelper.display({ id: "bom", header: "BOM", cell: ({ row }) => <StatusBadge label={`${row.original._count?.product_bom ?? 0} rows`} tone="info" /> }),
       productColumnHelper.display({
         id: "actions",
@@ -448,7 +443,7 @@ export function ProductWorkspace() {
           </div>
         </WorkspacePanel>
 
-        <WorkspacePanel title="Master Products" description="Compact product list with pricing and BOM coverage.">
+        <WorkspacePanel title="Master Products" description="Compact product list with BOM coverage.">
           <div className="space-y-4">
             <div className="flex justify-end"><Button size="sm" onClick={() => openProductModal()}><Plus className="size-4" />Add product</Button></div>
             <DataTable columns={productColumns} data={productsQuery.data ?? []} emptyMessage="No master products found." />
@@ -517,9 +512,7 @@ export function ProductWorkspace() {
           <FormField label="Main inventory" htmlFor="inv_main"><Input id="inv_main" list="inventory-codes" {...productForm.register("inv_main")} /></FormField>
           <FormField label="Accessory inventory" htmlFor="inv_acc"><Input id="inv_acc" list="inventory-codes" {...productForm.register("inv_acc")} /></FormField>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <FormField label="Marketplace price" htmlFor="price_mp" error={productForm.formState.errors.price_mp?.message}><Input id="price_mp" {...productForm.register("price_mp")} /></FormField>
-          <FormField label="Non-MP price" htmlFor="price_non_mp" error={productForm.formState.errors.price_non_mp?.message}><Input id="price_non_mp" {...productForm.register("price_non_mp")} /></FormField>
+        <div className="grid gap-4 md:grid-cols-1">
           <FormField label="Total HPP" htmlFor="total_hpp"><Input id="total_hpp" {...productForm.register("total_hpp")} /></FormField>
         </div>
         <FormField label="Active" htmlFor="product_active"><Input id="product_active" list="boolean-values" value={String(productForm.watch("is_active"))} onChange={(e) => productForm.setValue("is_active", asBool(e.target.value))} /></FormField>

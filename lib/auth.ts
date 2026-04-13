@@ -2,6 +2,15 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { env } from "@/schemas/env";
 
+function buildPasswordCandidates(value: string) {
+  const trimmed = value.trim();
+  const noEscapedDollar = trimmed.replace(/\\\$/g, "$");
+  const withEscapedDollar = trimmed.replace(/\$/g, "\\$");
+  const beforeHash = trimmed.split("#")[0]?.trim() ?? trimmed;
+
+  return new Set([trimmed, noEscapedDollar, withEscapedDollar, beforeHash]);
+}
+
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
@@ -22,13 +31,20 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const inputEmail = credentials.email?.trim().toLowerCase() ?? "";
+        const inputPassword = credentials.password?.trim() ?? "";
+        const expectedEmail = env.DEMO_ADMIN_EMAIL.trim().toLowerCase();
+        const expectedPasswordCandidates = buildPasswordCandidates(env.DEMO_ADMIN_PASSWORD);
+        const passwordMatched = expectedPasswordCandidates.has(inputPassword);
+        const emailMatched = inputEmail === expectedEmail;
+
         if (
-          credentials.email === env.DEMO_ADMIN_EMAIL &&
-          credentials.password === env.DEMO_ADMIN_PASSWORD
+          emailMatched &&
+          passwordMatched
         ) {
           return {
             id: "demo-admin",
-            email: credentials.email,
+            email: inputEmail,
             name: "System Admin",
           };
         }

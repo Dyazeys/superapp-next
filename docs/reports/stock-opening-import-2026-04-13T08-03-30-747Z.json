@@ -1,0 +1,45 @@
+{
+  "executed_at": "2026-04-13T08:03:30.747Z",
+  "source_file": "data/master-upload/saldo-stok-awal.csv",
+  "movement_reference_type": "ADJUSTMENT",
+  "reference_id": "SALDO-AWAL-2026-04-13",
+  "csv_summary": {
+    "rows": 826,
+    "total_qty_on_hand": 4330,
+    "non_zero_rows": 238,
+    "zero_rows": 588
+  },
+  "before": {
+    "stock_balances": 2,
+    "stock_movements": 3,
+    "adjustments": 1,
+    "returns": 0,
+    "inbound_items": 0,
+    "inbound_deliveries": 0,
+    "purchase_orders": 0
+  },
+  "changes": {
+    "deleted": {
+      "returns": 0,
+      "inbound_items": 0,
+      "inbound_deliveries": 0,
+      "adjustments": 1,
+      "stock_movements": 3,
+      "stock_balances": 2,
+      "purchase_orders": 0
+    },
+    "inserted": {
+      "stock_balances": 826,
+      "stock_movements": 826
+    }
+  },
+  "after": {
+    "stock_balances": 826,
+    "stock_movements": 826,
+    "adjustments": 0,
+    "returns": 0,
+    "inbound_items": 0,
+    "inbound_deliveries": 0,
+    "purchase_orders": 0
+  }
+}

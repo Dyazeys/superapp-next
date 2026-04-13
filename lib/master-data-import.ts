@@ -91,17 +91,18 @@ export const MASTER_IMPORT_DEFINITIONS: Record<MasterImportKey, ImportDefinition
       "inv_acc",
       "is_bundling",
       "is_active",
+      // Deprecated price columns, accepted for backward-compatible CSV import.
       "price_mp",
       "price_non_mp",
       "total_hpp",
     ],
-    requiredColumns: ["sku", "sku_name", "product_name", "price_mp", "price_non_mp"],
+    requiredColumns: ["sku", "sku_name", "product_name"],
   },
   inventory: {
     label: "Inventory",
     description: "Master inventory/bahan.",
-    allowedColumns: ["inv_code", "inv_name", "description", "hpp", "is_active"],
-    requiredColumns: ["inv_code", "inv_name", "hpp"],
+    allowedColumns: ["inv_code", "inv_name", "description", "unit_price", "hpp", "is_active"],
+    requiredColumns: ["inv_code", "inv_name", "unit_price"],
   },
   vendor: {
     label: "Vendor",
@@ -411,8 +412,6 @@ async function handleProductRow(row: Record<string, string>, mode: MasterImportM
     inv_acc: asNullableString(row.inv_acc),
     is_bundling: asBoolean(row.is_bundling, false),
     is_active: asBoolean(row.is_active, true),
-    price_mp: row.price_mp,
-    price_non_mp: row.price_non_mp,
     total_hpp: (row.total_hpp ?? "").trim() || "0",
   });
 
@@ -469,8 +468,6 @@ async function handleProductRow(row: Record<string, string>, mode: MasterImportM
         inv_acc: payload.inv_acc || null,
         is_bundling: payload.is_bundling,
         is_active: payload.is_active,
-        price_mp: payload.price_mp,
-        price_non_mp: payload.price_non_mp,
         total_hpp: payload.total_hpp,
         updated_at: new Date(),
       },
@@ -493,8 +490,6 @@ async function handleProductRow(row: Record<string, string>, mode: MasterImportM
       inv_acc: payload.inv_acc || null,
       is_bundling: payload.is_bundling,
       is_active: payload.is_active,
-      price_mp: payload.price_mp,
-      price_non_mp: payload.price_non_mp,
       total_hpp: payload.total_hpp,
     },
   });
@@ -502,11 +497,12 @@ async function handleProductRow(row: Record<string, string>, mode: MasterImportM
 }
 
 async function handleInventoryRow(row: Record<string, string>, mode: MasterImportMode): Promise<RowAction> {
+  const unitPriceRaw = (row.unit_price ?? "").trim() || (row.hpp ?? "").trim() || "0";
   const payload = masterInventorySchema.parse({
     inv_code: row.inv_code,
     inv_name: row.inv_name,
     description: asNullableString(row.description),
-    hpp: row.hpp,
+    hpp: unitPriceRaw,
     is_active: asBoolean(row.is_active, true),
   });
 

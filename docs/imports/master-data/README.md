@@ -24,6 +24,7 @@ Dengan `multipart/form-data`:
 
 - Header wajib mengikuti template persis (huruf kecil + underscore).
 - Header di luar daftar yang diizinkan akan ditolak.
+- Untuk master `inventory`, gunakan kolom harga `unit_price` (pengganti `hpp` di file CSV).
 - Referensi antar master wajib sudah ada:
   - `product.category_code` harus ada di `product_category`.
   - `product.inv_main` dan `product.inv_acc` harus ada di `inventory`.

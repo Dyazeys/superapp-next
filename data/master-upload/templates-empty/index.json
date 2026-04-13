@@ -1,0 +1,152 @@
+[
+  {
+    "schema": "accounting",
+    "table": "operational_expenses",
+    "file": "accounting/operational_expenses.csv",
+    "columns": [
+      "expense_date",
+      "expense_account_id",
+      "payment_account_id",
+      "is_product_barter",
+      "qty",
+      "amount",
+      "description",
+      "receipt_url",
+      "inv_code"
+    ]
+  },
+  {
+    "schema": "auth",
+    "table": "roles",
+    "file": "auth/roles.csv",
+    "columns": [
+      "role_name",
+      "permissions"
+    ]
+  },
+  {
+    "schema": "auth",
+    "table": "users",
+    "file": "auth/users.csv",
+    "columns": [
+      "role_id",
+      "username",
+      "full_name",
+      "password_hash",
+      "is_active"
+    ]
+  },
+  {
+    "schema": "payout",
+    "table": "t_adjustments",
+    "file": "payout/t_adjustments.csv",
+    "columns": [
+      "ref",
+      "payout_date",
+      "adjustment_date",
+      "channel_id",
+      "adjustment_type",
+      "reason",
+      "amount"
+    ]
+  },
+  {
+    "schema": "product",
+    "table": "hpp_history",
+    "file": "product/hpp_history.csv",
+    "columns": [
+      "sku",
+      "old_hpp",
+      "new_hpp",
+      "reason",
+      "changed_by"
+    ]
+  },
+  {
+    "schema": "sales",
+    "table": "master_customer",
+    "file": "sales/master_customer.csv",
+    "columns": [
+      "customer_name",
+      "phone",
+      "email",
+      "is_active"
+    ]
+  },
+  {
+    "schema": "warehouse",
+    "table": "adjustments",
+    "file": "warehouse/adjustments.csv",
+    "columns": [
+      "adjustment_date",
+      "inv_code",
+      "adj_type",
+      "qty",
+      "reason",
+      "approved_by"
+    ]
+  },
+  {
+    "schema": "warehouse",
+    "table": "inbound_deliveries",
+    "file": "warehouse/inbound_deliveries.csv",
+    "columns": [
+      "po_id",
+      "receive_date",
+      "surat_jalan_vendor",
+      "qc_status",
+      "received_by",
+      "notes"
+    ]
+  },
+  {
+    "schema": "warehouse",
+    "table": "inbound_items",
+    "file": "warehouse/inbound_items.csv",
+    "columns": [
+      "inbound_id",
+      "inv_code",
+      "qty_received",
+      "qty_passed_qc",
+      "qty_rejected_qc",
+      "unit_cost"
+    ]
+  },
+  {
+    "schema": "warehouse",
+    "table": "master_vendor",
+    "file": "warehouse/master_vendor.csv",
+    "columns": [
+      "vendor_code",
+      "vendor_name",
+      "pic_name",
+      "phone",
+      "address",
+      "is_active"
+    ]
+  },
+  {
+    "schema": "warehouse",
+    "table": "purchase_orders",
+    "file": "warehouse/purchase_orders.csv",
+    "columns": [
+      "po_number",
+      "vendor_code",
+      "order_date",
+      "status"
+    ]
+  },
+  {
+    "schema": "warehouse",
+    "table": "returns",
+    "file": "warehouse/returns.csv",
+    "columns": [
+      "inbound_id",
+      "inv_code",
+      "return_date",
+      "qty_returned",
+      "reason",
+      "status"
+    ]
+  }
+]

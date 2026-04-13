@@ -36,8 +36,6 @@ export const masterProductSchema = z.object({
   inv_acc: z.string().max(100).optional().nullable(),
   is_bundling: z.boolean(),
   is_active: z.boolean(),
-  price_mp: decimalInput,
-  price_non_mp: decimalInput,
   total_hpp: decimalInput.default("0"),
 });
 

@@ -31,7 +31,6 @@ export default function ProductMasterPage() {
   const totalProducts = productRows.length;
   const activeProducts = productRows.filter((row) => row.is_active).length;
   const productsWithBom = productRows.filter((row) => (row._count?.product_bom ?? 0) > 0).length;
-  const totalMpPrice = productRows.reduce((sum, row) => sum + Number(row.price_mp || 0), 0);
 
   const columns = [
     columnHelper.accessor("sku", {
@@ -48,7 +47,6 @@ export default function ProductMasterPage() {
       cell: (info) =>
         info.row.original.master_inventory_master_product_inv_mainTomaster_inventory?.inv_name ?? info.getValue() ?? "-",
     }),
-    columnHelper.accessor("price_mp", { header: "MP Price" }),
     columnHelper.accessor("total_hpp", { header: "Total HPP" }),
     columnHelper.display({
       id: "bom",
@@ -84,15 +82,10 @@ export default function ProductMasterPage() {
       description="Kelola SKU, kategori, referensi inventory, dan harga secara ringkas lewat modal CRUD."
     >
       <div className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <MetricCard title="Total products" value={String(totalProducts)} subtitle="Jumlah SKU yang terlihat." />
           <MetricCard title="Produk aktif" value={String(activeProducts)} subtitle="SKU yang siap dipakai operasional." />
           <MetricCard title="Produk dengan BOM" value={String(productsWithBom)} subtitle="SKU yang punya struktur komponen." />
-          <MetricCard
-            title="Total MP price (visible)"
-            value={totalMpPrice.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
-            subtitle="Akumulasi harga marketplace dari data yang terlihat."
-          />
         </div>
 
         <div className="flex justify-end">
@@ -165,13 +158,7 @@ export default function ProductMasterPage() {
             <Input id="inv_acc" list="product-inventory-codes" {...productForm.register("inv_acc")} />
           </FormField>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          <FormField label="Marketplace price" htmlFor="price_mp" error={productForm.formState.errors.price_mp?.message}>
-            <Input id="price_mp" {...productForm.register("price_mp")} />
-          </FormField>
-          <FormField label="Non-MP price" htmlFor="price_non_mp" error={productForm.formState.errors.price_non_mp?.message}>
-            <Input id="price_non_mp" {...productForm.register("price_non_mp")} />
-          </FormField>
+        <div className="grid gap-4 md:grid-cols-1">
           <FormField label="Total HPP" htmlFor="total_hpp">
             <Input id="total_hpp" {...productForm.register("total_hpp")} />
           </FormField>

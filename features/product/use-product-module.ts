@@ -227,8 +227,6 @@ export function useProductMaster(): ProductMasterHook {
       inv_acc: null,
       is_bundling: false,
       is_active: true,
-      price_mp: "0",
-      price_non_mp: "0",
       total_hpp: "0",
     },
   });
@@ -281,8 +279,6 @@ export function useProductMaster(): ProductMasterHook {
       inv_acc: product?.inv_acc ?? null,
       is_bundling: product?.is_bundling ?? false,
       is_active: product?.is_active ?? true,
-      price_mp: product?.price_mp ?? "0",
-      price_non_mp: product?.price_non_mp ?? "0",
       total_hpp: product?.total_hpp ?? "0",
     });
     modal.openModal();
