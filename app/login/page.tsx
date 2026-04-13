@@ -48,6 +48,56 @@ export default async function LoginPage() {
                 </div>
                 <LoginForm />
               </div>
+
+              <div className="space-y-3 lg:hidden">
+                <p className="inline-flex w-fit rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600 shadow-sm">
+                  Main Navigation
+                </p>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                  {TOP_NAV_ITEMS.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = item.id === "erp";
+                    const itemStatus = isActive ? "Aktif" : "Segera";
+
+                    return (
+                      <div
+                        key={`mobile-${item.id}`}
+                        className={[
+                          "rounded-2xl border p-3.5 shadow-sm shadow-slate-900/5 transition-colors",
+                          isActive ? "border-slate-300 bg-white" : "border-slate-200/90 bg-white/80",
+                        ].join(" ")}
+                      >
+                        <div
+                          className={[
+                            "mb-3 h-1 w-14 rounded-full",
+                            isActive ? "bg-slate-900" : "bg-slate-300",
+                          ].join(" ")}
+                        />
+                        <div className="mb-2 flex items-center justify-between">
+                          <span
+                            className={[
+                              "inline-flex size-7 items-center justify-center rounded-lg",
+                              isActive ? "bg-slate-900 text-white" : "bg-slate-200 text-slate-700",
+                            ].join(" ")}
+                          >
+                            <Icon className="size-3.5" />
+                          </span>
+                          <span
+                            className={[
+                              "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                              isActive ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-600",
+                            ].join(" ")}
+                          >
+                            {itemStatus}
+                          </span>
+                        </div>
+                        <p className="text-sm font-semibold text-slate-900">{item.label}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-slate-600">{TOP_NAV_SUMMARY[item.id]}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
 
