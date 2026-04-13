@@ -32,7 +32,7 @@ const parsedEnv = serverEnvSchema.parse({
   DEMO_ADMIN_PASSWORD: process.env.DEMO_ADMIN_PASSWORD,
 });
 
-if (isProduction) {
+if (enforceRequiredProdEnv) {
   const blockedDemoPasswords = new Set(["ChangeMe123!", "DevOnly-Replace-Me-123!"]);
   const blockedDemoEmails = new Set(["admin@superapp-next.local", "ops-auth@superapp.internal"]);
 
