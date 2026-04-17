@@ -36,17 +36,30 @@ export async function PATCH(
 ) {
   try {
     const { sku, id } = await params;
-    const raw = await request.json();
-    const payload = productBomSchema.partial().parse({
-      ...raw,
-      component_group: normalizeBomGroup(raw?.component_group),
-    });
+    const raw = (await request.json()) as Record<string, unknown>;
 
     const current = await prisma.product_bom.findUniqueOrThrow({
       where: { id },
     });
 
-    const nextInvCode = payload.inv_code === undefined ? current.inv_code : payload.inv_code;
+    const payload = productBomSchema.parse({
+      sku,
+      component_group: normalizeBomGroup(
+        raw.component_group === undefined ? current.component_group : raw.component_group
+      ),
+      component_type: raw.component_type === undefined ? current.component_type : raw.component_type,
+      inv_code: raw.inv_code === undefined ? current.inv_code : raw.inv_code,
+      component_name: raw.component_name === undefined ? current.component_name : raw.component_name,
+      qty: raw.qty === undefined ? current.qty.toString() : raw.qty,
+      unit_cost: raw.unit_cost === undefined ? current.unit_cost.toString() : raw.unit_cost,
+      is_stock_tracked:
+        raw.is_stock_tracked === undefined ? current.is_stock_tracked : raw.is_stock_tracked,
+      notes: raw.notes === undefined ? current.notes ?? "" : raw.notes,
+      sequence_no: raw.sequence_no === undefined ? current.sequence_no : raw.sequence_no,
+      is_active: raw.is_active === undefined ? current.is_active : raw.is_active,
+    });
+
+    const nextInvCode = payload.inv_code;
     if (nextInvCode) {
       const inventory = await prisma.master_inventory.findUnique({
         where: { inv_code: nextInvCode },
@@ -55,8 +68,8 @@ export async function PATCH(
       invariant(inventory, "Inventory reference for BOM row was not found.");
     }
 
-    const qty = payload.qty ?? current.qty.toString();
-    const unitCost = payload.unit_cost ?? current.unit_cost.toString();
+    const qty = payload.qty;
+    const unitCost = payload.unit_cost;
     const lineCost = (Number(qty) * Number(unitCost)).toFixed(2);
 
     const bom = await prisma.product_bom.update({
@@ -64,13 +77,13 @@ export async function PATCH(
       data: {
         component_group: payload.component_group,
         component_type: payload.component_type,
-        inv_code: payload.inv_code === undefined ? undefined : payload.inv_code || null,
+        inv_code: payload.inv_code || null,
         component_name: payload.component_name,
         qty: payload.qty,
         unit_cost: payload.unit_cost,
         line_cost: lineCost,
         is_stock_tracked: payload.is_stock_tracked,
-        notes: payload.notes === undefined ? undefined : payload.notes || null,
+        notes: payload.notes || null,
         sequence_no: payload.sequence_no,
         is_active: payload.is_active,
       },
