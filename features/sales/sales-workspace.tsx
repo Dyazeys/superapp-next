@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { salesApi } from "@/features/sales/api";
 import { useModalState } from "@/hooks/use-modal-state";
-import { salesOrderSchema, type SalesOrderInput, type SalesOrderItemInput } from "@/schemas/sales-module";
+import { SALES_STATUS_OPTIONS, salesOrderSchema, type SalesOrderInput, type SalesOrderItemInput } from "@/schemas/sales-module";
 import type { ChannelLookupRecord, SalesOrderItemRecord, SalesOrderRecord } from "@/types/sales";
 
 const orderColumnHelper = createColumnHelper<SalesOrderRecord>();
@@ -41,6 +41,13 @@ function toDateTimeInput(value: string | null | undefined) {
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function toSalesStatus(value: string | null | undefined) {
+  if (!value) return "PAID" as const;
+  return SALES_STATUS_OPTIONS.includes(value as (typeof SALES_STATUS_OPTIONS)[number])
+    ? (value as (typeof SALES_STATUS_OPTIONS)[number])
+    : "PAID";
 }
 
 function emptyItemDraft(orderNo: string): SalesOrderItemInput {
@@ -168,7 +175,7 @@ export function SalesWorkspace() {
       channel_id: order?.channel_id ?? null,
       customer_id: order?.customer_id ?? null,
       total_amount: order?.total_amount ?? "0",
-      status: order?.status ?? "PAID",
+      status: toSalesStatus(order?.status),
       is_historical: order?.is_historical ?? false,
     });
     orderModal.openModal();

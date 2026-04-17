@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select-native";
 import { formatMoney, formatShortDate } from "@/lib/format";
 import {
+  PAYOUT_STATUS_OPTIONS,
   payoutStatusTone,
   sumPayoutDeductions,
   sumPayoutFees,
@@ -319,7 +320,23 @@ export default function PayoutRecordsPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Status" htmlFor="payout_status" error={hooks.payoutForm.formState.errors.payout_status?.message}>
-            <Input id="payout_status" {...hooks.payoutForm.register("payout_status")} />
+            <SelectNative
+              id="payout_status"
+              value={hooks.payoutForm.watch("payout_status") ?? ""}
+              onChange={(event) =>
+                hooks.payoutForm.setValue(
+                  "payout_status",
+                  event.target.value ? (event.target.value as (typeof PAYOUT_STATUS_OPTIONS)[number]) : null
+                )
+              }
+            >
+              <option value="">No status</option>
+              {PAYOUT_STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
       </ModalFormShell>

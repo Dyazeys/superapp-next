@@ -502,7 +502,7 @@ async function handleInventoryRow(row: Record<string, string>, mode: MasterImpor
     inv_code: row.inv_code,
     inv_name: row.inv_name,
     description: asNullableString(row.description),
-    hpp: unitPriceRaw,
+    unit_price: unitPriceRaw,
     is_active: asBoolean(row.is_active, true),
   });
 
@@ -519,7 +519,7 @@ async function handleInventoryRow(row: Record<string, string>, mode: MasterImpor
       data: {
         inv_name: payload.inv_name,
         description: payload.description || null,
-        hpp: payload.hpp,
+        unit_price: payload.unit_price,
         is_active: payload.is_active,
         updated_at: new Date(),
       },
@@ -532,7 +532,7 @@ async function handleInventoryRow(row: Record<string, string>, mode: MasterImpor
       inv_code: payload.inv_code,
       inv_name: payload.inv_name,
       description: payload.description || null,
-      hpp: payload.hpp,
+      unit_price: payload.unit_price,
       is_active: payload.is_active,
     },
   });

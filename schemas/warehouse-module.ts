@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export const WAREHOUSE_PO_STATUS_OPTIONS = ["OPEN", "PARTIAL", "CLOSED"] as const;
+export const WAREHOUSE_QC_STATUS_OPTIONS = ["PENDING", "PARTIAL", "PASSED", "REJECTED"] as const;
+export const WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS = ["IN", "OUT"] as const;
+
 const decimalInput = z
   .union([z.string(), z.number()])
   .transform((value) => String(value))
@@ -25,14 +29,14 @@ export const purchaseOrderSchema = z.object({
   po_number: z.string().min(1, "PO number is required").max(50),
   vendor_code: z.string().min(1, "Vendor is required").max(100),
   order_date: dateInput,
-  status: z.string().min(1, "Status is required").max(20),
+  status: z.enum(WAREHOUSE_PO_STATUS_OPTIONS),
 });
 
 export const inboundDeliverySchema = z.object({
   po_id: z.string().optional().nullable(),
   receive_date: dateInput,
   surat_jalan_vendor: z.string().max(100).optional().nullable(),
-  qc_status: z.string().min(1, "QC status is required").max(20),
+  qc_status: z.enum(WAREHOUSE_QC_STATUS_OPTIONS),
   received_by: z.string().min(1, "Receiver is required").max(100),
   notes: z.string().optional().nullable(),
 });
@@ -85,7 +89,7 @@ export const inboundItemPatchSchema = z.object({
 export const adjustmentSchema = z.object({
   adjustment_date: dateInput,
   inv_code: z.string().min(1, "Inventory code is required").max(100),
-  adj_type: z.enum(["IN", "OUT"]),
+  adj_type: z.enum(WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS),
   qty: z.coerce.number().int().min(1),
   reason: z.string().min(2, "Reason is required"),
   approved_by: z.string().max(100).optional().nullable(),

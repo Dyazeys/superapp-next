@@ -24,6 +24,8 @@ import {
   inboundDeliverySchema,
   purchaseOrderSchema,
   vendorSchema,
+  WAREHOUSE_PO_STATUS_OPTIONS,
+  WAREHOUSE_QC_STATUS_OPTIONS,
   type AdjustmentInput,
   type InboundDeliveryInput,
   type InboundItemInput,
@@ -54,6 +56,20 @@ function asBool(value: string) {
 
 function toDateInput(value: string | null | undefined) {
   return value ? value.slice(0, 10) : "";
+}
+
+function toPoStatus(value: string | null | undefined) {
+  if (!value) return "OPEN" as const;
+  return WAREHOUSE_PO_STATUS_OPTIONS.includes(value as (typeof WAREHOUSE_PO_STATUS_OPTIONS)[number])
+    ? (value as (typeof WAREHOUSE_PO_STATUS_OPTIONS)[number])
+    : "OPEN";
+}
+
+function toQcStatus(value: string | null | undefined) {
+  if (!value) return "PENDING" as const;
+  return WAREHOUSE_QC_STATUS_OPTIONS.includes(value as (typeof WAREHOUSE_QC_STATUS_OPTIONS)[number])
+    ? (value as (typeof WAREHOUSE_QC_STATUS_OPTIONS)[number])
+    : "PENDING";
 }
 
 function emptyInboundItemDraft(inboundId: string): InboundItemInput {
@@ -131,11 +147,11 @@ export function WarehouseWorkspace() {
     resolver: zodResolver(vendorSchema),
     defaultValues: { vendor_code: "", vendor_name: "", pic_name: "", phone: "", address: "", is_active: true },
   });
-  const purchaseOrderForm = useForm({
+  const purchaseOrderForm = useForm<PurchaseOrderInput, unknown, PurchaseOrderInput>({
     resolver: zodResolver(purchaseOrderSchema),
     defaultValues: { po_number: "", vendor_code: "", order_date: "", status: "OPEN" },
   });
-  const inboundForm = useForm({
+  const inboundForm = useForm<InboundDeliveryInput, unknown, InboundDeliveryInput>({
     resolver: zodResolver(inboundDeliverySchema),
     defaultValues: { po_id: null, receive_date: "", surat_jalan_vendor: "", qc_status: "PENDING", received_by: "", notes: "" },
   });
@@ -252,13 +268,13 @@ export function WarehouseWorkspace() {
 
   const openPurchaseOrderModal = useCallback((purchaseOrder?: PurchaseOrderRecord) => {
     setEditingPurchaseOrder(purchaseOrder ?? null);
-    purchaseOrderForm.reset({ po_number: purchaseOrder?.po_number ?? "", vendor_code: purchaseOrder?.vendor_code ?? "", order_date: toDateInput(purchaseOrder?.order_date), status: purchaseOrder?.status ?? "OPEN" });
+    purchaseOrderForm.reset({ po_number: purchaseOrder?.po_number ?? "", vendor_code: purchaseOrder?.vendor_code ?? "", order_date: toDateInput(purchaseOrder?.order_date), status: toPoStatus(purchaseOrder?.status) });
     purchaseOrderModal.openModal();
   }, [purchaseOrderForm, purchaseOrderModal]);
 
   const openInboundModal = useCallback((inbound?: InboundDeliveryRecord) => {
     setEditingInbound(inbound ?? null);
-    inboundForm.reset({ po_id: inbound?.po_id ?? null, receive_date: toDateInput(inbound?.receive_date), surat_jalan_vendor: inbound?.surat_jalan_vendor ?? "", qc_status: inbound?.qc_status ?? "PENDING", received_by: inbound?.received_by ?? "", notes: inbound?.notes ?? "" });
+    inboundForm.reset({ po_id: inbound?.po_id ?? null, receive_date: toDateInput(inbound?.receive_date), surat_jalan_vendor: inbound?.surat_jalan_vendor ?? "", qc_status: toQcStatus(inbound?.qc_status), received_by: inbound?.received_by ?? "", notes: inbound?.notes ?? "" });
     inboundModal.openModal();
   }, [inboundForm, inboundModal]);
 
@@ -468,7 +484,7 @@ export function WarehouseWorkspace() {
         cell: (info) => <StatusBadge label={String(info.getValue())} tone={info.getValue() > 0 ? "success" : info.getValue() < 0 ? "danger" : "neutral"} />,
       }),
       stockBalanceColumnHelper.accessor("last_updated", { header: "Last Updated", cell: (info) => new Date(info.getValue()).toLocaleString("en-US") }),
-      stockBalanceColumnHelper.accessor("master_inventory", { header: "HPP", cell: (info) => info.getValue()?.hpp ?? "-" }),
+      stockBalanceColumnHelper.accessor("master_inventory", { header: "Unit Price", cell: (info) => info.getValue()?.unit_price ?? "-" }),
     ],
     []
   );

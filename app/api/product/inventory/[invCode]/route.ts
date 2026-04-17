@@ -17,7 +17,7 @@ export async function PATCH(
       data: {
         inv_name: payload.inv_name,
         description: payload.description === undefined ? undefined : payload.description || null,
-        hpp: payload.hpp,
+        unit_price: payload.unit_price,
         is_active: payload.is_active,
       },
     });

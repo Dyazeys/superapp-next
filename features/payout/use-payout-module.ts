@@ -9,6 +9,8 @@ import { z } from "zod";
 import { useModalState } from "@/hooks/use-modal-state";
 import { payoutApi } from "@/features/payout/api";
 import {
+  PAYOUT_ADJUSTMENT_TYPE_OPTIONS,
+  PAYOUT_STATUS_OPTIONS,
   payoutAdjustmentSchema,
   payoutSchema,
   type PayoutAdjustmentInput,
@@ -65,10 +67,25 @@ const PAYOUT_ORDER_LOOKUP_KEY = ["payout-order-lookup"] as const;
 const PAYOUT_CHANNEL_LOOKUP_KEY = ["payout-channel-lookup"] as const;
 const PAYOUT_BANK_ACCOUNT_LOOKUP_KEY = ["payout-bank-account-lookup"] as const;
 const PAYOUT_TRANSFER_KEY = ["payout-transfers"] as const;
+export { PAYOUT_ADJUSTMENT_TYPE_OPTIONS, PAYOUT_STATUS_OPTIONS };
 
 function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) {
   const queryClient = useQueryClient();
   return () => Promise.all(invalidateKeys.map((key) => queryClient.invalidateQueries({ queryKey: key })));
+}
+
+function toPayoutStatus(value: string | null | undefined) {
+  if (!value) return null;
+  return PAYOUT_STATUS_OPTIONS.includes(value as (typeof PAYOUT_STATUS_OPTIONS)[number])
+    ? (value as (typeof PAYOUT_STATUS_OPTIONS)[number])
+    : null;
+}
+
+function toPayoutAdjustmentType(value: string | null | undefined) {
+  if (!value) return null;
+  return PAYOUT_ADJUSTMENT_TYPE_OPTIONS.includes(value as (typeof PAYOUT_ADJUSTMENT_TYPE_OPTIONS)[number])
+    ? (value as (typeof PAYOUT_ADJUSTMENT_TYPE_OPTIONS)[number])
+    : null;
 }
 
 export function toDateInput(value: string | null | undefined) {
@@ -162,7 +179,7 @@ export function usePayouts(): PayoutsHook {
       fee_affiliate: "0",
       shipping_cost: "0",
       omset: "0",
-      payout_status: "",
+      payout_status: null,
     },
   });
   const payoutsQuery = useQuery({
@@ -218,7 +235,7 @@ export function usePayouts(): PayoutsHook {
       fee_affiliate: payout?.fee_affiliate ?? "0",
       shipping_cost: payout?.shipping_cost ?? "0",
       omset: payout?.omset ?? "0",
-      payout_status: payout?.payout_status ?? "",
+      payout_status: toPayoutStatus(payout?.payout_status),
     });
     payoutModal.openModal();
   };
@@ -254,7 +271,7 @@ export function usePayoutAdjustments(ref?: string): PayoutAdjustmentsHook {
       payout_date: "",
       adjustment_date: null,
       channel_id: null,
-      adjustment_type: "",
+      adjustment_type: null,
       reason: "",
       amount: "0",
     },
@@ -302,7 +319,7 @@ export function usePayoutAdjustments(ref?: string): PayoutAdjustmentsHook {
       payout_date: toDateInput(adjustment?.payout_date),
       adjustment_date: toDateInput(adjustment?.adjustment_date),
       channel_id: adjustment?.channel_id ?? null,
-      adjustment_type: adjustment?.adjustment_type ?? "",
+      adjustment_type: toPayoutAdjustmentType(adjustment?.adjustment_type),
       reason: adjustment?.reason ?? "",
       amount: adjustment?.amount ?? "0",
     });

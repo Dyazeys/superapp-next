@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export const PAYOUT_STATUS_OPTIONS = ["PENDING", "PROCESSING", "SETTLED", "PAID", "HOLD", "FAILED", "CANCELLED"] as const;
+export const PAYOUT_ADJUSTMENT_TYPE_OPTIONS = ["MANUAL", "FEE", "REFUND", "REVERSAL", "PROMO", "OTHER"] as const;
+
 const decimalInput = z
   .union([z.string(), z.number()])
   .transform((value) => String(value))
@@ -35,7 +38,7 @@ export const payoutSchema = z.object({
   fee_affiliate: decimalInput.default("0"),
   shipping_cost: decimalInput.default("0"),
   omset: decimalInput.default("0"),
-  payout_status: z.string().max(20).optional().nullable(),
+  payout_status: z.enum(PAYOUT_STATUS_OPTIONS).optional().nullable(),
 }).superRefine((value, context) => {
   if (Number(value.omset) > Number(value.total_price)) {
     context.addIssue({
@@ -61,7 +64,7 @@ export const payoutPatchSchema = z.object({
   fee_affiliate: decimalInput.optional(),
   shipping_cost: decimalInput.optional(),
   omset: decimalInput.optional(),
-  payout_status: z.string().max(20).optional().nullable(),
+  payout_status: z.enum(PAYOUT_STATUS_OPTIONS).optional().nullable(),
 }).superRefine((value, context) => {
   if (value.omset !== undefined && value.total_price !== undefined) {
     if (Number(value.omset) > Number(value.total_price)) {
@@ -81,7 +84,7 @@ export const payoutAdjustmentSchema = z.object({
   payout_date: dateInput,
   adjustment_date: optionalDateInput,
   channel_id: z.coerce.number().int().optional().nullable(),
-  adjustment_type: z.string().max(100).optional().nullable(),
+  adjustment_type: z.enum(PAYOUT_ADJUSTMENT_TYPE_OPTIONS).optional().nullable(),
   reason: z.string().optional().nullable(),
   amount: decimalInput,
 });

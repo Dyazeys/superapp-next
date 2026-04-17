@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+export const PRODUCT_BOM_GROUP_OPTIONS = ["MAIN", "PACKING", "ACCESSORY", "LABOR", "BRANDING"] as const;
+export const PRODUCT_BOM_TYPE_OPTIONS = ["INVENTORY", "NON_INVENTORY"] as const;
+
 const decimalInput = z
   .union([z.string(), z.number()])
   .transform((value) => String(value))
@@ -18,7 +21,7 @@ export const masterInventorySchema = z.object({
   inv_code: z.string().min(1, "Inventory code is required").max(100),
   inv_name: z.string().min(2, "Inventory name is required").max(255),
   description: z.string().optional().nullable(),
-  hpp: decimalInput,
+  unit_price: decimalInput,
   is_active: z.boolean(),
 });
 
@@ -41,8 +44,8 @@ export const masterProductSchema = z.object({
 
 export const productBomSchema = z.object({
   sku: z.string().min(1, "SKU is required").max(100),
-  component_group: z.string().min(1, "Group is required").max(50),
-  component_type: z.string().min(1, "Type is required").max(50),
+  component_group: z.enum(PRODUCT_BOM_GROUP_OPTIONS),
+  component_type: z.enum(PRODUCT_BOM_TYPE_OPTIONS),
   inv_code: z.string().max(100).optional().nullable(),
   component_name: z.string().min(1, "Component name is required").max(255),
   qty: decimalInput,

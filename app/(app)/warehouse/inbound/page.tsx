@@ -10,6 +10,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import {
   WAREHOUSE_QC_STATUS_OPTIONS,
@@ -92,19 +93,6 @@ export default function WarehouseInboundPage() {
       title="Inbound"
       description="Kelola header inbound dan status QC untuk memastikan penerimaan dan posting stok tetap terkontrol."
     >
-      <datalist id="warehouse-inbound-po-ids">
-        {(purchaseOrdersQuery.data ?? []).map((purchaseOrder) => (
-          <option key={purchaseOrder.id} value={purchaseOrder.id}>
-            {purchaseOrder.po_number}
-          </option>
-        ))}
-      </datalist>
-      <datalist id="warehouse-inbound-qc-statuses">
-        {WAREHOUSE_QC_STATUS_OPTIONS.map((status) => (
-          <option key={status} value={status} />
-        ))}
-      </datalist>
-
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-5">
           <MetricCard title="Total inbound" value={String(totalInbound)} subtitle="Jumlah inbound yang terlihat." />
@@ -134,8 +122,23 @@ export default function WarehouseInboundPage() {
         }}
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="PO id" htmlFor="po_id">
-            <Input id="po_id" list="warehouse-inbound-po-ids" {...inboundForm.register("po_id")} />
+          <FormField
+            label="PO id"
+            htmlFor="po_id"
+            helperText={
+              (purchaseOrdersQuery.data?.length ?? 0) === 0
+                ? "Belum ada purchase order. Buat PO dulu di menu Warehouse > Purchase Orders."
+                : undefined
+            }
+          >
+            <SelectNative id="po_id" {...inboundForm.register("po_id")}>
+              <option value="">No PO (optional)</option>
+              {(purchaseOrdersQuery.data ?? []).map((purchaseOrder) => (
+                <option key={purchaseOrder.id} value={purchaseOrder.id}>
+                  {purchaseOrder.po_number}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
           <FormField
             label="Receive date"
@@ -150,7 +153,13 @@ export default function WarehouseInboundPage() {
             <Input id="surat_jalan_vendor" {...inboundForm.register("surat_jalan_vendor")} />
           </FormField>
           <FormField label="QC status" htmlFor="qc_status" error={inboundForm.formState.errors.qc_status?.message}>
-            <Input id="qc_status" list="warehouse-inbound-qc-statuses" {...inboundForm.register("qc_status")} />
+            <SelectNative id="qc_status" {...inboundForm.register("qc_status")}>
+              {WAREHOUSE_QC_STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
         <FormField

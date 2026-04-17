@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         inv_code: payload.inv_code,
         inv_name: payload.inv_name,
         description: payload.description || null,
-        hpp: payload.hpp,
+        unit_price: payload.unit_price,
         is_active: payload.is_active,
       },
     });

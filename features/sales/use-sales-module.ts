@@ -12,6 +12,7 @@ import {
   salesCustomerSchema,
   salesOrderItemSchema,
   salesOrderSchema,
+  SALES_STATUS_OPTIONS,
   type SalesCustomerInput,
   type SalesOrderInput,
   type SalesOrderItemInput,
@@ -60,8 +61,7 @@ export const SALES_BOOLEAN_OPTIONS = [
   { label: "true", value: "true" },
   { label: "false", value: "false" },
 ] as const;
-
-export const SALES_STATUS_OPTIONS = ["PAID", "PICKUP", "OPEN", "CANCELLED"] as const;
+export { SALES_STATUS_OPTIONS };
 
 const SALES_ORDER_KEY = ["sales-orders"] as const;
 const SALES_CHANNEL_KEY = ["sales-channels"] as const;
@@ -73,6 +73,13 @@ const WAREHOUSE_STOCK_MOVEMENT_KEY = ["warehouse-stock-movements"] as const;
 function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) {
   const queryClient = useQueryClient();
   return () => Promise.all(invalidateKeys.map((key) => queryClient.invalidateQueries({ queryKey: key })));
+}
+
+function toSalesStatus(value: string | null | undefined) {
+  if (!value) return "PAID" as const;
+  return SALES_STATUS_OPTIONS.includes(value as (typeof SALES_STATUS_OPTIONS)[number])
+    ? (value as (typeof SALES_STATUS_OPTIONS)[number])
+    : "PAID";
 }
 
 export function parseSalesBooleanInput(value: string) {
@@ -198,7 +205,7 @@ export function useSalesOrders(): SalesOrdersHook {
       channel_id: order?.channel_id ?? null,
       customer_id: order?.customer_id ?? null,
       total_amount: order?.total_amount ?? "0",
-      status: order?.status ?? "PAID",
+      status: toSalesStatus(order?.status),
       is_historical: order?.is_historical ?? false,
     });
     orderModal.openModal();

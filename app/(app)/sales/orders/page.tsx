@@ -10,9 +10,8 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import {
-  parseSalesBooleanInput,
-  SALES_BOOLEAN_OPTIONS,
   SALES_STATUS_OPTIONS,
   useSalesChannels,
   useSalesCustomers,
@@ -96,35 +95,9 @@ export default function SalesOrdersPage() {
       title="Sales Orders"
       description="Kelola header sales order untuk operasional harian tanpa mengubah mekanisme posting stok yang sudah ada."
     >
-      <datalist id="sales-order-channel-ids">
-        {(channelsQuery.data ?? []).map((channel) => (
-          <option key={channel.channel_id} value={channel.channel_id}>
-            {channel.channel_name}
-          </option>
-        ))}
-      </datalist>
-      <datalist id="sales-order-customer-ids">
-        {(customersQuery.data ?? []).map((customer) => (
-          <option key={customer.customer_id} value={customer.customer_id}>
-            {customer.customer_name}
-          </option>
-        ))}
-      </datalist>
       <datalist id="sales-order-nos">
         {(ordersQuery.data ?? []).map((order) => (
           <option key={order.order_no} value={order.order_no} />
-        ))}
-      </datalist>
-      <datalist id="sales-order-statuses">
-        {SALES_STATUS_OPTIONS.map((status) => (
-          <option key={status} value={status} />
-        ))}
-      </datalist>
-      <datalist id="sales-order-boolean-options">
-        {SALES_BOOLEAN_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
         ))}
       </datalist>
 
@@ -178,26 +151,42 @@ export default function SalesOrdersPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Channel id" htmlFor="channel_id">
-            <Input
+            <SelectNative
               id="channel_id"
-              list="sales-order-channel-ids"
-              value={orderForm.watch("channel_id") == null ? "" : String(orderForm.watch("channel_id"))}
+              value={String(orderForm.watch("channel_id") ?? "")}
               onChange={(event) => orderForm.setValue("channel_id", event.target.value ? Number(event.target.value) : null)}
-            />
+            >
+              <option value="">Select channel</option>
+              {(channelsQuery.data ?? []).map((channel) => (
+                <option key={channel.channel_id} value={channel.channel_id}>
+                  {channel.channel_name}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
           <FormField
             label="Customer id (opsional)"
             htmlFor="customer_id"
-            helperText="Dipakai terutama untuk order manual atau web yang punya data customer lengkap. Order omnichannel/import boleh dikosongkan."
+            helperText={
+              (customersQuery.data?.length ?? 0) === 0
+                ? "Belum ada customer master. Bisa dikosongkan dulu atau isi dari menu Sales > Customers."
+                : "Dipakai terutama untuk order manual/web. Order omnichannel/import boleh dikosongkan."
+            }
           >
-            <Input
+            <SelectNative
               id="customer_id"
-              list="sales-order-customer-ids"
-              value={orderForm.watch("customer_id") == null ? "" : String(orderForm.watch("customer_id"))}
+              value={String(orderForm.watch("customer_id") ?? "")}
               onChange={(event) =>
                 orderForm.setValue("customer_id", event.target.value ? Number(event.target.value) : null)
               }
-            />
+            >
+              <option value="">No customer</option>
+              {(customersQuery.data ?? []).map((customer) => (
+                <option key={customer.customer_id} value={customer.customer_id}>
+                  {customer.customer_name}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
@@ -209,17 +198,23 @@ export default function SalesOrdersPage() {
             <Input id="total_amount" {...orderForm.register("total_amount")} />
           </FormField>
           <FormField label="Status" htmlFor="status" error={orderForm.formState.errors.status?.message}>
-            <Input id="status" list="sales-order-statuses" {...orderForm.register("status")} />
+            <SelectNative id="status" {...orderForm.register("status")}>
+              {SALES_STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
           <FormField label="Historical" htmlFor="is_historical">
-            <Input
+            <SelectNative
               id="is_historical"
-              list="sales-order-boolean-options"
               value={String(orderForm.watch("is_historical") ?? false)}
-              onChange={(event) =>
-                orderForm.setValue("is_historical", parseSalesBooleanInput(event.target.value))
-              }
-            />
+              onChange={(event) => orderForm.setValue("is_historical", event.target.value === "true")}
+            >
+              <option value="false">false</option>
+              <option value="true">true</option>
+            </SelectNative>
           </FormField>
         </div>
       </ModalFormShell>

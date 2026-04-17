@@ -20,6 +20,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useModalState } from "@/hooks/use-modal-state";
 import { productApi } from "@/features/product/api";
 import {
+  PRODUCT_BOM_GROUP_OPTIONS,
+  PRODUCT_BOM_TYPE_OPTIONS,
   masterInventorySchema,
   masterProductSchema,
   productCategorySchema,
@@ -42,6 +44,19 @@ const bomColumnHelper = createColumnHelper<ProductBomRecord>();
 
 function asBool(value: string) {
   return value === "true";
+}
+
+function asBomGroup(value: string) {
+  if (value === "OVERHEAD") return "BRANDING";
+  return PRODUCT_BOM_GROUP_OPTIONS.includes(value as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
+    ? (value as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
+    : "MAIN";
+}
+
+function asBomType(value: string) {
+  return PRODUCT_BOM_TYPE_OPTIONS.includes(value as (typeof PRODUCT_BOM_TYPE_OPTIONS)[number])
+    ? (value as (typeof PRODUCT_BOM_TYPE_OPTIONS)[number])
+    : "INVENTORY";
 }
 
 function emptyBomDraft(sku: string): ProductBomInput {
@@ -94,7 +109,7 @@ export function ProductWorkspace() {
   });
   const inventoryForm = useForm({
     resolver: zodResolver(masterInventorySchema),
-    defaultValues: { inv_code: "", inv_name: "", description: "", hpp: "0", is_active: true },
+    defaultValues: { inv_code: "", inv_name: "", description: "", unit_price: "0", is_active: true },
   });
   const productForm = useForm({
     resolver: zodResolver(masterProductSchema),
@@ -236,7 +251,7 @@ export function ProductWorkspace() {
       inv_code: inventory?.inv_code ?? "",
       inv_name: inventory?.inv_name ?? "",
       description: inventory?.description ?? "",
-      hpp: inventory?.hpp ?? "0",
+      unit_price: inventory?.unit_price ?? "0",
       is_active: inventory?.is_active ?? true,
     });
     inventoryModal.openModal();
@@ -290,7 +305,7 @@ export function ProductWorkspace() {
     () => [
       inventoryColumnHelper.accessor("inv_code", { header: "Code", cell: (info) => <span className="font-medium">{info.getValue()}</span> }),
       inventoryColumnHelper.accessor("inv_name", { header: "Inventory" }),
-      inventoryColumnHelper.accessor("hpp", { header: "HPP" }),
+      inventoryColumnHelper.accessor("unit_price", { header: "Unit Price" }),
       inventoryColumnHelper.accessor("is_active", {
         header: "Status",
         cell: (info) => <StatusBadge label={info.getValue() ? "Active" : "Inactive"} tone={info.getValue() ? "success" : "neutral"} />,
@@ -371,11 +386,11 @@ export function ProductWorkspace() {
       }),
       bomColumnHelper.accessor("component_group", {
         header: "Group",
-        cell: ({ row, getValue }) => isEditingBomRow(row.original.id) ? <Input value={bomDraft?.component_group ?? getValue()} onChange={(e) => setBomDraft((c) => c ? { ...c, component_group: e.target.value } : c)} className="h-8 min-w-[110px]" /> : getValue(),
+        cell: ({ row, getValue }) => isEditingBomRow(row.original.id) ? <Input value={bomDraft?.component_group ?? getValue()} onChange={(e) => setBomDraft((c) => c ? { ...c, component_group: asBomGroup(e.target.value) } : c)} className="h-8 min-w-[110px]" /> : getValue(),
       }),
       bomColumnHelper.accessor("component_type", {
         header: "Type",
-        cell: ({ row, getValue }) => isEditingBomRow(row.original.id) ? <Input list="bom-component-types" value={bomDraft?.component_type ?? getValue()} onChange={(e) => setBomDraft((c) => c ? { ...c, component_type: e.target.value } : c)} className="h-8 min-w-[130px]" /> : getValue(),
+        cell: ({ row, getValue }) => isEditingBomRow(row.original.id) ? <Input list="bom-component-types" value={bomDraft?.component_type ?? getValue()} onChange={(e) => setBomDraft((c) => c ? { ...c, component_type: asBomType(e.target.value) } : c)} className="h-8 min-w-[130px]" /> : getValue(),
       }),
       bomColumnHelper.accessor("inv_code", {
         header: "Inventory Ref",
@@ -412,7 +427,7 @@ export function ProductWorkspace() {
           </div>
         ) : (
           <div className="flex justify-end gap-2">
-            <Button size="icon-xs" variant="outline" onClick={() => { setEditingBomId(row.original.id); setBomDraft({ sku: row.original.sku, component_group: row.original.component_group, component_type: row.original.component_type, inv_code: row.original.inv_code, component_name: row.original.component_name, qty: row.original.qty, unit_cost: row.original.unit_cost, is_stock_tracked: row.original.is_stock_tracked, notes: row.original.notes ?? "", sequence_no: row.original.sequence_no, is_active: row.original.is_active }); }}><Pencil className="size-3.5" /></Button>
+            <Button size="icon-xs" variant="outline" onClick={() => { setEditingBomId(row.original.id); setBomDraft({ sku: row.original.sku, component_group: asBomGroup(row.original.component_group), component_type: asBomType(row.original.component_type), inv_code: row.original.inv_code, component_name: row.original.component_name, qty: row.original.qty, unit_cost: row.original.unit_cost, is_stock_tracked: row.original.is_stock_tracked, notes: row.original.notes ?? "", sequence_no: row.original.sequence_no, is_active: row.original.is_active }); }}><Pencil className="size-3.5" /></Button>
             <Button size="icon-xs" variant="outline" onClick={() => selectedSku && deleteBomMutation.mutate({ sku: selectedSku, id: row.original.id })}><Trash2 className="size-3.5" /></Button>
           </div>
         ),
@@ -483,7 +498,7 @@ export function ProductWorkspace() {
           <FormField label="Inventory name" htmlFor="inv_name" error={inventoryForm.formState.errors.inv_name?.message}><Input id="inv_name" {...inventoryForm.register("inv_name")} /></FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="HPP" htmlFor="hpp" error={inventoryForm.formState.errors.hpp?.message}><Input id="hpp" {...inventoryForm.register("hpp")} /></FormField>
+          <FormField label="Unit Price" htmlFor="unit_price" error={inventoryForm.formState.errors.unit_price?.message}><Input id="unit_price" {...inventoryForm.register("unit_price")} /></FormField>
           <FormField label="Active" htmlFor="inventory_active"><Input id="inventory_active" list="boolean-values" value={String(inventoryForm.watch("is_active"))} onChange={(e) => inventoryForm.setValue("is_active", asBool(e.target.value))} /></FormField>
         </div>
         <FormField label="Description" htmlFor="description"><Textarea id="description" {...inventoryForm.register("description")} /></FormField>

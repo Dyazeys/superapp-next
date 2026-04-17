@@ -1,16 +1,23 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
+import { FormField } from "@/components/forms/form-field";
+import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+import { SelectNative } from "@/components/ui/select-native";
+import { Textarea } from "@/components/ui/textarea";
 import {
+  PRODUCT_BOM_GROUP_OPTIONS,
+  PRODUCT_BOM_TYPE_OPTIONS,
   PRODUCT_BOOLEAN_OPTIONS,
   createEmptyBomDraft,
   parseBooleanInput,
@@ -24,11 +31,23 @@ import type { ProductBomRecord } from "@/types/product";
 
 const columnHelper = createColumnHelper<ProductBomRecord>();
 
+function asBomGroup(value: string) {
+  if (value === "OVERHEAD") return "BRANDING";
+  return PRODUCT_BOM_GROUP_OPTIONS.includes(value as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
+    ? (value as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
+    : "MAIN";
+}
+
 function toBomDraft(row: ProductBomRecord): ProductBomInput {
+  const group = asBomGroup(row.component_group);
+  const type = PRODUCT_BOM_TYPE_OPTIONS.includes(row.component_type as (typeof PRODUCT_BOM_TYPE_OPTIONS)[number])
+    ? (row.component_type as (typeof PRODUCT_BOM_TYPE_OPTIONS)[number])
+    : "INVENTORY";
+
   return {
     sku: row.sku,
-    component_group: row.component_group,
-    component_type: row.component_type,
+    component_group: group,
+    component_type: type,
     inv_code: row.inv_code,
     component_name: row.component_name,
     qty: row.qty,
@@ -43,9 +62,11 @@ function toBomDraft(row: ProductBomRecord): ProductBomInput {
 export default function ProductBomPage() {
   const { productsQuery } = useProductMaster();
   const { inventoryQuery } = useProductInventory();
-  const { selectedSku, currentSku, setSelectedSku } = useProductSelection(productsQuery.data);
+  const { selectedSku, currentSku, setSelectedSku } = useProductSelection();
   const { bomQuery, editingBomId, setEditingBomId, bomDraft, setBomDraft, saveBom, deleteBom, actionPending } =
     useProductBom(currentSku ?? undefined);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addDraft, setAddDraft] = useState<ProductBomInput | null>(null);
 
   const bomRows = bomQuery.data ?? [];
   const totalBomRows = bomRows.length;
@@ -55,6 +76,25 @@ export default function ProductBomPage() {
   const activeBomValue = bomRows.reduce(
     (sum, row) => sum + (row.is_active ? Number(row.qty) * Number(row.unit_cost) : 0),
     0
+  );
+  const selectedSkuValue = selectedSku ?? "";
+
+  const productOptions = useMemo(
+    () =>
+      (productsQuery.data ?? []).map((product) => ({
+        value: product.sku,
+        label: `${product.sku} - ${product.product_name}`,
+      })),
+    [productsQuery.data]
+  );
+
+  const inventoryOptions = useMemo(
+    () =>
+      (inventoryQuery.data ?? []).map((item) => ({
+        value: item.inv_code,
+        label: `${item.inv_code} - ${item.inv_name}`,
+      })),
+    [inventoryQuery.data]
   );
 
   const rows = useMemo(() => {
@@ -107,11 +147,26 @@ export default function ProductBomPage() {
       header: "Group",
       cell: ({ row, getValue }) =>
         isEditingRow(row.original.id) ? (
-          <Input
+          <SelectNative
             value={bomDraft?.component_group ?? getValue()}
-            onChange={(e) => setBomDraft((prev) => (prev ? { ...prev, component_group: e.target.value } : prev))}
+            onChange={(event) =>
+              setBomDraft((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      component_group: asBomGroup(event.target.value),
+                    }
+                  : prev
+              )
+            }
             className="h-8 min-w-[120px]"
-          />
+          >
+            {PRODUCT_BOM_GROUP_OPTIONS.map((group) => (
+              <option key={group} value={group}>
+                {group}
+              </option>
+            ))}
+          </SelectNative>
         ) : (
           getValue()
         ),
@@ -120,12 +175,26 @@ export default function ProductBomPage() {
       header: "Type",
       cell: ({ row, getValue }) =>
         isEditingRow(row.original.id) ? (
-          <Input
-            list="bom-component-types"
+          <SelectNative
             value={bomDraft?.component_type ?? getValue()}
-            onChange={(e) => setBomDraft((prev) => (prev ? { ...prev, component_type: e.target.value } : prev))}
+            onChange={(event) =>
+              setBomDraft((prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      component_type: event.target.value as (typeof PRODUCT_BOM_TYPE_OPTIONS)[number],
+                    }
+                  : prev
+              )
+            }
             className="h-8 min-w-[130px]"
-          />
+          >
+            {PRODUCT_BOM_TYPE_OPTIONS.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
+            ))}
+          </SelectNative>
         ) : (
           getValue()
         ),
@@ -134,11 +203,12 @@ export default function ProductBomPage() {
       header: "Inventory Ref",
       cell: ({ row, getValue }) =>
         isEditingRow(row.original.id) ? (
-          <Input
-            list="bom-inventory-codes"
+          <SearchableSelect
             value={bomDraft?.inv_code ?? getValue() ?? ""}
-            onChange={(e) => setBomDraft((prev) => (prev ? { ...prev, inv_code: e.target.value || null } : prev))}
-            className="h-8 min-w-[150px]"
+            options={inventoryOptions}
+            placeholder="Search inventory..."
+            inputClassName="h-8 min-w-[180px]"
+            onValueChange={(next) => setBomDraft((prev) => (prev ? { ...prev, inv_code: next || null } : prev))}
           />
         ) : (
           getValue() ?? "-"
@@ -195,14 +265,19 @@ export default function ProductBomPage() {
       header: "Tracked",
       cell: ({ row, getValue }) =>
         isEditingRow(row.original.id) ? (
-          <Input
-            list="bom-boolean-options"
+          <SelectNative
             value={String(bomDraft?.is_stock_tracked ?? getValue())}
             onChange={(e) =>
               setBomDraft((prev) => (prev ? { ...prev, is_stock_tracked: parseBooleanInput(e.target.value) } : prev))
             }
             className="h-8 w-24"
-          />
+          >
+            {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </SelectNative>
         ) : (
           <StatusBadge label={getValue() ? "Tracked" : "Manual"} tone={getValue() ? "info" : "neutral"} />
         ),
@@ -211,14 +286,19 @@ export default function ProductBomPage() {
       header: "Status",
       cell: ({ row, getValue }) =>
         isEditingRow(row.original.id) ? (
-          <Input
-            list="bom-boolean-options"
+          <SelectNative
             value={String(bomDraft?.is_active ?? getValue())}
             onChange={(e) =>
               setBomDraft((prev) => (prev ? { ...prev, is_active: parseBooleanInput(e.target.value) } : prev))
             }
             className="h-8 w-24"
-          />
+          >
+            {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </SelectNative>
         ) : (
           <StatusBadge label={getValue() ? "Active" : "Inactive"} tone={getValue() ? "success" : "neutral"} />
         ),
@@ -271,25 +351,6 @@ export default function ProductBomPage() {
       title="Product BOM"
       description="Kelola baris BOM per SKU secara inline untuk kebutuhan komponen dan estimasi nilai."
     >
-      <datalist id="bom-component-types">
-        <option value="INVENTORY" />
-        <option value="NON_INVENTORY" />
-      </datalist>
-      <datalist id="bom-inventory-codes">
-        {(inventoryQuery.data ?? []).map((item) => (
-          <option key={item.inv_code} value={item.inv_code}>
-            {item.inv_name}
-          </option>
-        ))}
-      </datalist>
-      <datalist id="bom-boolean-options">
-        {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </datalist>
-
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-5">
           <MetricCard title="Total BOM rows" value={String(totalBomRows)} subtitle="Baris BOM yang terlihat untuk SKU ini." />
@@ -313,23 +374,19 @@ export default function ProductBomPage() {
               htmlFor="product-selection"
               className="w-[140px] shrink-0 text-xs font-medium tracking-[0.02em] text-foreground/80"
             >
-              Selected product
+              Search product
             </label>
             <div className="min-w-0">
-              <select
+              <SearchableSelect
                 id="product-selection"
-                className="min-w-[320px] rounded-2xl border border-input bg-background px-3 py-2.5 text-sm shadow-sm shadow-slate-900/5"
-                value={selectedSku ?? currentSku ?? ""}
+                className="min-w-[320px]"
+                inputClassName="h-11 min-w-[320px] rounded-2xl bg-background px-3 py-2.5 text-sm shadow-sm shadow-slate-900/5"
+                value={selectedSkuValue}
+                options={productOptions}
+                placeholder="cari produk di sini"
                 disabled={productsQuery.isLoading}
-                onChange={(event) => setSelectedSku(event.target.value || null)}
-              >
-                {(productsQuery.data ?? []).map((product) => (
-                  <option key={product.sku} value={product.sku}>
-                    {product.sku} - {product.product_name}
-                  </option>
-                ))}
-              </select>
-
+                onValueChange={(next) => setSelectedSku(next || null)}
+              />
             </div>
           </div>
           {currentSku ? (
@@ -338,7 +395,9 @@ export default function ProductBomPage() {
               disabled={actionPending}
               onClick={() => {
                 setEditingBomId(null);
-                setBomDraft(createEmptyBomDraft(currentSku));
+                setBomDraft(null);
+                setAddDraft(createEmptyBomDraft(currentSku));
+                setAddModalOpen(true);
               }}
             >
               <Plus className="size-4" />
@@ -350,6 +409,8 @@ export default function ProductBomPage() {
           <EmptyState title="Failed to load products" description={productsQuery.error.message} />
         ) : inventoryQuery.isError ? (
           <EmptyState title="Failed to load inventory" description={inventoryQuery.error.message} />
+        ) : (inventoryQuery.data?.length ?? 0) === 0 ? (
+          <EmptyState title="Inventory Is Empty" description="Isi master inventory terlebih dulu sebelum setup BOM ter-track stok." />
         ) : bomQuery.isError ? (
           <EmptyState title="Failed to load BOM rows" description={bomQuery.error.message} />
         ) : currentSku ? (
@@ -358,6 +419,169 @@ export default function ProductBomPage() {
           <EmptyState title="Select a product" description="Choose a product to manage its BOM rows." />
         )}
       </div>
+      <ModalFormShell
+        open={addModalOpen}
+        onOpenChange={(open) => {
+          setAddModalOpen(open);
+          if (!open) {
+            setAddDraft(null);
+          }
+        }}
+        title="Add BOM row"
+        description="Tambah komponen BOM baru untuk produk yang sedang dipilih."
+        submitLabel="Create BOM row"
+        isSubmitting={actionPending}
+        onSubmit={async () => {
+          if (!addDraft) return;
+          await saveBom(addDraft);
+          setAddModalOpen(false);
+          setAddDraft(null);
+        }}
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField label="Group" htmlFor="add_bom_group">
+            <SelectNative
+              id="add_bom_group"
+              value={addDraft?.component_group ?? "MAIN"}
+              onChange={(event) =>
+                setAddDraft((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        component_group: asBomGroup(event.target.value),
+                      }
+                    : prev
+                )
+              }
+            >
+              {PRODUCT_BOM_GROUP_OPTIONS.map((group) => (
+                <option key={group} value={group}>
+                  {group}
+                </option>
+              ))}
+            </SelectNative>
+          </FormField>
+          <FormField label="Type" htmlFor="add_bom_type">
+            <SelectNative
+              id="add_bom_type"
+              value={addDraft?.component_type ?? "INVENTORY"}
+              onChange={(event) =>
+                setAddDraft((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        component_type: event.target.value as (typeof PRODUCT_BOM_TYPE_OPTIONS)[number],
+                      }
+                    : prev
+                )
+              }
+            >
+              {PRODUCT_BOM_TYPE_OPTIONS.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </SelectNative>
+          </FormField>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField label="Inventory ref" htmlFor="add_bom_inventory_ref">
+            <SearchableSelect
+              id="add_bom_inventory_ref"
+              value={addDraft?.inv_code ?? ""}
+              options={inventoryOptions}
+              placeholder="Search inventory..."
+              onValueChange={(next) => setAddDraft((prev) => (prev ? { ...prev, inv_code: next || null } : prev))}
+            />
+          </FormField>
+          <FormField label="Component name" htmlFor="add_bom_component_name">
+            <Input
+              id="add_bom_component_name"
+              value={addDraft?.component_name ?? ""}
+              onChange={(event) =>
+                setAddDraft((prev) => (prev ? { ...prev, component_name: event.target.value } : prev))
+              }
+            />
+          </FormField>
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          <FormField label="Qty" htmlFor="add_bom_qty">
+            <Input
+              id="add_bom_qty"
+              value={addDraft?.qty ?? "1"}
+              onChange={(event) => setAddDraft((prev) => (prev ? { ...prev, qty: event.target.value } : prev))}
+            />
+          </FormField>
+          <FormField label="Unit cost" htmlFor="add_bom_unit_cost">
+            <Input
+              id="add_bom_unit_cost"
+              value={addDraft?.unit_cost ?? "0"}
+              onChange={(event) =>
+                setAddDraft((prev) => (prev ? { ...prev, unit_cost: event.target.value } : prev))
+              }
+            />
+          </FormField>
+          <FormField label="Sequence" htmlFor="add_bom_sequence">
+            <Input
+              id="add_bom_sequence"
+              value={String(addDraft?.sequence_no ?? 1)}
+              onChange={(event) =>
+                setAddDraft((prev) =>
+                  prev ? { ...prev, sequence_no: Number(event.target.value || 1) } : prev
+                )
+              }
+            />
+          </FormField>
+          <FormField label="Status" htmlFor="add_bom_status">
+            <SelectNative
+              id="add_bom_status"
+              value={String(addDraft?.is_active ?? true)}
+              onChange={(event) =>
+                setAddDraft((prev) => (prev ? { ...prev, is_active: parseBooleanInput(event.target.value) } : prev))
+              }
+            >
+              {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectNative>
+          </FormField>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField label="Stock tracked" htmlFor="add_bom_stock_tracked">
+            <SelectNative
+              id="add_bom_stock_tracked"
+              value={String(addDraft?.is_stock_tracked ?? true)}
+              onChange={(event) =>
+                setAddDraft((prev) =>
+                  prev ? { ...prev, is_stock_tracked: parseBooleanInput(event.target.value) } : prev
+                )
+              }
+            >
+              {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectNative>
+          </FormField>
+          <FormField label="Estimated line cost" htmlFor="add_bom_line_cost">
+            <Input
+              id="add_bom_line_cost"
+              value={((Number(addDraft?.qty ?? "0") * Number(addDraft?.unit_cost ?? "0")) || 0).toFixed(2)}
+              disabled
+            />
+          </FormField>
+        </div>
+        <FormField label="Notes" htmlFor="add_bom_notes">
+          <Textarea
+            id="add_bom_notes"
+            value={addDraft?.notes ?? ""}
+            onChange={(event) => setAddDraft((prev) => (prev ? { ...prev, notes: event.target.value } : prev))}
+          />
+        </FormField>
+      </ModalFormShell>
     </PageShell>
   );
 }

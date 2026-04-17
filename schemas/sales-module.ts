@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const SALES_STATUS_OPTIONS = ["PAID", "PICKUP", "OPEN", "CANCELLED"] as const;
+
 const decimalInput = z
   .union([z.string(), z.number()])
   .transform((value) => String(value))
@@ -33,7 +35,7 @@ export const salesOrderSchema = z.object({
   channel_id: z.coerce.number().int().optional().nullable(),
   customer_id: z.coerce.number().int().optional().nullable(),
   total_amount: decimalInput.default("0"),
-  status: z.string().min(1, "Status is required").max(50),
+  status: z.enum(SALES_STATUS_OPTIONS),
   is_historical: z.boolean().default(false),
 });
 
@@ -45,7 +47,7 @@ export const salesOrderPatchSchema = z.object({
   channel_id: z.coerce.number().int().optional().nullable(),
   customer_id: z.coerce.number().int().optional().nullable(),
   total_amount: decimalInput.optional(),
-  status: z.string().min(1, "Status is required").max(50).optional(),
+  status: z.enum(SALES_STATUS_OPTIONS).optional(),
   is_historical: z.boolean().optional(),
 });
 

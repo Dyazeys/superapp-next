@@ -10,7 +10,7 @@ export async function GET() {
         select: {
           inv_code: true,
           inv_name: true,
-          hpp: true,
+          unit_price: true,
           is_active: true,
         },
       },

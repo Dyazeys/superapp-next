@@ -15,7 +15,7 @@ export type MasterInventoryRecord = {
   inv_code: string;
   inv_name: string;
   description: string | null;
-  hpp: string;
+  unit_price: string;
   is_active: boolean;
   created_at: string;
   updated_at: string | null;

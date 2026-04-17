@@ -79,7 +79,7 @@ export type StockBalanceRecord = {
   master_inventory?: {
     inv_code: string;
     inv_name: string;
-    hpp: string;
+    unit_price: string;
     is_active: boolean;
   } | null;
 };

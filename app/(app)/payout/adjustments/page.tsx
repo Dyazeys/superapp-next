@@ -10,9 +10,15 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import { formatMoney, formatShortDate } from "@/lib/format";
-import { usePayoutAdjustments, usePayoutChannels, usePayoutOrders } from "@/features/payout/use-payout-module";
+import {
+  PAYOUT_ADJUSTMENT_TYPE_OPTIONS,
+  usePayoutAdjustments,
+  usePayoutChannels,
+  usePayoutOrders,
+} from "@/features/payout/use-payout-module";
 import type { PayoutAdjustmentInput } from "@/schemas/payout-module";
 import type { PayoutAdjustmentRecord } from "@/types/payout";
 
@@ -98,14 +104,6 @@ export default function PayoutAdjustmentsPage() {
           ) : null
         )}
       </datalist>
-      <datalist id="payout-adjustment-channel-ids">
-        {(channelsQuery.data ?? []).map((channel) => (
-          <option key={channel.channel_id} value={channel.channel_id}>
-            {channel.channel_name}
-          </option>
-        ))}
-      </datalist>
-
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-4">
           <MetricCard title="Total adjustments" value={String(totalAdjustments)} subtitle="Jumlah adjustment yang terlihat." />
@@ -157,17 +155,49 @@ export default function PayoutAdjustmentsPage() {
             label="Channel ID"
             htmlFor="adjustment_channel_id"
             error={hooks.adjustmentForm.formState.errors.channel_id?.message}
+            helperText={
+              (channelsQuery.data?.length ?? 0) === 0
+                ? "Belum ada channel master. Isi dulu di menu Channel."
+                : undefined
+            }
           >
-            <Input
+            <SelectNative
               id="adjustment_channel_id"
-              list="payout-adjustment-channel-ids"
-              {...hooks.adjustmentForm.register("channel_id", { valueAsNumber: true })}
-            />
+              value={String(hooks.adjustmentForm.watch("channel_id") ?? "")}
+              onChange={(event) =>
+                hooks.adjustmentForm.setValue("channel_id", event.target.value ? Number(event.target.value) : null)
+              }
+            >
+              <option value="">No channel</option>
+              {(channelsQuery.data ?? []).map((channel) => (
+                <option key={channel.channel_id} value={channel.channel_id}>
+                  {channel.channel_name}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Type" htmlFor="adjustment_type">
-            <Input id="adjustment_type" {...hooks.adjustmentForm.register("adjustment_type")} />
+            <SelectNative
+              id="adjustment_type"
+              value={hooks.adjustmentForm.watch("adjustment_type") ?? ""}
+              onChange={(event) =>
+                hooks.adjustmentForm.setValue(
+                  "adjustment_type",
+                  event.target.value
+                    ? (event.target.value as (typeof PAYOUT_ADJUSTMENT_TYPE_OPTIONS)[number])
+                    : null
+                )
+              }
+            >
+              <option value="">No type</option>
+              {PAYOUT_ADJUSTMENT_TYPE_OPTIONS.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
           <FormField label="Amount" htmlFor="adjustment_amount" error={hooks.adjustmentForm.formState.errors.amount?.message}>
             <Input id="adjustment_amount" {...hooks.adjustmentForm.register("amount")} />

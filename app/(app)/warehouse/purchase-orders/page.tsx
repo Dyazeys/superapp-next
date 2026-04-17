@@ -10,6 +10,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import {
   WAREHOUSE_PO_STATUS_OPTIONS,
   toDateInput,
@@ -75,19 +76,6 @@ export default function WarehousePurchaseOrdersPage() {
       title="Purchase Orders"
       description="Kelola PO untuk kontrol pembelian dan pelacakan inbound."
     >
-      <datalist id="warehouse-po-vendor-codes">
-        {(vendorsQuery.data ?? []).map((vendor) => (
-          <option key={vendor.vendor_code} value={vendor.vendor_code}>
-            {vendor.vendor_name}
-          </option>
-        ))}
-      </datalist>
-      <datalist id="warehouse-po-statuses">
-        {WAREHOUSE_PO_STATUS_OPTIONS.map((status) => (
-          <option key={status} value={status} />
-        ))}
-      </datalist>
-
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-4">
           <MetricCard title="Total PO" value={String(totalPo)} subtitle="Jumlah PO yang terlihat." />
@@ -127,8 +115,20 @@ export default function WarehousePurchaseOrdersPage() {
             label="Vendor code"
             htmlFor="vendor_code"
             error={purchaseOrderForm.formState.errors.vendor_code?.message}
+            helperText={
+              (vendorsQuery.data?.length ?? 0) === 0
+                ? "Belum ada vendor. Isi dulu di menu Warehouse > Vendors."
+                : undefined
+            }
           >
-            <Input id="vendor_code" list="warehouse-po-vendor-codes" {...purchaseOrderForm.register("vendor_code")} />
+            <SelectNative id="vendor_code" {...purchaseOrderForm.register("vendor_code")}>
+              <option value="">Select vendor</option>
+              {(vendorsQuery.data ?? []).map((vendor) => (
+                <option key={vendor.vendor_code} value={vendor.vendor_code}>
+                  {vendor.vendor_name}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -140,7 +140,13 @@ export default function WarehousePurchaseOrdersPage() {
             <Input id="order_date" type="date" {...purchaseOrderForm.register("order_date")} />
           </FormField>
           <FormField label="Status" htmlFor="status" error={purchaseOrderForm.formState.errors.status?.message}>
-            <Input id="status" list="warehouse-po-statuses" {...purchaseOrderForm.register("status")} />
+            <SelectNative id="status" {...purchaseOrderForm.register("status")}>
+              {WAREHOUSE_PO_STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
       </ModalFormShell>

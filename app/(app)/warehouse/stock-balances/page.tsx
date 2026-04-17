@@ -46,8 +46,8 @@ export default function WarehouseStockBalancesPage() {
       ),
     }),
     columnHelper.accessor("master_inventory", {
-      header: "HPP",
-      cell: (info) => info.getValue()?.hpp ?? "-",
+      header: "Unit Price",
+      cell: (info) => info.getValue()?.unit_price ?? "-",
     }),
     columnHelper.accessor("last_updated", {
       header: "Last Updated",

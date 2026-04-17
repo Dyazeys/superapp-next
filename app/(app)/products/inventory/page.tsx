@@ -27,8 +27,8 @@ export default function ProductInventoryPage() {
   const inventoryRows = inventoryQuery.data ?? [];
   const totalInventory = inventoryRows.length;
   const activeInventory = inventoryRows.filter((row) => row.is_active).length;
-  const totalHpp = inventoryRows.reduce((sum, row) => sum + Number(row.hpp || 0), 0);
-  const activeHpp = inventoryRows.reduce((sum, row) => sum + (row.is_active ? Number(row.hpp || 0) : 0), 0);
+  const totalUnitPrice = inventoryRows.reduce((sum, row) => sum + Number(row.unit_price || 0), 0);
+  const activeUnitPrice = inventoryRows.reduce((sum, row) => sum + (row.is_active ? Number(row.unit_price || 0) : 0), 0);
 
   const columns = [
     columnHelper.accessor("inv_code", {
@@ -36,7 +36,7 @@ export default function ProductInventoryPage() {
       cell: (info) => <span className="font-medium">{info.getValue()}</span>,
     }),
     columnHelper.accessor("inv_name", { header: "Inventory" }),
-    columnHelper.accessor("hpp", { header: "HPP" }),
+    columnHelper.accessor("unit_price", { header: "Unit Price" }),
     columnHelper.accessor("is_active", {
       header: "Status",
       cell: (info) => (
@@ -70,14 +70,14 @@ export default function ProductInventoryPage() {
           <MetricCard title="Total inventory" value={String(totalInventory)} subtitle="Semua item yang terlihat di halaman ini." />
           <MetricCard title="Inventory aktif" value={String(activeInventory)} subtitle="Item berstatus aktif." />
           <MetricCard
-            title="Total HPP (visible)"
-            value={totalHpp.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
-            subtitle="Akumulasi HPP dari semua item yang terlihat."
+            title="Total Unit Price (visible)"
+            value={totalUnitPrice.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Akumulasi unit price dari semua item yang terlihat."
           />
           <MetricCard
-            title="HPP aktif"
-            value={activeHpp.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
-            subtitle="Akumulasi HPP untuk item aktif."
+            title="Unit Price aktif"
+            value={activeUnitPrice.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Akumulasi unit price untuk item aktif."
           />
         </div>
 
@@ -109,8 +109,8 @@ export default function ProductInventoryPage() {
           </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="HPP" htmlFor="hpp" error={inventoryForm.formState.errors.hpp?.message}>
-            <Input id="hpp" {...inventoryForm.register("hpp")} />
+          <FormField label="Unit Price" htmlFor="unit_price" error={inventoryForm.formState.errors.unit_price?.message}>
+            <Input id="unit_price" {...inventoryForm.register("unit_price")} />
           </FormField>
           <FormField label="Active" htmlFor="inventory_active">
             <Input

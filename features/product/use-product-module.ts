@@ -8,6 +8,8 @@ import { useState } from "react";
 import { useModalState } from "@/hooks/use-modal-state";
 import { productApi } from "@/features/product/api";
 import {
+  PRODUCT_BOM_GROUP_OPTIONS,
+  PRODUCT_BOM_TYPE_OPTIONS,
   type MasterInventoryFormValues,
   masterInventorySchema,
   type MasterProductFormValues,
@@ -32,6 +34,7 @@ export const PRODUCT_BOOLEAN_OPTIONS = [
   { label: "true", value: "true" },
   { label: "false", value: "false" },
 ] as const;
+export { PRODUCT_BOM_GROUP_OPTIONS, PRODUCT_BOM_TYPE_OPTIONS };
 
 export function parseBooleanInput(value: string) {
   return value === "true";
@@ -152,7 +155,7 @@ export function useProductInventory(): ProductInventoryHook {
   const [editingInventory, setEditingInventory] = useState<MasterInventoryRecord | null>(null);
   const form = useForm<MasterInventoryFormValues, unknown, MasterInventoryInput>({
     resolver: zodResolver(masterInventorySchema),
-    defaultValues: { inv_code: "", inv_name: "", description: "", hpp: "0", is_active: true },
+    defaultValues: { inv_code: "", inv_name: "", description: "", unit_price: "0", is_active: true },
   });
   const modal = useModalState();
   const query = useQuery({ queryKey: ["product-inventory"], queryFn: productApi.inventory.list });
@@ -192,7 +195,7 @@ export function useProductInventory(): ProductInventoryHook {
       inv_code: inventory?.inv_code ?? "",
       inv_name: inventory?.inv_name ?? "",
       description: inventory?.description ?? "",
-      hpp: inventory?.hpp ?? "0",
+      unit_price: inventory?.unit_price ?? "0",
       is_active: inventory?.is_active ?? true,
     });
     modal.openModal();
@@ -360,9 +363,9 @@ export function useProductBom(selectedSku?: string) {
   };
 }
 
-export function useProductSelection(products: MasterProductRecord[] | undefined) {
+export function useProductSelection() {
   const [selectedSku, setSelectedSku] = useState<string | null>(null);
-  const currentSku = selectedSku ?? products?.[0]?.sku ?? null;
+  const currentSku = selectedSku;
 
   return { selectedSku, currentSku, setSelectedSku };
 }

@@ -13,6 +13,9 @@ import {
   inboundItemSchema,
   purchaseOrderSchema,
   vendorSchema,
+  WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS,
+  WAREHOUSE_PO_STATUS_OPTIONS,
+  WAREHOUSE_QC_STATUS_OPTIONS,
   type AdjustmentInput,
   type InboundDeliveryInput,
   type InboundItemInput,
@@ -32,7 +35,7 @@ import type {
 type InventoryLookupRecord = {
   inv_code: string;
   inv_name: string;
-  hpp?: string;
+  unit_price?: string;
   is_active?: boolean;
 };
 
@@ -88,10 +91,7 @@ export const WAREHOUSE_BOOLEAN_OPTIONS = [
   { label: "true", value: "true" },
   { label: "false", value: "false" },
 ] as const;
-
-export const WAREHOUSE_PO_STATUS_OPTIONS = ["OPEN", "PARTIAL", "CLOSED"] as const;
-export const WAREHOUSE_QC_STATUS_OPTIONS = ["PENDING", "PARTIAL", "PASSED", "REJECTED"] as const;
-export const WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS = ["IN", "OUT"] as const;
+export { WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS, WAREHOUSE_PO_STATUS_OPTIONS, WAREHOUSE_QC_STATUS_OPTIONS };
 
 const WAREHOUSE_VENDOR_KEY = ["warehouse-vendors"] as const;
 const WAREHOUSE_PURCHASE_ORDER_KEY = ["warehouse-purchase-orders"] as const;
@@ -104,6 +104,20 @@ const WAREHOUSE_INVENTORY_LOOKUP_KEY = ["warehouse-inventory-lookup"] as const;
 function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) {
   const queryClient = useQueryClient();
   return () => Promise.all(invalidateKeys.map((key) => queryClient.invalidateQueries({ queryKey: key })));
+}
+
+function toPoStatus(value: string | null | undefined) {
+  if (!value) return "OPEN" as const;
+  return WAREHOUSE_PO_STATUS_OPTIONS.includes(value as (typeof WAREHOUSE_PO_STATUS_OPTIONS)[number])
+    ? (value as (typeof WAREHOUSE_PO_STATUS_OPTIONS)[number])
+    : "OPEN";
+}
+
+function toQcStatus(value: string | null | undefined) {
+  if (!value) return "PENDING" as const;
+  return WAREHOUSE_QC_STATUS_OPTIONS.includes(value as (typeof WAREHOUSE_QC_STATUS_OPTIONS)[number])
+    ? (value as (typeof WAREHOUSE_QC_STATUS_OPTIONS)[number])
+    : "PENDING";
 }
 
 export function parseWarehouseBooleanInput(value: string) {
@@ -255,7 +269,7 @@ export function useWarehousePurchaseOrders(): PurchaseOrderHook {
       po_number: purchaseOrder?.po_number ?? "",
       vendor_code: purchaseOrder?.vendor_code ?? "",
       order_date: toDateInput(purchaseOrder?.order_date),
-      status: purchaseOrder?.status ?? "OPEN",
+      status: toPoStatus(purchaseOrder?.status),
     });
     purchaseOrderModal.openModal();
   };
@@ -328,7 +342,7 @@ export function useWarehouseInbound(): InboundHook {
       po_id: inbound?.po_id ?? null,
       receive_date: toDateInput(inbound?.receive_date),
       surat_jalan_vendor: inbound?.surat_jalan_vendor ?? "",
-      qc_status: inbound?.qc_status ?? "PENDING",
+      qc_status: toQcStatus(inbound?.qc_status),
       received_by: inbound?.received_by ?? "",
       notes: inbound?.notes ?? "",
     });
