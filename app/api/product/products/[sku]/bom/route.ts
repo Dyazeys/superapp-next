@@ -4,6 +4,13 @@ import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { productBomSchema } from "@/schemas/product-module";
 
+function normalizeBomGroup(value: unknown) {
+  if (typeof value !== "string") return value;
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "OVERHEAD") return "BRANDING";
+  return normalized;
+}
+
 async function syncProductHpp(sku: string) {
   const aggregate = await prisma.product_bom.aggregate({
     where: {
@@ -47,7 +54,12 @@ export async function POST(
 ) {
   try {
     const { sku } = await params;
-    const payload = productBomSchema.parse({ ...(await request.json()), sku });
+    const raw = await request.json();
+    const payload = productBomSchema.parse({
+      ...raw,
+      component_group: normalizeBomGroup(raw?.component_group),
+      sku,
+    });
 
     const product = await prisma.master_product.findUnique({
       where: { sku },
