@@ -48,6 +48,7 @@ function asBool(value: string) {
 
 function asBomGroup(value: string) {
   if (value === "OVERHEAD") return "BRANDING";
+  if (value === "OTHER_COST") return "BRANDING";
   return PRODUCT_BOM_GROUP_OPTIONS.includes(value as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
     ? (value as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
     : "MAIN";
