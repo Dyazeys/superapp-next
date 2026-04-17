@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const PRODUCT_BOM_GROUP_OPTIONS = ["MAIN", "PACKING", "ACCESSORY", "LABOR", "BRANDING"] as const;
+export const PRODUCT_BOM_GROUP_OPTIONS = ["MAIN", "MATERIAL", "PACKING", "ACCESSORY", "LABOR", "BRANDING"] as const;
 export const PRODUCT_BOM_TYPE_OPTIONS = ["INVENTORY", "NON_INVENTORY"] as const;
 
 const decimalInput = z
