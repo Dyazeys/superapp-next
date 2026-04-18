@@ -1,9 +1,0 @@
-production : The term 'production' is not recognized as the name of a cmdlet, function, script file, or operable 
-program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
-At line:1 char:15
-+ $env:NODE_ENV=production; Set-Location E:\deploy\superapp-next; npm r ...
-+               ~~~~~~~~~~
-    + CategoryInfo          : ObjectNotFound: (production:String) [], CommandNotFoundException
-    + FullyQualifiedErrorId : CommandNotFoundException
- 
-^C

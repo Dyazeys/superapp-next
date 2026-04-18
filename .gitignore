@@ -22,6 +22,7 @@ yarn-error.log*
 .db-tunnel.err.log
 .db-tunnel.out.log
 .db-tunnel-session.log
+.next-*.log
 .next-dev-check.err.log
 .next-dev-check.out.log
 .next-start.err.log
