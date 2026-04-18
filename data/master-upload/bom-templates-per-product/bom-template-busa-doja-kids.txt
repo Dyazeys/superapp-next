@@ -1,80 +1,36 @@
-{
-    "template_version":  "1.0",
-    "source":  {
-                   "master_product_csv":  "data/master-upload/Master Produk - Edited.csv",
-                   "notes":  "Auto-generated per product_name. Apply to all SKUs with same product_name, keyed by inv_main/inv_acc markers."
-               },
-    "execution_rule":  {
-                           "match_required":  [
-                                                  "product_name"
-                                              ],
-                           "marker_fields":  [
-                                                 "inv_main",
-                                                 "inv_acc"
-                                             ],
-                           "apply_to":  "all_skus_with_same_product_name",
-                           "deduplicate_key":  [
-                                                   "sku",
-                                                   "component_group",
-                                                   "component_type",
-                                                   "inv_code",
-                                                   "sequence_no"
-                                               ],
-                           "inv_code_binding":  {
-                                                    "INV_MAIN":  "master_product.inv_main",
-                                                    "INV_ACC":  "master_product.inv_acc"
-                                                }
-                       },
-    "product":  {
-                    "product_name":  "Busa Doja Kids",
-                    "sku_count":  3,
-                    "unique_inv_main_count":  3,
-                    "unique_inv_acc_values":  [
+# BOM template simple text (multiline)
+# Edit nilai di kanan ':'
+# when support: always | inv_main:not_null | inv_acc:not_null | inv_acc:eq:<INV_CODE>
+# inv_acc tersedia untuk product ini:
+# (tidak ada inv_acc)
 
-                                              ],
-                    "rules":  [
-                                  {
-                                      "when":  {
-                                                   "inv_main":  {
-                                                                    "not":  null
-                                                                }
-                                               },
-                                      "bom_rows":  [
-                                                       {
-                                                           "sequence_no":  1,
-                                                           "component_group":  "MAIN",
-                                                           "component_type":  "INVENTORY",
-                                                           "inv_code":  "{{INV_MAIN}}",
-                                                           "component_name":  "Main - {{INV_MAIN}}",
-                                                           "qty":  1,
-                                                           "unit_cost_source":  "inventory_unit_price",
-                                                           "is_stock_tracked":  true,
-                                                           "is_active":  true,
-                                                           "notes":  "Auto from inv_main"
-                                                       }
-                                                   ]
-                                  },
-                                  {
-                                      "when":  {
-                                                   "inv_acc":  {
-                                                                   "not":  null
-                                                               }
-                                               },
-                                      "bom_rows":  [
-                                                       {
-                                                           "sequence_no":  2,
-                                                           "component_group":  "ACCESSORY",
-                                                           "component_type":  "INVENTORY",
-                                                           "inv_code":  "{{INV_ACC}}",
-                                                           "component_name":  "Accessory - {{INV_ACC}}",
-                                                           "qty":  1,
-                                                           "unit_cost_source":  "inventory_unit_price",
-                                                           "is_stock_tracked":  true,
-                                                           "is_active":  true,
-                                                           "notes":  "Auto from inv_acc"
-                                                       }
-                                                   ]
-                                  }
-                              ]
-                }
-}
+product_name: Busa Doja Kids
+deduplicate_key: sku,component_group,component_type,inv_code,sequence_no
+
+row_begin
+when: inv_main:not_null
+sequence_no: 1
+component_group: MAIN
+component_type: INVENTORY
+inv_code: {{INV_MAIN}}
+component_name: Main - {{INV_MAIN}}
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_main
+row_end
+
+row_begin
+when: inv_acc:not_null
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - {{INV_ACC}}
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc
+row_end

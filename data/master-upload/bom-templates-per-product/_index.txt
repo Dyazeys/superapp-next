@@ -3,186 +3,186 @@
 Total product_name: 183
 Generated from: data/master-upload/Master Produk - Edited.csv
 
-- Addicted | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-addicted.txt
-- Arban | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-arban.txt
-- Aria | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-aria.txt
-- Asaki | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-asaki.txt
-- Asmat | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-asmat.txt
-- Baduy | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-baduy.txt
-- Bagra | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-bagra.txt
-- BG O5 | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-bg-o5.txt
-- BG O6 | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-bg-o6.txt
-- Bife | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-bife.txt
-- Blek Letter | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-blek-letter.txt
-- Bona | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-bona.txt
-- Born | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-born.txt
-- Buma | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-buma.txt
-- Busa Decal Reguler Checkered | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-busa-decal-reguler-checkered.txt
-- Busa Doja Kids | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-busa-doja-kids.txt
-- Busa Doja Kids Fullset | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-busa-doja-kids-fullset.txt
-- Busa Helm Doja Fullset | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-busa-helm-doja-fullset.txt
-- Busa Helm Premium Doja | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-busa-helm-premium-doja.txt
-- Busa Helm Reguler Jitsu | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-busa-helm-reguler-jitsu.txt
-- Busa Helm RIMC x Pickers | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-busa-helm-rimc-x-pickers.txt
-- Busa Rosa Flannel | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-busa-rosa-flannel.txt
-- Busa Rosa Reguler | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-busa-rosa-reguler.txt
-- Busa Slimhead 500-Tx | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-busa-slimhead-500-tx.txt
-- Caferacer M50 | SKU=12 | data/master-upload/bom-templates-per-product/bom-template-caferacer-m50.txt
-- Cala | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-cala.txt
-- Carlos | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-carlos.txt
-- Carter | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-carter.txt
-- Checkered | SKU=18 | data/master-upload/bom-templates-per-product/bom-template-checkered.txt
-- Cheesh | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-cheesh.txt
-- Choppa | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-choppa.txt
-- Cive | SKU=13 | data/master-upload/bom-templates-per-product/bom-template-cive.txt
-- Dante | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-dante.txt
-- Dayak | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-dayak.txt
-- Diba | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-diba.txt
-- Dirty | SKU=15 | data/master-upload/bom-templates-per-product/bom-template-dirty.txt
-- Doja | SKU=72 | data/master-upload/bom-templates-per-product/bom-template-doja.txt
-- Doja Kids | SKU=168 | data/master-upload/bom-templates-per-product/bom-template-doja-kids.txt
-- Doja X | SKU=36 | data/master-upload/bom-templates-per-product/bom-template-doja-x.txt
-- Ducky | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-ducky.txt
-- Dusty | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-dusty.txt
-- Ebra | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-ebra.txt
-- Ebra 2XL | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ebra-2xl.txt
-- Edgar | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-edgar.txt
-- Eliot | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-eliot.txt
-- Eljo | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-eljo.txt
-- Enduro | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-enduro.txt
-- Erga | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-erga.txt
-- Eternal | SKU=18 | data/master-upload/bom-templates-per-product/bom-template-eternal.txt
-- Faster | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-faster.txt
-- Flame | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-flame.txt
-- Flannel Garcia | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-flannel-garcia.txt
-- Flannel Origin | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-flannel-origin.txt
-- Flannel Pablo | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-flannel-pablo.txt
-- Floki | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-floki.txt
-- For Ride | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-for-ride.txt
-- Gringgo Kaca | SKU=10 | data/master-upload/bom-templates-per-product/bom-template-gringgo-kaca.txt
-- Gringgo Kancing | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-gringgo-kancing.txt
-- Halma | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-halma.txt
-- Hannya | SKU=6 | data/master-upload/bom-templates-per-product/bom-template-hannya.txt
-- Hanter | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-hanter.txt
-- Hogskull | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-hogskull.txt
-- Jerry | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-jerry.txt
-- Jitsu | SKU=24 | data/master-upload/bom-templates-per-product/bom-template-jitsu.txt
-- Journe | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-journe.txt
-- Kava | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-kava.txt
-- Kava 2XL | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-kava-2xl.txt
-- Kawa | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-kawa.txt
-- KLR Spict | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-klr-spict.txt
-- Koffin | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-koffin.txt
-- Krugger | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-krugger.txt
-- KTR Addicted | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ktr-addicted.txt
-- KTR AJS | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-ktr-ajs.txt
-- KTR Asmat | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-asmat.txt
-- KTR Baduy | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-baduy.txt
-- KTR Dayak | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-dayak.txt
-- KTR Dusty | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-dusty.txt
-- KTR Falo | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ktr-falo.txt
-- KTR Faster | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-ktr-faster.txt
-- KTR Gome | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ktr-gome.txt
-- KTR Hade | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ktr-hade.txt
-- KTR Jerry | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-jerry.txt
-- KTR Koffin | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-koffin.txt
-- KTR Kori | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-ktr-kori.txt
-- KTR Logos | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-ktr-logos.txt
-- KTR Mak Lampir | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-ktr-mak-lampir.txt
-- KTR Mosty Bob | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-mosty-bob.txt
-- KTR Mustard | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-ktr-mustard.txt
-- KTR Orto | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-orto.txt
-- KTR Rimo | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-rimo.txt
-- KTR Sidar | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ktr-sidar.txt
-- KTR The Kong | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-ktr-the-kong.txt
-- KTR Tomkull | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-tomkull.txt
-- KTR Torgo | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ktr-torgo.txt
-- KTR Veni | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ktr-veni.txt
-- KTR Viel | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-viel.txt
-- KTR Washi | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-washi.txt
-- KTR Welly | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-ktr-welly.txt
-- KTR Whisper | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ktr-whisper.txt
-- KTR Yone | SKU=7 | data/master-upload/bom-templates-per-product/bom-template-ktr-yone.txt
-- KTR Zero | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-ktr-zero.txt
-- Logos | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-logos.txt
-- Lubro Bandit M30 | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-lubro-bandit-m30.txt
-- Magpies | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-magpies.txt
-- Mario | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-mario.txt
-- Marko | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-marko.txt
-- Marteen | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-marteen.txt
-- Matteo | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-matteo.txt
-- Minimoto | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-minimoto.txt
-- Miya | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-miya.txt
-- Moran | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-moran.txt
-- Moran 2XL | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-moran-2xl.txt
-- Mosto | SKU=7 | data/master-upload/bom-templates-per-product/bom-template-mosto.txt
-- Mosty | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-mosty.txt
-- Mosty Bob | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-mosty-bob.txt
-- Mosty Bob Pendek | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-mosty-bob-pendek.txt
-- Mustrad | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-mustrad.txt
-- Never | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-never.txt
-- Nikas | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-nikas.txt
-- No Bad Day | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-no-bad-day.txt
-- NP Blek Letter | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-np-blek-letter.txt
-- Orto | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-orto.txt
-- Parker | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-parker.txt
-- Pedo | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-pedo.txt
-- Pendek | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-pendek.txt
-- Pet Warna | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-pet-warna.txt
-- Pet Warna Transparant | SKU=6 | data/master-upload/bom-templates-per-product/bom-template-pet-warna-transparant.txt
-- Ragnar | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-ragnar.txt
-- Redwing | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-redwing.txt
-- Republik Kandang Babi | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-republik-kandang-babi.txt
-- Ride Hard | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-ride-hard.txt
-- Riga | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-riga.txt
-- Rimo | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-rimo.txt
-- Rok Doja Kids | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-rok-doja-kids.txt
-- Rok Seri Doja | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-rok-seri-doja.txt
-- Rosa | SKU=90 | data/master-upload/bom-templates-per-product/bom-template-rosa.txt
-- Rosa Flannel | SKU=90 | data/master-upload/bom-templates-per-product/bom-template-rosa-flannel.txt
-- Rosa Pilot | SKU=18 | data/master-upload/bom-templates-per-product/bom-template-rosa-pilot.txt
-- Rotwell | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-rotwell.txt
-- Runaway | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-runaway.txt
-- Saka | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-saka.txt
-- Santos | SKU=21 | data/master-upload/bom-templates-per-product/bom-template-santos.txt
-- Sheet | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-sheet.txt
-- Shovel Head | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-shovel-head.txt
-- Skull | SKU=13 | data/master-upload/bom-templates-per-product/bom-template-skull.txt
-- Slim 500TX | SKU=58 | data/master-upload/bom-templates-per-product/bom-template-slim-500tx.txt
-- Slim 500TX List Chrome | SKU=7 | data/master-upload/bom-templates-per-product/bom-template-slim-500tx-list-chrome.txt
-- Snail | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-snail.txt
-- Snapback | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-snapback.txt
-- Speed | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-speed.txt
-- Speega | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-speega.txt
-- Spict | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-spict.txt
-- Sugoti | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-sugoti.txt
-- Taco | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-taco.txt
-- Tayeng | SKU=25 | data/master-upload/bom-templates-per-product/bom-template-tayeng.txt
-- Tera | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-tera.txt
-- The Kong | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-the-kong.txt
-- The Stars | SKU=6 | data/master-upload/bom-templates-per-product/bom-template-the-stars.txt
-- The Wind | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-the-wind.txt
-- Tigre | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-tigre.txt
-- Tomkull | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-tomkull.txt
-- Torgo | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-torgo.txt
-- Toso | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-toso.txt
-- Transparan | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-transparan.txt
-- Travea | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-travea.txt
-- Travers | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-travers.txt
-- Trucker | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-trucker.txt
-- Union Jack | SKU=18 | data/master-upload/bom-templates-per-product/bom-template-union-jack.txt
-- Versity Madass | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-versity-madass.txt
-- Versity Wonder | SKU=3 | data/master-upload/bom-templates-per-product/bom-template-versity-wonder.txt
-- Viel | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-viel.txt
-- Voco | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-voco.txt
-- Vulture | SKU=4 | data/master-upload/bom-templates-per-product/bom-template-vulture.txt
-- Washi | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-washi.txt
-- Welly | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-welly.txt
-- Whisper | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-whisper.txt
-- Windbreaker Mogos | SKU=10 | data/master-upload/bom-templates-per-product/bom-template-windbreaker-mogos.txt
-- Windbreaker Vasa | SKU=15 | data/master-upload/bom-templates-per-product/bom-template-windbreaker-vasa.txt
-- WS Welly | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-ws-welly.txt
-- Yapko | SKU=5 | data/master-upload/bom-templates-per-product/bom-template-yapko.txt
-- Yone | SKU=9 | data/master-upload/bom-templates-per-product/bom-template-yone.txt
-- Zero | SKU=2 | data/master-upload/bom-templates-per-product/bom-template-zero.txt
-- Zuqa | SKU=1 | data/master-upload/bom-templates-per-product/bom-template-zuqa.txt
+- Addicted | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-addicted.txt
+- Arban | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-arban.txt
+- Aria | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-aria.txt
+- Asaki | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-asaki.txt
+- Asmat | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-asmat.txt
+- Baduy | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-baduy.txt
+- Bagra | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-bagra.txt
+- BG O5 | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-bg-o5.txt
+- BG O6 | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-bg-o6.txt
+- Bife | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-bife.txt
+- Blek Letter | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-blek-letter.txt
+- Bona | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-bona.txt
+- Born | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-born.txt
+- Buma | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-buma.txt
+- Busa Decal Reguler Checkered | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-busa-decal-reguler-checkered.txt
+- Busa Doja Kids | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-busa-doja-kids.txt
+- Busa Doja Kids Fullset | SKU=3 | inv_acc_variants=1 | data/master-upload/bom-templates-per-product/bom-template-busa-doja-kids-fullset.txt
+- Busa Helm Doja Fullset | SKU=3 | inv_acc_variants=1 | data/master-upload/bom-templates-per-product/bom-template-busa-helm-doja-fullset.txt
+- Busa Helm Premium Doja | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-busa-helm-premium-doja.txt
+- Busa Helm Reguler Jitsu | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-busa-helm-reguler-jitsu.txt
+- Busa Helm RIMC x Pickers | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-busa-helm-rimc-x-pickers.txt
+- Busa Rosa Flannel | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-busa-rosa-flannel.txt
+- Busa Rosa Reguler | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-busa-rosa-reguler.txt
+- Busa Slimhead 500-Tx | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-busa-slimhead-500-tx.txt
+- Caferacer M50 | SKU=12 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-caferacer-m50.txt
+- Cala | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-cala.txt
+- Carlos | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-carlos.txt
+- Carter | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-carter.txt
+- Checkered | SKU=18 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-checkered.txt
+- Cheesh | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-cheesh.txt
+- Choppa | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-choppa.txt
+- Cive | SKU=13 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-cive.txt
+- Dante | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-dante.txt
+- Dayak | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-dayak.txt
+- Diba | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-diba.txt
+- Dirty | SKU=15 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-dirty.txt
+- Doja | SKU=72 | inv_acc_variants=2 | data/master-upload/bom-templates-per-product/bom-template-doja.txt
+- Doja Kids | SKU=168 | inv_acc_variants=7 | data/master-upload/bom-templates-per-product/bom-template-doja-kids.txt
+- Doja X | SKU=36 | inv_acc_variants=2 | data/master-upload/bom-templates-per-product/bom-template-doja-x.txt
+- Ducky | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ducky.txt
+- Dusty | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-dusty.txt
+- Ebra | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ebra.txt
+- Ebra 2XL | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ebra-2xl.txt
+- Edgar | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-edgar.txt
+- Eliot | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-eliot.txt
+- Eljo | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-eljo.txt
+- Enduro | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-enduro.txt
+- Erga | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-erga.txt
+- Eternal | SKU=18 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-eternal.txt
+- Faster | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-faster.txt
+- Flame | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-flame.txt
+- Flannel Garcia | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-flannel-garcia.txt
+- Flannel Origin | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-flannel-origin.txt
+- Flannel Pablo | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-flannel-pablo.txt
+- Floki | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-floki.txt
+- For Ride | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-for-ride.txt
+- Gringgo Kaca | SKU=10 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-gringgo-kaca.txt
+- Gringgo Kancing | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-gringgo-kancing.txt
+- Halma | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-halma.txt
+- Hannya | SKU=6 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-hannya.txt
+- Hanter | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-hanter.txt
+- Hogskull | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-hogskull.txt
+- Jerry | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-jerry.txt
+- Jitsu | SKU=24 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-jitsu.txt
+- Journe | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-journe.txt
+- Kava | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-kava.txt
+- Kava 2XL | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-kava-2xl.txt
+- Kawa | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-kawa.txt
+- KLR Spict | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-klr-spict.txt
+- Koffin | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-koffin.txt
+- Krugger | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-krugger.txt
+- KTR Addicted | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-addicted.txt
+- KTR AJS | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-ajs.txt
+- KTR Asmat | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-asmat.txt
+- KTR Baduy | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-baduy.txt
+- KTR Dayak | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-dayak.txt
+- KTR Dusty | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-dusty.txt
+- KTR Falo | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-falo.txt
+- KTR Faster | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-faster.txt
+- KTR Gome | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-gome.txt
+- KTR Hade | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-hade.txt
+- KTR Jerry | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-jerry.txt
+- KTR Koffin | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-koffin.txt
+- KTR Kori | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-kori.txt
+- KTR Logos | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-logos.txt
+- KTR Mak Lampir | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-mak-lampir.txt
+- KTR Mosty Bob | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-mosty-bob.txt
+- KTR Mustard | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-mustard.txt
+- KTR Orto | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-orto.txt
+- KTR Rimo | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-rimo.txt
+- KTR Sidar | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-sidar.txt
+- KTR The Kong | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-the-kong.txt
+- KTR Tomkull | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-tomkull.txt
+- KTR Torgo | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-torgo.txt
+- KTR Veni | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-veni.txt
+- KTR Viel | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-viel.txt
+- KTR Washi | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-washi.txt
+- KTR Welly | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-welly.txt
+- KTR Whisper | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-whisper.txt
+- KTR Yone | SKU=7 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-yone.txt
+- KTR Zero | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ktr-zero.txt
+- Logos | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-logos.txt
+- Lubro Bandit M30 | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-lubro-bandit-m30.txt
+- Magpies | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-magpies.txt
+- Mario | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-mario.txt
+- Marko | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-marko.txt
+- Marteen | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-marteen.txt
+- Matteo | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-matteo.txt
+- Minimoto | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-minimoto.txt
+- Miya | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-miya.txt
+- Moran | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-moran.txt
+- Moran 2XL | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-moran-2xl.txt
+- Mosto | SKU=7 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-mosto.txt
+- Mosty | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-mosty.txt
+- Mosty Bob | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-mosty-bob.txt
+- Mosty Bob Pendek | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-mosty-bob-pendek.txt
+- Mustrad | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-mustrad.txt
+- Never | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-never.txt
+- Nikas | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-nikas.txt
+- No Bad Day | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-no-bad-day.txt
+- NP Blek Letter | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-np-blek-letter.txt
+- Orto | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-orto.txt
+- Parker | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-parker.txt
+- Pedo | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-pedo.txt
+- Pendek | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-pendek.txt
+- Pet Warna | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-pet-warna.txt
+- Pet Warna Transparant | SKU=6 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-pet-warna-transparant.txt
+- Ragnar | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ragnar.txt
+- Redwing | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-redwing.txt
+- Republik Kandang Babi | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-republik-kandang-babi.txt
+- Ride Hard | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ride-hard.txt
+- Riga | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-riga.txt
+- Rimo | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-rimo.txt
+- Rok Doja Kids | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-rok-doja-kids.txt
+- Rok Seri Doja | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-rok-seri-doja.txt
+- Rosa | SKU=90 | inv_acc_variants=4 | data/master-upload/bom-templates-per-product/bom-template-rosa.txt
+- Rosa Flannel | SKU=90 | inv_acc_variants=4 | data/master-upload/bom-templates-per-product/bom-template-rosa-flannel.txt
+- Rosa Pilot | SKU=18 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-rosa-pilot.txt
+- Rotwell | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-rotwell.txt
+- Runaway | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-runaway.txt
+- Saka | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-saka.txt
+- Santos | SKU=21 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-santos.txt
+- Sheet | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-sheet.txt
+- Shovel Head | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-shovel-head.txt
+- Skull | SKU=13 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-skull.txt
+- Slim 500TX | SKU=58 | inv_acc_variants=2 | data/master-upload/bom-templates-per-product/bom-template-slim-500tx.txt
+- Slim 500TX List Chrome | SKU=7 | inv_acc_variants=2 | data/master-upload/bom-templates-per-product/bom-template-slim-500tx-list-chrome.txt
+- Snail | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-snail.txt
+- Snapback | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-snapback.txt
+- Speed | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-speed.txt
+- Speega | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-speega.txt
+- Spict | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-spict.txt
+- Sugoti | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-sugoti.txt
+- Taco | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-taco.txt
+- Tayeng | SKU=25 | inv_acc_variants=3 | data/master-upload/bom-templates-per-product/bom-template-tayeng.txt
+- Tera | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-tera.txt
+- The Kong | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-the-kong.txt
+- The Stars | SKU=6 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-the-stars.txt
+- The Wind | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-the-wind.txt
+- Tigre | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-tigre.txt
+- Tomkull | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-tomkull.txt
+- Torgo | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-torgo.txt
+- Toso | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-toso.txt
+- Transparan | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-transparan.txt
+- Travea | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-travea.txt
+- Travers | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-travers.txt
+- Trucker | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-trucker.txt
+- Union Jack | SKU=18 | inv_acc_variants=2 | data/master-upload/bom-templates-per-product/bom-template-union-jack.txt
+- Versity Madass | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-versity-madass.txt
+- Versity Wonder | SKU=3 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-versity-wonder.txt
+- Viel | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-viel.txt
+- Voco | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-voco.txt
+- Vulture | SKU=4 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-vulture.txt
+- Washi | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-washi.txt
+- Welly | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-welly.txt
+- Whisper | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-whisper.txt
+- Windbreaker Mogos | SKU=10 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-windbreaker-mogos.txt
+- Windbreaker Vasa | SKU=15 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-windbreaker-vasa.txt
+- WS Welly | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-ws-welly.txt
+- Yapko | SKU=5 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-yapko.txt
+- Yone | SKU=9 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-yone.txt
+- Zero | SKU=2 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-zero.txt
+- Zuqa | SKU=1 | inv_acc_variants=0 | data/master-upload/bom-templates-per-product/bom-template-zuqa.txt
