@@ -101,7 +101,7 @@ export const MASTER_IMPORT_DEFINITIONS: Record<MasterImportKey, ImportDefinition
   inventory: {
     label: "Inventory",
     description: "Master inventory/bahan.",
-    allowedColumns: ["inv_code", "inv_name", "description", "unit_price", "hpp", "is_active"],
+    allowedColumns: ["inv_code", "inv_name", "description", "unit_price", "unit_cost", "hpp", "is_active"],
     requiredColumns: ["inv_code", "inv_name", "unit_price"],
   },
   vendor: {
@@ -497,7 +497,8 @@ async function handleProductRow(row: Record<string, string>, mode: MasterImportM
 }
 
 async function handleInventoryRow(row: Record<string, string>, mode: MasterImportMode): Promise<RowAction> {
-  const unitPriceRaw = (row.unit_price ?? "").trim() || (row.hpp ?? "").trim() || "0";
+  const unitPriceRaw =
+    (row.unit_price ?? "").trim() || (row.unit_cost ?? "").trim() || (row.hpp ?? "").trim() || "0";
   const payload = masterInventorySchema.parse({
     inv_code: row.inv_code,
     inv_name: row.inv_name,
@@ -601,6 +602,18 @@ function validateColumns(master: MasterImportKey, headers: string[]) {
   const unknown = headers.filter((header) => !definition.allowedColumns.includes(header));
   if (unknown.length > 0) {
     throw new Error(`Unknown columns for ${master}: ${unknown.join(", ")}`);
+  }
+
+  if (master === "inventory") {
+    const hasPriceColumn = headers.includes("unit_price") || headers.includes("unit_cost") || headers.includes("hpp");
+    if (!hasPriceColumn) {
+      throw new Error("Missing required columns for inventory: one of unit_price, unit_cost, or hpp");
+    }
+    const baseMissing = ["inv_code", "inv_name"].filter((required) => !headers.includes(required));
+    if (baseMissing.length > 0) {
+      throw new Error(`Missing required columns for inventory: ${baseMissing.join(", ")}`);
+    }
+    return;
   }
 
   const missing = definition.requiredColumns.filter((required) => !headers.includes(required));
