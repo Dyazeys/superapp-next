@@ -3,6 +3,19 @@ import { z } from "zod";
 export const WAREHOUSE_PO_STATUS_OPTIONS = ["OPEN", "PARTIAL", "CLOSED"] as const;
 export const WAREHOUSE_QC_STATUS_OPTIONS = ["PENDING", "PARTIAL", "PASSED", "REJECTED"] as const;
 export const WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS = ["IN", "OUT"] as const;
+export const WAREHOUSE_ADJUSTMENT_REASON_OPTIONS = [
+  "Loss",
+  "Surplus",
+  "Rijek",
+  "Event Masuk",
+  "Event Keluar",
+  "Konsinyasi Masuk",
+  "Konsinyasi Keluar",
+  "Inventaris Konten",
+  "Sampel Produk",
+  "Display",
+  "Tukar Produk",
+] as const;
 
 const decimalInput = z
   .union([z.string(), z.number()])
@@ -91,7 +104,8 @@ export const adjustmentSchema = z.object({
   inv_code: z.string().min(1, "Inventory code is required").max(100),
   adj_type: z.enum(WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS),
   qty: z.coerce.number().int().min(1),
-  reason: z.string().min(2, "Reason is required"),
+  reason: z.enum(WAREHOUSE_ADJUSTMENT_REASON_OPTIONS),
+  notes: z.string().optional().nullable(),
   approved_by: z.string().max(100).optional().nullable(),
 });
 

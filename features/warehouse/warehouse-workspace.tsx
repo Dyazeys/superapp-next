@@ -16,6 +16,7 @@ import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import { warehouseApi } from "@/features/warehouse/api";
 import { useModalState } from "@/hooks/use-modal-state";
@@ -24,6 +25,8 @@ import {
   inboundDeliverySchema,
   purchaseOrderSchema,
   vendorSchema,
+  WAREHOUSE_ADJUSTMENT_REASON_OPTIONS,
+  WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS,
   WAREHOUSE_PO_STATUS_OPTIONS,
   WAREHOUSE_QC_STATUS_OPTIONS,
   type AdjustmentInput,
@@ -49,6 +52,9 @@ const inboundItemColumnHelper = createColumnHelper<InboundItemRecord>();
 const adjustmentColumnHelper = createColumnHelper<AdjustmentRecord>();
 const stockBalanceColumnHelper = createColumnHelper<StockBalanceRecord>();
 const stockMovementColumnHelper = createColumnHelper<StockMovementRecord>();
+type AdjustmentFormValues = Omit<AdjustmentInput, "qty"> & {
+  qty: unknown;
+};
 
 function asBool(value: string) {
   return value === "true";
@@ -155,9 +161,17 @@ export function WarehouseWorkspace() {
     resolver: zodResolver(inboundDeliverySchema),
     defaultValues: { po_id: null, receive_date: "", surat_jalan_vendor: "", qc_status: "PENDING", received_by: "", notes: "" },
   });
-  const adjustmentForm = useForm({
+  const adjustmentForm = useForm<AdjustmentFormValues, unknown, AdjustmentInput>({
     resolver: zodResolver(adjustmentSchema),
-    defaultValues: { adjustment_date: "", inv_code: "", adj_type: "IN", qty: 1, reason: "", approved_by: "" },
+    defaultValues: {
+      adjustment_date: "",
+      inv_code: "",
+      adj_type: "IN",
+      qty: 1,
+      reason: WAREHOUSE_ADJUSTMENT_REASON_OPTIONS[0],
+      notes: "",
+      approved_by: "",
+    },
   });
 
   async function invalidateAll() {
@@ -280,7 +294,17 @@ export function WarehouseWorkspace() {
 
   const openAdjustmentModal = useCallback((adjustment?: AdjustmentRecord) => {
     setEditingAdjustment(adjustment ?? null);
-    adjustmentForm.reset({ adjustment_date: toDateInput(adjustment?.adjustment_date), inv_code: adjustment?.inv_code ?? "", adj_type: (adjustment?.adj_type as "IN" | "OUT" | undefined) ?? "IN", qty: adjustment?.qty ?? 1, reason: adjustment?.reason ?? "", approved_by: adjustment?.approved_by ?? "" });
+    adjustmentForm.reset({
+      adjustment_date: toDateInput(adjustment?.adjustment_date),
+      inv_code: adjustment?.inv_code ?? "",
+      adj_type: (adjustment?.adj_type as "IN" | "OUT" | undefined) ?? "IN",
+      qty: adjustment?.qty ?? 1,
+      reason:
+        (adjustment?.reason as (typeof WAREHOUSE_ADJUSTMENT_REASON_OPTIONS)[number] | undefined) ??
+        WAREHOUSE_ADJUSTMENT_REASON_OPTIONS[0],
+      notes: adjustment?.notes ?? "",
+      approved_by: adjustment?.approved_by ?? "",
+    });
     adjustmentModal.openModal();
   }, [adjustmentForm, adjustmentModal]);
 
@@ -459,6 +483,7 @@ export function WarehouseWorkspace() {
       adjustmentColumnHelper.accessor("adj_type", { header: "Type", cell: (info) => <StatusBadge label={info.getValue()} tone={info.getValue() === "IN" ? "success" : "warning"} /> }),
       adjustmentColumnHelper.accessor("qty", { header: "Qty" }),
       adjustmentColumnHelper.accessor("reason", { header: "Reason" }),
+      adjustmentColumnHelper.accessor("notes", { header: "Catatan", cell: (info) => info.getValue() ?? "-" }),
       adjustmentColumnHelper.display({
         id: "actions",
         header: "",
@@ -608,13 +633,32 @@ export function WarehouseWorkspace() {
         <div className="grid gap-4 md:grid-cols-3">
           <FormField label="Adjustment date" htmlFor="adjustment_date" error={adjustmentForm.formState.errors.adjustment_date?.message}><Input id="adjustment_date" type="date" {...adjustmentForm.register("adjustment_date")} /></FormField>
           <FormField label="Inventory code" htmlFor="adjustment_inv_code" error={adjustmentForm.formState.errors.inv_code?.message}><Input id="adjustment_inv_code" list="warehouse-inventory-codes" {...adjustmentForm.register("inv_code")} /></FormField>
-          <FormField label="Type" htmlFor="adjustment_type" error={adjustmentForm.formState.errors.adj_type?.message}><Input id="adjustment_type" list="warehouse-adjustment-types" {...adjustmentForm.register("adj_type")} /></FormField>
+          <FormField label="Type" htmlFor="adjustment_type" error={adjustmentForm.formState.errors.adj_type?.message}>
+            <SelectNative id="adjustment_type" {...adjustmentForm.register("adj_type")}>
+              {WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </SelectNative>
+          </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Quantity" htmlFor="adjustment_qty" error={adjustmentForm.formState.errors.qty?.message}><Input id="adjustment_qty" {...adjustmentForm.register("qty")} /></FormField>
           <FormField label="Approved by" htmlFor="approved_by"><Input id="approved_by" {...adjustmentForm.register("approved_by")} /></FormField>
         </div>
-        <FormField label="Reason" htmlFor="reason" error={adjustmentForm.formState.errors.reason?.message}><Textarea id="reason" {...adjustmentForm.register("reason")} /></FormField>
+        <FormField label="Reason" htmlFor="reason" error={adjustmentForm.formState.errors.reason?.message}>
+          <SelectNative id="reason" {...adjustmentForm.register("reason")}>
+            {WAREHOUSE_ADJUSTMENT_REASON_OPTIONS.map((reason) => (
+              <option key={reason} value={reason}>
+                {reason}
+              </option>
+            ))}
+          </SelectNative>
+        </FormField>
+        <FormField label="Catatan" htmlFor="adjustment_notes" error={adjustmentForm.formState.errors.notes?.message}>
+          <Textarea id="adjustment_notes" rows={3} {...adjustmentForm.register("notes")} />
+        </FormField>
       </ModalFormShell>
     </div>
   );

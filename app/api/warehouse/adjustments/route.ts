@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
           adj_type: payload.adj_type,
           qty: payload.qty,
           reason: payload.reason,
+          notes: payload.notes || null,
           approved_by: payload.approved_by || null,
         },
         include: {

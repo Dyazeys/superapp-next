@@ -29,6 +29,7 @@ export async function PATCH(
         adj_type: payload.adj_type,
         qty: payload.qty,
         reason: payload.reason,
+        notes: payload.notes === undefined ? undefined : payload.notes || null,
         approved_by: payload.approved_by === undefined ? undefined : payload.approved_by || null,
       },
       include: {

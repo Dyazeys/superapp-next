@@ -2,7 +2,27 @@
 
 Dokumen ini menjelaskan model database inti SuperApp secara singkat dan padat.
 
-## Update Terakhir (13 April 2026)
+## Update Terakhir (20 April 2026)
+
+- `warehouse.adjustments` sekarang punya kolom `notes` (catatan adjustment).
+- Input `warehouse.adjustments.adj_type` dibatasi ke `IN` / `OUT`.
+- Input `warehouse.adjustments.reason` dibatasi ke daftar reason operasional berikut:
+  - `Loss`
+  - `Surplus`
+  - `Rijek`
+  - `Event Masuk`
+  - `Event Keluar`
+  - `Konsinyasi Masuk`
+  - `Konsinyasi Keluar`
+  - `Inventaris Konten`
+  - `Sampel Produk`
+  - `Display`
+  - `Tukar Produk`
+- Setiap create/update/delete `warehouse.adjustments` disinkronkan ke `warehouse.stock_movements` dengan:
+  - `reference_type = ADJUSTMENT`
+  - `reference_id = adjustments.id`
+
+## Update Sebelumnya (13 April 2026)
 
 - Import `master inventory` sekarang memakai kolom CSV `unit_price` (fallback ke `hpp` jika file lama), lalu dipetakan ke kolom DB `product.master_inventory.hpp`.
 - Untuk data awal, `unit_price` kosong diperbolehkan dan otomatis dibaca sebagai `0`.
@@ -536,6 +556,48 @@ CREATE INDEX idx_warehouse_stock_movements_inv_code
 CREATE INDEX idx_warehouse_stock_movements_reference
   ON warehouse.stock_movements(reference_type, reference_id);
 ```
+
+### warehouse.adjustments
+
+```sql
+CREATE TABLE warehouse.adjustments (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  adjustment_date DATE NOT NULL,
+  inv_code        VARCHAR(100) NOT NULL,
+  adj_type        VARCHAR(10) NOT NULL,
+  qty             INT NOT NULL,
+  reason          TEXT NOT NULL,
+  notes           TEXT,
+  approved_by     VARCHAR(100),
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT fk_adjustments_inv_code
+    FOREIGN KEY (inv_code) REFERENCES product.master_inventory(inv_code) ON DELETE RESTRICT,
+  CONSTRAINT chk_adjustments_adj_type
+    CHECK (adj_type IN ('IN', 'OUT')),
+  CONSTRAINT chk_adjustments_reason
+    CHECK (reason IN (
+      'Loss',
+      'Surplus',
+      'Rijek',
+      'Event Masuk',
+      'Event Keluar',
+      'Konsinyasi Masuk',
+      'Konsinyasi Keluar',
+      'Inventaris Konten',
+      'Sampel Produk',
+      'Display',
+      'Tukar Produk'
+    ))
+);
+CREATE INDEX idx_warehouse_adjustments_inv_code
+  ON warehouse.adjustments(inv_code);
+CREATE INDEX idx_warehouse_adjustments_adjustment_date
+  ON warehouse.adjustments(adjustment_date);
+```
+
+Catatan implementasi:
+- Validasi enum `adj_type` dan `reason` saat ini ditegakkan di level aplikasi (`zod schema` / API).
+- DB di atas menampilkan bentuk constraint yang disarankan agar konsisten dengan aplikasi.
 
 ### accounting.accounts
 

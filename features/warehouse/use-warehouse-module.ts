@@ -9,6 +9,7 @@ import { useModalState } from "@/hooks/use-modal-state";
 import { warehouseApi } from "@/features/warehouse/api";
 import {
   adjustmentSchema,
+  WAREHOUSE_ADJUSTMENT_REASON_OPTIONS,
   inboundDeliverySchema,
   inboundItemSchema,
   purchaseOrderSchema,
@@ -502,7 +503,8 @@ export function useWarehouseAdjustments(): AdjustmentHook {
       inv_code: "",
       adj_type: "IN",
       qty: 1,
-      reason: "",
+      reason: WAREHOUSE_ADJUSTMENT_REASON_OPTIONS[0],
+      notes: "",
       approved_by: "",
     },
   });
@@ -553,7 +555,10 @@ export function useWarehouseAdjustments(): AdjustmentHook {
       inv_code: adjustment?.inv_code ?? "",
       adj_type: (adjustment?.adj_type as "IN" | "OUT" | undefined) ?? "IN",
       qty: adjustment?.qty ?? 1,
-      reason: adjustment?.reason ?? "",
+      reason:
+        (adjustment?.reason as (typeof WAREHOUSE_ADJUSTMENT_REASON_OPTIONS)[number] | undefined) ??
+        WAREHOUSE_ADJUSTMENT_REASON_OPTIONS[0],
+      notes: adjustment?.notes ?? "",
       approved_by: adjustment?.approved_by ?? "",
     });
     adjustmentModal.openModal();

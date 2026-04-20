@@ -64,6 +64,7 @@ export type AdjustmentRecord = {
   adj_type: string;
   qty: number;
   reason: string;
+  notes: string | null;
   approved_by: string | null;
   created_at: string;
   master_inventory?: {

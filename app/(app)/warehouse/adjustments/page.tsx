@@ -10,6 +10,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import {
   WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS,
@@ -17,7 +18,7 @@ import {
   useWarehouseAdjustments,
   useWarehouseInventoryLookup,
 } from "@/features/warehouse/use-warehouse-module";
-import type { AdjustmentInput } from "@/schemas/warehouse-module";
+import { WAREHOUSE_ADJUSTMENT_REASON_OPTIONS, type AdjustmentInput } from "@/schemas/warehouse-module";
 import type { AdjustmentRecord } from "@/types/warehouse";
 
 const columnHelper = createColumnHelper<AdjustmentRecord>();
@@ -62,6 +63,10 @@ export default function WarehouseAdjustmentsPage() {
     }),
     columnHelper.accessor("qty", { header: "Qty" }),
     columnHelper.accessor("reason", { header: "Reason" }),
+    columnHelper.accessor("notes", {
+      header: "Catatan",
+      cell: (info) => info.getValue() ?? "-",
+    }),
     columnHelper.accessor("approved_by", {
       header: "Approved By",
       cell: (info) => info.getValue() ?? "-",
@@ -95,12 +100,6 @@ export default function WarehouseAdjustmentsPage() {
           </option>
         ))}
       </datalist>
-      <datalist id="warehouse-adjustment-types">
-        {WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS.map((type) => (
-          <option key={type} value={type} />
-        ))}
-      </datalist>
-
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-4">
           <MetricCard title="Total adjustments" value={String(totalAdjustments)} subtitle="Jumlah adjustment yang terlihat." />
@@ -146,7 +145,13 @@ export default function WarehouseAdjustmentsPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Type" htmlFor="adj_type" error={adjustmentForm.formState.errors.adj_type?.message}>
-            <Input id="adj_type" list="warehouse-adjustment-types" {...adjustmentForm.register("adj_type")} />
+            <SelectNative id="adj_type" {...adjustmentForm.register("adj_type")}>
+              {WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
           <FormField label="Quantity" htmlFor="adjustment_qty" error={adjustmentForm.formState.errors.qty?.message}>
             <Input id="adjustment_qty" type="number" {...adjustmentForm.register("qty", { valueAsNumber: true })} />
@@ -157,9 +162,18 @@ export default function WarehouseAdjustmentsPage() {
             <Input id="approved_by" {...adjustmentForm.register("approved_by")} />
           </FormField>
           <FormField label="Reason" htmlFor="adjustment_reason" error={adjustmentForm.formState.errors.reason?.message}>
-            <Textarea id="adjustment_reason" {...adjustmentForm.register("reason")} />
+            <SelectNative id="adjustment_reason" {...adjustmentForm.register("reason")}>
+              {WAREHOUSE_ADJUSTMENT_REASON_OPTIONS.map((reason) => (
+                <option key={reason} value={reason}>
+                  {reason}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
+        <FormField label="Catatan" htmlFor="adjustment_notes" error={adjustmentForm.formState.errors.notes?.message}>
+          <Textarea id="adjustment_notes" rows={3} {...adjustmentForm.register("notes")} />
+        </FormField>
       </ModalFormShell>
     </PageShell>
   );

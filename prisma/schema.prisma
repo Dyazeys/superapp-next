@@ -400,6 +400,7 @@ model adjustments {
   adj_type         String           @db.VarChar(10)
   qty              Int
   reason           String
+  notes            String?
   approved_by      String?          @db.VarChar(100)
   created_at       DateTime         @default(now()) @db.Timestamptz(6)
   master_inventory master_inventory @relation(fields: [inv_code], references: [inv_code], map: "fk_adjustments_inv_code")
