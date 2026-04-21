@@ -18,16 +18,19 @@ type DataTableProps<TData> = {
   columns: ColumnDef<TData, any>[];
   data: TData[];
   emptyMessage?: string;
+  getRowId?: (originalRow: TData, index: number, parent?: { id: string }) => string;
 };
 
 export function DataTable<TData>({
   columns,
   data,
   emptyMessage = "No rows to display.",
+  getRowId,
 }: DataTableProps<TData>) {
   const table = useReactTable({
     data,
     columns,
+    getRowId,
     getCoreRowModel: getCoreRowModel(),
   });
 

@@ -1,0 +1,3 @@
+sku,component_group,component_type,inv_code,component_name,qty,unit_cost,is_stock_tracked,notes,sequence_no,is_active
+RIMC-HLM-DJA-BG-L,MAIN,INVENTORY,RIMC-HLM-DJA-BG-L,Main - RIMC-HLM-DJA-BG-L,1,172000,true,Auto from inv_main,1,true
+RIMC-HLM-DJA-BG-L,PACKING,NON_INVENTORY,,PACKING,1,4000,false,"BUBBLEPACK, LAKBAN",6,true

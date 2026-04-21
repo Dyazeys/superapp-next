@@ -6,7 +6,7 @@ import { PageShell } from "@/components/foundation/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-type MasterKey = "channel" | "customer" | "product_category" | "product" | "inventory" | "vendor";
+type MasterKey = "channel" | "customer" | "product_category" | "product" | "product_bom" | "inventory" | "vendor";
 type ImportMode = "upsert" | "skip_duplicate";
 
 type ImportResult = {
@@ -83,6 +83,23 @@ const MASTER_OPTIONS: Array<{
     ],
   },
   {
+    key: "product_bom",
+    label: "Product BOM",
+    description: "Update baris BOM existing per SKU. Import ini tidak membuat row BOM baru jika key dedup tidak ketemu.",
+    requiredColumns: [
+      "sku",
+      "component_group",
+      "component_type",
+      "component_name",
+      "qty",
+      "unit_cost",
+      "is_stock_tracked",
+      "sequence_no",
+      "is_active",
+    ],
+    optionalColumns: ["inv_code", "notes"],
+  },
+  {
     key: "inventory",
     label: "Inventory",
     description: "Master inventory/bahan.",
@@ -147,7 +164,7 @@ export function MasterDataImportWorkspace() {
     <PageShell
       eyebrow="Master Data"
       title="CSV Import"
-      description="Import CSV untuk master data saja (channel, customer, product/category, inventory/vendor). Tidak menyentuh tabel transaksi."
+      description="Import CSV untuk master data dan update BOM. Alur ini tidak menyentuh tabel transaksi."
     >
       <div className="space-y-5">
         <section className="rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm">

@@ -22,15 +22,43 @@ notes: Auto from inv_main
 row_end
 
 row_begin
-when: inv_acc:not_null
+when: inv_acc:eq:RIMC-PT-DKY-BLK
 sequence_no: 2
 component_group: ACCESSORY
 component_type: INVENTORY
 inv_code: {{INV_ACC}}
-component_name: Accessory - {{INV_ACC}}
+component_name: Accessory - RIMC-PT-DKY-BLK
 qty: 1
 unit_cost_source: inventory_unit_price
 is_stock_tracked: true
 is_active: true
-notes: Auto from inv_acc
+notes: Auto from inv_acc (RIMC-PT-DKY-BLK)
+row_end
+
+row_begin
+when: inv_acc:eq:RIMC-PT-DKY-RD
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - RIMC-PT-DKY-RD
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc (RIMC-PT-DKY-RD)
+row_end
+
+row_begin
+when: inv_acc:eq:RIMC-PT-DKY-WHT
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - RIMC-PT-DKY-WHT
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc (RIMC-PT-DKY-WHT)
 row_end

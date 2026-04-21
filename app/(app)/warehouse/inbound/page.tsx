@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  WAREHOUSE_QC_STATUS_OPTIONS,
+  isInboundPosted,
+  WAREHOUSE_INBOUND_EDITABLE_STATUS_OPTIONS,
   toDateInput,
   useWarehouseInbound,
   useWarehousePurchaseOrders,
@@ -61,7 +62,13 @@ export default function WarehouseInboundPage() {
         <StatusBadge
           label={info.getValue()}
           tone={
-            info.getValue() === "PASSED" ? "success" : info.getValue() === "PARTIAL" ? "warning" : "neutral"
+            info.getValue() === "POSTED"
+              ? "info"
+              : info.getValue() === "PASSED"
+                ? "success"
+                : info.getValue() === "PARTIAL"
+                  ? "warning"
+                  : "neutral"
           }
         />
       ),
@@ -76,10 +83,20 @@ export default function WarehouseInboundPage() {
       header: "",
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.openInboundModal(row.original)}>
+          <Button
+            size="icon-xs"
+            variant="outline"
+            disabled={isInboundPosted(row.original.qc_status)}
+            onClick={() => hooks.openInboundModal(row.original)}
+          >
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.deleteInbound(row.original.id)}>
+          <Button
+            size="icon-xs"
+            variant="outline"
+            disabled={isInboundPosted(row.original.qc_status)}
+            onClick={() => hooks.deleteInbound(row.original.id)}
+          >
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -154,7 +171,7 @@ export default function WarehouseInboundPage() {
           </FormField>
           <FormField label="QC status" htmlFor="qc_status" error={inboundForm.formState.errors.qc_status?.message}>
             <SelectNative id="qc_status" {...inboundForm.register("qc_status")}>
-              {WAREHOUSE_QC_STATUS_OPTIONS.map((status) => (
+              {WAREHOUSE_INBOUND_EDITABLE_STATUS_OPTIONS.map((status) => (
                 <option key={status} value={status}>
                   {status}
                 </option>

@@ -119,5 +119,11 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
     icon: Upload,
     badge: "Master",
   },
+  {
+    label: "BOM TXT Import",
+    href: "/master-data/import-txt",
+    icon: Upload,
+    badge: "Master",
+  },
   { label: "Workspace", href: "/workspace", icon: PanelLeft, badge: "UI" },
 ];

@@ -76,6 +76,7 @@ type InboundHook = {
   openInboundModal: (inbound?: InboundDeliveryRecord) => void;
   saveInbound: (values: InboundDeliveryInput) => Promise<InboundDeliveryRecord>;
   deleteInbound: (id: string) => Promise<void>;
+  postInbound: (id: string) => Promise<void>;
 };
 
 type AdjustmentHook = {
@@ -93,6 +94,12 @@ export const WAREHOUSE_BOOLEAN_OPTIONS = [
   { label: "false", value: "false" },
 ] as const;
 export { WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS, WAREHOUSE_PO_STATUS_OPTIONS, WAREHOUSE_QC_STATUS_OPTIONS };
+export const WAREHOUSE_INBOUND_EDITABLE_STATUS_OPTIONS = WAREHOUSE_QC_STATUS_OPTIONS.filter(
+  (status) => status !== "POSTED"
+);
+export function isInboundPosted(status: string | null | undefined) {
+  return status === "POSTED";
+}
 
 const WAREHOUSE_VENDOR_KEY = ["warehouse-vendors"] as const;
 const WAREHOUSE_PURCHASE_ORDER_KEY = ["warehouse-purchase-orders"] as const;
@@ -337,6 +344,17 @@ export function useWarehouseInbound(): InboundHook {
     }
   };
 
+  const postInbound = async (id: string) => {
+    try {
+      await warehouseApi.inbound.post(id);
+      toast.success("Inbound posted to stock");
+      await invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to post inbound");
+      throw error;
+    }
+  };
+
   const openInboundModal = (inbound?: InboundDeliveryRecord) => {
     setEditingInbound(inbound ?? null);
     inboundForm.reset({
@@ -358,6 +376,7 @@ export function useWarehouseInbound(): InboundHook {
     openInboundModal,
     saveInbound,
     deleteInbound,
+    postInbound,
   };
 }
 

@@ -19,9 +19,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-.db-tunnel.err.log
-.db-tunnel.out.log
-.db-tunnel-session.log
+*.log
+.next-dev.out.log
 .next-*.log
 .next-dev-check.err.log
 .next-dev-check.out.log

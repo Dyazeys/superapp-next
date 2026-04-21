@@ -243,7 +243,8 @@ export async function syncSalesOrderItemMovements(tx: Tx, orderItemId: number) {
     return;
   }
 
-  if (!item.order_no || !item.sku || !item.t_order || item.t_order.is_historical) {
+  const order = item.t_order;
+  if (!order || order.is_historical || !item.order_no || !item.sku) {
     if (item.order_no) {
       await syncSalesOrderTotal(tx, item.order_no);
     }
@@ -258,10 +259,11 @@ export async function syncSalesOrderItemMovements(tx: Tx, orderItemId: number) {
   }
 
   await syncSalesOrderTotal(tx, item.order_no);
+  const sku = item.sku;
 
   const bomRows = await tx.product_bom.findMany({
     where: {
-      sku: item.sku,
+      sku,
       is_active: true,
       is_stock_tracked: true,
       inv_code: {
@@ -293,7 +295,7 @@ export async function syncSalesOrderItemMovements(tx: Tx, orderItemId: number) {
     await tx.stock_movements.create({
       data: {
         id: randomUUID(),
-        movement_date: item.t_order.order_date,
+        movement_date: order.order_date,
         inv_code: bom.inv_code,
         reference_type: "SALE",
         reference_id: String(orderItemId),

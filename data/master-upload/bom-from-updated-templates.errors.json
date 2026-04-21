@@ -1,0 +1,26 @@
+[
+  {
+    "template_file": "bom-template-busa-helm-rimc-x-pickers l-xl.txt",
+    "product_name": "Busa Helm RIMC x Pickers L-XL",
+    "sku": null,
+    "message": "Tidak ada SKU master untuk product_name ini."
+  },
+  {
+    "template_file": "bom-template-busa-helm-rimc-x-pickers s-m.txt",
+    "product_name": "Busa Helm RIMC x Pickers S-M",
+    "sku": null,
+    "message": "Tidak ada SKU master untuk product_name ini."
+  },
+  {
+    "template_file": "bom-template-busa-slimhead-500-tx l-xl.txt",
+    "product_name": "Busa Slimhead 500-Tx L-XL",
+    "sku": null,
+    "message": "Tidak ada SKU master untuk product_name ini."
+  },
+  {
+    "template_file": "bom-template-busa-slimhead-500-tx s-m.txt",
+    "product_name": "Busa Slimhead 500-Tx S-M",
+    "sku": null,
+    "message": "Tidak ada SKU master untuk product_name ini."
+  }
+]

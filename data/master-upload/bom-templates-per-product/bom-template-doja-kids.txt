@@ -22,15 +22,99 @@ notes: Auto from inv_main
 row_end
 
 row_begin
-when: inv_acc:not_null
+when: inv_acc:eq:RIMC-PT-PWT-BLU
 sequence_no: 2
 component_group: ACCESSORY
 component_type: INVENTORY
 inv_code: {{INV_ACC}}
-component_name: Accessory - {{INV_ACC}}
+component_name: Accessory - RIMC-PT-PWT-BLU
 qty: 1
 unit_cost_source: inventory_unit_price
 is_stock_tracked: true
 is_active: true
-notes: Auto from inv_acc
+notes: Auto from inv_acc (RIMC-PT-PWT-BLU)
+row_end
+
+row_begin
+when: inv_acc:eq:RIMC-PT-PWT-CL
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - RIMC-PT-PWT-CL
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc (RIMC-PT-PWT-CL)
+row_end
+
+row_begin
+when: inv_acc:eq:RIMC-PT-PWT-ORN
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - RIMC-PT-PWT-ORN
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc (RIMC-PT-PWT-ORN)
+row_end
+
+row_begin
+when: inv_acc:eq:RIMC-PT-PWT-SMK
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - RIMC-PT-PWT-SMK
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc (RIMC-PT-PWT-SMK)
+row_end
+
+row_begin
+when: inv_acc:eq:RIMC-PT-PWT-YL
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - RIMC-PT-PWT-YL
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc (RIMC-PT-PWT-YL)
+row_end
+
+row_begin
+when: inv_acc:eq:RIMC-VSR-BG5-CL
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - RIMC-VSR-BG5-CL
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc (RIMC-VSR-BG5-CL)
+row_end
+
+row_begin
+when: inv_acc:eq:RIMC-VSR-BG5-SMK
+sequence_no: 2
+component_group: ACCESSORY
+component_type: INVENTORY
+inv_code: {{INV_ACC}}
+component_name: Accessory - RIMC-VSR-BG5-SMK
+qty: 1
+unit_cost_source: inventory_unit_price
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_acc (RIMC-VSR-BG5-SMK)
 row_end

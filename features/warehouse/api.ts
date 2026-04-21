@@ -67,6 +67,10 @@ export const warehouseApi = {
       requestJson<{ ok: true }>(`/api/warehouse/inbound/${encodeURIComponent(id)}`, {
         method: "DELETE",
       }),
+    post: (id: string) =>
+      requestJson<InboundDeliveryRecord>(`/api/warehouse/inbound/${encodeURIComponent(id)}/post`, {
+        method: "POST",
+      }),
     items: {
       list: (inboundId: string) =>
         requestJson<InboundItemRecord[]>(`/api/warehouse/inbound/${encodeURIComponent(inboundId)}/items`),

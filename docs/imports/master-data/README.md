@@ -8,6 +8,7 @@ Folder ini menyiapkan format CSV untuk import **master data saja**.
 - `customer`
 - `product_category`
 - `product`
+- `product_bom`
 - `inventory`
 - `vendor`
 
@@ -31,6 +32,13 @@ Dengan `multipart/form-data`:
   - `product.inv_main` dan `product.inv_acc` harus ada di `inventory`.
   - `channel.*_account_code` harus ada di `accounting.accounts.code`.
 - Untuk `channel`, `group_name` dan `category_name` dapat dibuat otomatis jika belum ada.
+- Untuk `product_bom`, import hanya meng-update row BOM yang sudah ada berdasarkan key:
+  - `sku`
+  - `component_group`
+  - `component_type`
+  - `inv_code`
+  - `sequence_no`
+- Jika key BOM tersebut tidak ketemu di database, row akan gagal dan tidak dibuatkan row baru.
 
 ## Ringkasan hasil import
 
@@ -52,5 +60,6 @@ Lihat folder:
 - `docs/imports/master-data/templates/customer.csv`
 - `docs/imports/master-data/templates/product_category.csv`
 - `docs/imports/master-data/templates/product.csv`
+- `docs/imports/master-data/templates/product_bom.csv`
 - `docs/imports/master-data/templates/inventory.csv`
 - `docs/imports/master-data/templates/vendor.csv`

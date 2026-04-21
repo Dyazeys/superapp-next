@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const WAREHOUSE_PO_STATUS_OPTIONS = ["OPEN", "PARTIAL", "CLOSED"] as const;
-export const WAREHOUSE_QC_STATUS_OPTIONS = ["PENDING", "PARTIAL", "PASSED", "REJECTED"] as const;
+export const WAREHOUSE_QC_STATUS_OPTIONS = ["PENDING", "PARTIAL", "PASSED", "REJECTED", "POSTED"] as const;
 export const WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS = ["IN", "OUT"] as const;
 export const WAREHOUSE_ADJUSTMENT_REASON_OPTIONS = [
   "Loss",

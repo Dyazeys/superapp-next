@@ -62,6 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/payout/transfers": "Catat perpindahan saldo channel ke rekening bank secara manual.",
       "/payout/reconciliation": "Bandingkan piutang, payout, saldo, dan transfer bank per channel secara read-only.",
       "/master-data/import": "Upload CSV untuk import master data secara terkontrol dengan validasi kolom dan ringkasan hasil.",
+      "/master-data/import-txt": "Upload template TXT (JSON text) untuk apply BOM massal per product name ke semua SKU terkait.",
     };
 
     return (

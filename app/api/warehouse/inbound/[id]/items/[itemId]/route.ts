@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
-import { removeInboundItemMovement, syncInboundItemMovement } from "@/lib/warehouse-stock";
+import { removeInboundItemMovement } from "@/lib/warehouse-stock";
 import { inboundItemPatchSchema } from "@/schemas/warehouse-module";
 
 export async function PATCH(
@@ -17,6 +17,12 @@ export async function PATCH(
       const current = await tx.inbound_items.findUniqueOrThrow({
         where: { id: itemId },
       });
+      const inbound = await tx.inbound_deliveries.findUnique({
+        where: { id: current.inbound_id },
+        select: { qc_status: true },
+      });
+      invariant(inbound, "Inbound delivery was not found.");
+      invariant(inbound.qc_status !== "POSTED", "Posted inbound is locked and cannot be edited.");
       const nextQtyReceived = payload.qty_received ?? current.qty_received;
       const nextQtyPassedQc = payload.qty_passed_qc ?? current.qty_passed_qc;
       const nextQtyRejectedQc = payload.qty_rejected_qc ?? current.qty_rejected_qc;
@@ -58,11 +64,7 @@ export async function PATCH(
         },
       });
 
-      if (payload.inv_code && payload.inv_code !== current.inv_code) {
-        await removeInboundItemMovement(tx, itemId, current.inv_code);
-      }
-
-      await syncInboundItemMovement(tx, itemId);
+      await removeInboundItemMovement(tx, itemId, current.inv_code);
 
       return updated;
     });
@@ -84,9 +86,16 @@ export async function DELETE(
       const current = await tx.inbound_items.findUniqueOrThrow({
         where: { id: itemId },
         select: {
+          inbound_id: true,
           inv_code: true,
         },
       });
+      const inbound = await tx.inbound_deliveries.findUnique({
+        where: { id: current.inbound_id },
+        select: { qc_status: true },
+      });
+      invariant(inbound, "Inbound delivery was not found.");
+      invariant(inbound.qc_status !== "POSTED", "Posted inbound is locked and cannot be deleted.");
 
       await removeInboundItemMovement(tx, itemId, current.inv_code);
 

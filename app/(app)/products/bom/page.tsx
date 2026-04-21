@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
@@ -78,6 +78,9 @@ export default function ProductBomPage() {
     (sum, row) => sum + (row.is_active ? Number(row.qty) * Number(row.unit_cost) : 0),
     0
   );
+  const selectedProduct = (productsQuery.data ?? []).find((product) => product.sku === currentSku) ?? null;
+  const masterProductHpp = Number(selectedProduct?.total_hpp ?? "0");
+  const bomVsMasterHppDiff = totalBomValue - masterProductHpp;
   const selectedSkuValue = selectedSku ?? "";
 
   const productOptions = useMemo(
@@ -353,19 +356,33 @@ export default function ProductBomPage() {
       description="Kelola baris BOM per SKU secara inline untuk kebutuhan komponen dan estimasi nilai."
     >
       <div className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-7">
           <MetricCard title="Total BOM rows" value={String(totalBomRows)} subtitle="Baris BOM yang terlihat untuk SKU ini." />
           <MetricCard title="Active rows" value={String(activeBomRows)} subtitle="Baris aktif yang digunakan." />
           <MetricCard title="Stock-tracked" value={String(trackedBomRows)} subtitle="Baris yang memengaruhi stok." />
           <MetricCard
             title="Total BOM value"
             value={totalBomValue.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
-            subtitle="Σ qty × unit cost (semua baris)."
+            subtitle="Total qty x unit cost (semua baris)."
           />
           <MetricCard
             title="Active BOM value"
             value={activeBomValue.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
-            subtitle="Σ qty × unit cost (baris aktif)."
+            subtitle="Total qty x unit cost (baris aktif)."
+          />
+          <MetricCard
+            title="Master Product HPP"
+            value={masterProductHpp.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
+            subtitle="Nilai total_hpp dari master product."
+          />
+          <MetricCard
+            title="Selisih BOM vs HPP"
+            value={bomVsMasterHppDiff.toLocaleString("id-ID", {
+              minimumFractionDigits: 0,
+              maximumFractionDigits: 0,
+              signDisplay: "always",
+            })}
+            subtitle="Total BOM value dikurangi Master Product HPP."
           />
         </div>
 
@@ -586,3 +603,4 @@ export default function ProductBomPage() {
     </PageShell>
   );
 }
+

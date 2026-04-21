@@ -130,6 +130,7 @@ Database PostgreSQL dipisah per domain:
 
 - Skema lengkap: `prisma/schema.prisma`
 - Standar reference key: `docs/reference-system-standard.md`
+- Klasifikasi master vs transaksi dan channel `SALDO` vs `DIRECT`: `docs/data-classification-and-channel-settlement.md`
 
 ## Detail DDL (Ringkas per Tabel Inti)
 

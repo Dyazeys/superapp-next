@@ -21,6 +21,7 @@ type SearchableSelectProps = {
   inputClassName?: string
   emptyText?: string
   maxResults?: number
+  portal?: boolean
 }
 
 function normalize(value: string) {
@@ -49,6 +50,7 @@ function SearchableSelect({
   inputClassName,
   emptyText = "No matches found.",
   maxResults = 80,
+  portal = true,
 }: SearchableSelectProps) {
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const menuRef = React.useRef<HTMLDivElement | null>(null)
@@ -142,6 +144,42 @@ function SearchableSelect({
       .slice(0, maxResults)
   }, [maxResults, options, query])
 
+  const menuContent = (
+    <div
+      ref={menuRef}
+      className={cn(
+        portal
+          ? "fixed z-[200] max-h-64 overflow-auto rounded-xl border border-input bg-white p-1 shadow-lg"
+          : "absolute top-full left-0 z-[200] mt-1 max-h-64 w-full overflow-auto rounded-xl border border-input bg-white p-1 shadow-lg"
+      )}
+      style={portal ? menuStyle : undefined}
+    >
+      {filteredOptions.length > 0 ? (
+        filteredOptions.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={cn(
+              "block w-full rounded-lg px-2 py-1.5 text-left text-sm text-slate-800 hover:bg-slate-100",
+              option.value === value ? "bg-slate-100" : undefined
+            )}
+            onMouseDown={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              onValueChange(option.value)
+              setQuery(option.label)
+              setOpen(false)
+            }}
+          >
+            {option.label}
+          </button>
+        ))
+      ) : (
+        <p className="px-2 py-2 text-sm text-slate-500">{emptyText}</p>
+      )}
+    </div>
+  )
+
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
       <input
@@ -174,40 +212,7 @@ function SearchableSelect({
         }}
       />
 
-      {mounted && open
-          ? createPortal(
-            <div
-              ref={menuRef}
-              className="fixed z-[200] max-h-64 overflow-auto rounded-xl border border-input bg-white p-1 shadow-lg"
-              style={menuStyle}
-            >
-              {filteredOptions.length > 0 ? (
-                filteredOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    className={cn(
-                      "block w-full rounded-lg px-2 py-1.5 text-left text-sm text-slate-800 hover:bg-slate-100",
-                      option.value === value ? "bg-slate-100" : undefined
-                    )}
-                    onMouseDown={(event) => {
-                      event.preventDefault()
-                      event.stopPropagation()
-                      onValueChange(option.value)
-                      setQuery(option.label)
-                      setOpen(false)
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))
-              ) : (
-                <p className="px-2 py-2 text-sm text-slate-500">{emptyText}</p>
-              )}
-            </div>,
-            document.body
-          )
-        : null}
+      {mounted && open ? (portal ? createPortal(menuContent, document.body) : menuContent) : null}
     </div>
   )
 }

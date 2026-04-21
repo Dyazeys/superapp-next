@@ -18,6 +18,7 @@ Index ini membantu tim cari dokumen operasional tanpa buka satu per satu.
 - `docs/runbook-data-import-sequence.md`
 - `docs/stock-opening-balance-sop.md`
 - `docs/database-model-overview.md`
+- `docs/data-classification-and-channel-settlement.md`
 - `docs/reference-system-standard.md`
 
 ## 3) Operasional Harian
@@ -28,6 +29,7 @@ Index ini membantu tim cari dokumen operasional tanpa buka satu per satu.
 
 ## 4) UAT & Issue Tracking
 
+- `docs/uat-transaction-checklist.md`
 - `docs/uat-go-live-checklist.md`
 - `docs/known-issues.md`
 - `docs/reports/` (historical evidence)

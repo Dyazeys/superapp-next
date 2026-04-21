@@ -60,6 +60,11 @@ export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
   const item = await tx.t_order_item.findUnique({
     where: { id: orderItemId },
     include: {
+      master_product: {
+        select: {
+          total_hpp: true,
+        },
+      },
       t_order: {
         include: {
           m_channel: {
@@ -95,21 +100,8 @@ export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
   const grossAmount = item.qty * Number(item.unit_price);
   const revenueAmount = Math.max(0, grossAmount - Number(item.discount_item));
 
-  const bomRows = await tx.product_bom.findMany({
-    where: {
-      sku: item.sku,
-      is_active: true,
-      is_stock_tracked: true,
-      inv_code: {
-        not: null,
-      },
-    },
-    select: {
-      line_cost: true,
-    },
-  });
-
-  const hppAmount = bomRows.reduce((sum, row) => sum + Number(row.line_cost) * item.qty, 0);
+  const productHpp = Number(item.master_product?.total_hpp ?? "0");
+  const hppAmount = (Number.isFinite(productHpp) ? productHpp : 0) * item.qty;
   const needsHppPosting = hppAmount > 0;
 
   if (revenueAmount <= 0 && !needsHppPosting) {

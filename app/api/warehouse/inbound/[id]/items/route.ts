@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
-import { syncInboundItemMovement } from "@/lib/warehouse-stock";
+import { removeInboundItemMovement } from "@/lib/warehouse-stock";
 import { inboundItemSchema } from "@/schemas/warehouse-module";
 
 export async function GET(
@@ -42,9 +42,10 @@ export async function POST(
     const item = await prisma.$transaction(async (tx) => {
       const inbound = await tx.inbound_deliveries.findUnique({
         where: { id },
-        select: { id: true },
+        select: { id: true, qc_status: true },
       });
       invariant(inbound, "Inbound delivery was not found.");
+      invariant(inbound.qc_status !== "POSTED", "Posted inbound is locked and cannot receive new item edits.");
 
       const inventory = await tx.master_inventory.findUnique({
         where: { inv_code: payload.inv_code },
@@ -72,7 +73,7 @@ export async function POST(
         },
       });
 
-      await syncInboundItemMovement(tx, created.id);
+      await removeInboundItemMovement(tx, created.id, created.inv_code);
 
       return created;
     });

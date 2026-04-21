@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/db/prisma";
 import { parseCsv } from "@/lib/csv";
 import { channelSchema } from "@/schemas/channel-module";
-import { masterInventorySchema, masterProductSchema, productCategorySchema } from "@/schemas/product-module";
+import { masterInventorySchema, masterProductSchema, productBomSchema, productCategorySchema } from "@/schemas/product-module";
 import { salesCustomerSchema } from "@/schemas/sales-module";
 import { vendorSchema } from "@/schemas/warehouse-module";
 
@@ -12,6 +12,7 @@ export const MASTER_IMPORT_KEYS = [
   "customer",
   "product_category",
   "product",
+  "product_bom",
   "inventory",
   "vendor",
 ] as const;
@@ -97,6 +98,34 @@ export const MASTER_IMPORT_DEFINITIONS: Record<MasterImportKey, ImportDefinition
       "total_hpp",
     ],
     requiredColumns: ["sku", "sku_name", "product_name"],
+  },
+  product_bom: {
+    label: "Product BOM",
+    description: "Update BOM existing per SKU dengan key dedup BOM sistem.",
+    allowedColumns: [
+      "sku",
+      "component_group",
+      "component_type",
+      "inv_code",
+      "component_name",
+      "qty",
+      "unit_cost",
+      "is_stock_tracked",
+      "notes",
+      "sequence_no",
+      "is_active",
+    ],
+    requiredColumns: [
+      "sku",
+      "component_group",
+      "component_type",
+      "component_name",
+      "qty",
+      "unit_cost",
+      "is_stock_tracked",
+      "sequence_no",
+      "is_active",
+    ],
   },
   inventory: {
     label: "Inventory",
@@ -540,6 +569,97 @@ async function handleInventoryRow(row: Record<string, string>, mode: MasterImpor
   return "created";
 }
 
+async function handleProductBomRow(row: Record<string, string>, mode: MasterImportMode): Promise<RowAction> {
+  const normalizeBomGroup = (value: string | undefined) => {
+    const normalized = (value ?? "").trim().toUpperCase();
+    if (normalized === "OVERHEAD" || normalized === "OTHER_COST") return "BRANDING";
+    if (normalized === "ACCESORY") return "ACCESSORY";
+    return normalized;
+  };
+
+  const normalizeBomType = (value: string | undefined) => {
+    const normalized = (value ?? "").trim().toUpperCase();
+    if (normalized === "NON_INVENTORY") return "NON_INVENTORY";
+    return "INVENTORY";
+  };
+
+  const sku = row.sku.trim();
+  const payload = productBomSchema.parse({
+    sku,
+    component_group: normalizeBomGroup(row.component_group),
+    component_type: normalizeBomType(row.component_type),
+    inv_code: asNullableString(row.inv_code),
+    component_name: row.component_name,
+    qty: row.qty,
+    unit_cost: row.unit_cost,
+    is_stock_tracked: asBoolean(row.is_stock_tracked, false),
+    notes: asNullableString(row.notes),
+    sequence_no: row.sequence_no,
+    is_active: asBoolean(row.is_active, true),
+  });
+
+  const product = await prisma.master_product.findUnique({
+    where: { sku: payload.sku },
+    select: { sku: true },
+  });
+  if (!product) {
+    throw new Error(`Product SKU "${payload.sku}" was not found.`);
+  }
+
+  if (payload.inv_code) {
+    const inventory = await prisma.master_inventory.findUnique({
+      where: { inv_code: payload.inv_code },
+      select: { inv_code: true },
+    });
+    if (!inventory) {
+      throw new Error(`Inventory reference "${payload.inv_code}" was not found.`);
+    }
+  }
+
+  const existing = await prisma.product_bom.findFirst({
+    where: {
+      sku: payload.sku,
+      component_group: payload.component_group,
+      component_type: payload.component_type,
+      inv_code: payload.inv_code || null,
+      sequence_no: payload.sequence_no,
+    },
+    orderBy: { created_at: "asc" },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    throw new Error(
+      "No existing BOM row matched sku + component_group + component_type + inv_code + sequence_no. CSV BOM import only updates existing rows."
+    );
+  }
+
+  if (mode === "skip_duplicate") {
+    return "skipped";
+  }
+
+  const lineCost = (Number(payload.qty) * Number(payload.unit_cost)).toFixed(2);
+  await prisma.product_bom.update({
+    where: { id: existing.id },
+    data: {
+      component_group: payload.component_group,
+      component_type: payload.component_type,
+      inv_code: payload.inv_code || null,
+      component_name: payload.component_name,
+      qty: payload.qty,
+      unit_cost: payload.unit_cost,
+      line_cost: lineCost,
+      is_stock_tracked: payload.is_stock_tracked,
+      notes: payload.notes || null,
+      sequence_no: payload.sequence_no,
+      is_active: payload.is_active,
+      updated_at: new Date(),
+    },
+  });
+
+  return "updated";
+}
+
 async function handleVendorRow(row: Record<string, string>, mode: MasterImportMode): Promise<RowAction> {
   const payload = vendorSchema.parse({
     vendor_code: row.vendor_code,
@@ -670,6 +790,7 @@ export async function importMasterDataCsv(input: {
     groupIdByName: new Map<string, number>(),
     categoryIdByKey: new Map<string, number>(),
   };
+  const touchedBomSkus = new Set<string>();
   if (master === "channel") {
     const accounts = await prisma.accounts.findMany({
       select: { id: true, code: true },
@@ -693,9 +814,15 @@ export async function importMasterDataCsv(input: {
               ? await handleProductCategoryRow(row, mode)
               : master === "product"
                 ? await handleProductRow(row, mode)
+                : master === "product_bom"
+                  ? await handleProductBomRow(row, mode)
                 : master === "inventory"
                   ? await handleInventoryRow(row, mode)
                   : await handleVendorRow(row, mode);
+
+      if (master === "product_bom" && action === "updated") {
+        touchedBomSkus.add((row.sku ?? "").trim());
+      }
 
       summary.success_rows += 1;
       if (action === "created") summary.created_rows += 1;
@@ -710,6 +837,27 @@ export async function importMasterDataCsv(input: {
             ? error.message
             : "Unknown error";
       errors.push({ row: rowNumber, message });
+    }
+  }
+
+  if (master === "product_bom" && touchedBomSkus.size > 0) {
+    for (const sku of touchedBomSkus) {
+      const aggregate = await prisma.product_bom.aggregate({
+        where: {
+          sku,
+          is_active: true,
+        },
+        _sum: {
+          line_cost: true,
+        },
+      });
+
+      await prisma.master_product.update({
+        where: { sku },
+        data: {
+          total_hpp: aggregate._sum.line_cost ?? "0",
+        },
+      });
     }
   }
 
