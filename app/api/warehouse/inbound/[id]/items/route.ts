@@ -45,7 +45,7 @@ export async function POST(
         select: { id: true, qc_status: true },
       });
       invariant(inbound, "Inbound delivery was not found.");
-      invariant(inbound.qc_status !== "POSTED", "Posted inbound is locked and cannot receive new item edits.");
+      invariant(inbound.qc_status !== "PASSED", "Posted inbound is locked and cannot receive new item edits.");
 
       const inventory = await tx.master_inventory.findUnique({
         where: { inv_code: payload.inv_code },

@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
         po_id: payload.po_id || null,
         receive_date: asDateOnly(payload.receive_date),
         surat_jalan_vendor: payload.surat_jalan_vendor || null,
-        qc_status: payload.qc_status,
+        // Guardrail: inbound status can only become PASSED via /post endpoint flow.
+        qc_status: "PENDING",
         received_by: payload.received_by,
         notes: payload.notes || null,
       },

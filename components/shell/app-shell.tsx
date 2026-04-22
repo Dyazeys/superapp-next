@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ModuleSidebar } from "@/components/shell/module-sidebar";
 import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
-import { Bell, CalendarDays, Mail, PanelLeftOpen } from "lucide-react";
+import { PanelLeftOpen } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [activeTop, setActiveTop] = useState(TOP_NAV_ITEMS[0].id);
@@ -63,6 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/payout/reconciliation": "Bandingkan piutang, payout, saldo, dan transfer bank per channel secara read-only.",
       "/master-data/import": "Upload CSV untuk import master data secara terkontrol dengan validasi kolom dan ringkasan hasil.",
       "/master-data/import-txt": "Upload template TXT (JSON text) untuk apply BOM massal per product name ke semua SKU terkait.",
+      "/profile": "Kelola data akun dan preferensi profil pengguna.",
     };
 
     return (
@@ -71,11 +71,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       `Ruang kerja ${activeTopItem.label} untuk operasional harian.`
     );
   })();
-  const todayLabel = new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date());
   const userName = session?.user?.name?.trim() || "Operator";
   const userInitials = userName
     .split(" ")
@@ -94,14 +89,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         >
           {sidebarCollapsed ? (
-            <aside className="flex h-screen flex-col bg-slate-50/60 p-3">
-              <div className="flex-1 space-y-2 overflow-y-auto rounded-2xl bg-white p-2 shadow-sm">
+            <aside className="flex h-screen flex-col border-r border-slate-200/70 bg-slate-100/60 p-3">
+              <div className="flex-1 space-y-2 overflow-y-auto rounded-2xl bg-slate-50/80 p-2 ring-1 ring-slate-200/70">
                 <Button
                   variant="outline"
                   size="icon-sm"
                   onClick={() => setSidebarCollapsed(false)}
                   aria-label="Show modules"
-                  className="h-11 w-full rounded-xl"
+                  className="h-10 w-full rounded-xl border-slate-200 bg-white text-slate-500 hover:text-slate-800"
                 >
                   <PanelLeftOpen className="size-5" />
                 </Button>
@@ -117,10 +112,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       title={module.label}
                       aria-label={module.label}
                       className={cn(
-                        "flex h-11 items-center justify-center rounded-xl transition-all duration-200",
+                        "flex h-10 items-center justify-center rounded-xl transition-all duration-200",
                         active
-                          ? "bg-slate-900 text-white shadow-sm shadow-slate-900/20"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                          ? "bg-white text-sky-600 shadow-sm ring-1 ring-slate-200"
+                          : "text-slate-400 hover:bg-white hover:text-slate-700"
                       )}
                     >
                       <Icon className="size-5" />
@@ -134,17 +129,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               collapsed={sidebarCollapsed}
               modules={sidebarModules}
               moduleTitle={activeTopItem.label}
+              userInitials={userInitials}
               onToggle={() => setSidebarCollapsed(true)}
             />
           )}
         </div>
 
-        <div className="flex h-screen min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.03)_0%,rgba(255,255,255,0)_52%)]">
+        <div className="flex h-screen min-w-0 flex-1 flex-col bg-[radial-gradient(circle_at_top,_rgba(15,23,42,0.03)_0%,rgba(255,255,255,0)_54%)]">
           <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-background/90 px-4 py-4 backdrop-blur sm:px-6 lg:px-8">
             <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
-              <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-1.5 shadow-sm">
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-white px-2 py-1.5 shadow-sm">
                 <div className="flex min-h-9 min-w-0 flex-1 items-center gap-3">
-                  <nav className="flex w-full max-w-[800px] items-center gap-2 rounded-xl p-0 text-slate-600">
+                  <nav className="flex w-full items-center gap-2 rounded-xl p-0 text-slate-600">
                     <div className="flex w-full items-center justify-between gap-2">
                       {TOP_NAV_ITEMS.map((item) => {
                         const active = activeTop === item.id;
@@ -155,9 +151,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                             type="button"
                             title={item.label}
                             className={cn(
-                              "inline-flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium transition-all duration-200",
+                              "inline-flex h-9 flex-1 items-center justify-center gap-2 rounded-xl px-3 text-sm font-medium transition-all duration-200",
                               active
-                                ? "bg-slate-900 text-white shadow-sm shadow-slate-900/25"
+                                ? "bg-slate-100 text-slate-900 ring-1 ring-slate-200"
                                 : "bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-900",
                               item.disabled && "cursor-not-allowed opacity-40"
                             )}
@@ -177,40 +173,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     </div>
                   </nav>
                 </div>
-
-                <div className="ml-auto flex shrink-0 items-center gap-2">
-                  <div className="inline-flex items-center gap-2 rounded-xl border border-blue-700 bg-blue-700 px-3 py-2 text-xs font-medium text-white">
-                    <CalendarDays className="size-3.5 text-white" />
-                    {todayLabel}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    aria-label="Mail"
-                    className="border-slate-900 bg-white text-slate-900 hover:bg-slate-100"
-                  >
-                    <Mail className="size-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon-sm"
-                    aria-label="Notifications"
-                    className="border-slate-900 bg-white text-slate-900 hover:bg-slate-100"
-                  >
-                    <Bell className="size-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => signOut({ callbackUrl: "/login" })}
-                    className="border-rose-700 bg-rose-700 text-white hover:bg-rose-800"
-                  >
-                    Sign out
-                  </Button>
-                  <Avatar size="lg" className="ring-2 ring-slate-900">
-                    <AvatarFallback className="bg-slate-900 text-white">{userInitials || "OP"}</AvatarFallback>
-                  </Avatar>
-                </div>
               </div>
 
               <div className="flex items-start justify-between gap-3">
@@ -220,7 +182,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   {navMatch ? ` / ${navMatch.label}` : ""}
                   {childMatch ? ` / ${childMatch.label}` : ""}
                   </p>
-                  <h1 className="mt-1 truncate text-2xl font-semibold tracking-tight">{pageTitle}</h1>
+                  <h1 className="mt-1 truncate text-2xl font-semibold tracking-tight text-slate-900">{pageTitle}</h1>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{pageContext}</p>
                 </div>
               </div>

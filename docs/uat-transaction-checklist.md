@@ -1,78 +1,87 @@
 # UAT Transaction Checklist
 
-Tanggal update: `2026-04-21`
+Tanggal update: `2026-04-22`
 
-Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data inti sudah siap.
+Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data inti dinyatakan aman.
 
-## 1) Precheck Master
+## Scope Sementara Akunting (Keputusan UAT)
 
-- [ ] Buka modul `Products` dan pastikan product aktif tampil normal.
-- [ ] Buka modul `BOM` dan cek beberapa SKU random punya komponen lengkap.
-- [ ] Buka modul `Channel` dan pastikan channel yang akan dipakai test tersedia.
-- [ ] Buka modul `Accounts` dan cek akun `111*`, `revenue`, `piutang`, dan `saldo` tersedia.
-- [ ] Buka modul `Vendors` dan pastikan vendor utama tersedia.
+- [x] Fokus UAT akunting saat ini: **Income Statement**.
+- [x] Posting yang berdampak utama ke **Balance Sheet** (khususnya aset dagang/persediaan) di-`hold` dulu sampai keputusan owner final terkait metode valuasi.
+- [x] Untuk modul warehouse, validasi sementara difokuskan ke integritas transaksi dan stok (`stock_movements`, `stock_balances`), bukan final posting jurnal aset.
 
-## 2) Sales Order
+## 1) Status Master Data
 
-- [ ] Buat 1 sales order tanpa `customer_id`.
+- [x] Master data inti sudah dites dan aman.
+- [x] Pengujian transaksi dimulai dari flow operasional, bukan dari setup master.
+
+## 2) Warehouse - Inbound Dulu (Wajib Mulai dari Sini)
+
+- [ ] Buat 1 purchase order ke vendor utama.
+- [ ] Buat inbound dari PO tersebut.
+- [ ] Tambah inbound item untuk inventory yang valid.
+- [ ] Pastikan stock movement inbound terbentuk.
+- [ ] Cek stock balance bertambah sesuai qty inbound.
+- [ ] Verifikasi tidak ada flow gantung/bocor pada inbound (header, item, posting, dan lock status).
+- [ ] `Hold sementara`: verifikasi jurnal aset inbound (menunggu keputusan owner valuasi persediaan).
+
+## 3) Warehouse - Stock Adjustment
+
+- [ ] Buat adjustment `IN`.
+- [ ] Buat adjustment `OUT`.
+- [ ] Pastikan `reason` memakai nilai valid.
+- [ ] Pastikan stock movement adjustment sinkron.
+- [ ] `Hold sementara`: verifikasi jurnal aset adjustment (menunggu keputusan owner valuasi persediaan).
+
+## 4) Sales - Sampai Jurnal
+
+### 4.1 Sales Order
+
+- [ ] Buat 1 sales order tanpa `customer_id` (boleh kosong).
 - [ ] Isi `channel`, `order_no`, `ref_no`, dan `status`.
 - [ ] Pastikan order berhasil tersimpan.
-- [ ] Edit order tersebut sekali untuk memastikan update normal.
-- [ ] Jika flow parent order dipakai, coba buat 1 order dengan `parent_order_no`.
+- [ ] Edit order sekali untuk memastikan update normal.
+- [ ] Jika flow parent order dipakai, test 1 order dengan `parent_order_no`.
 
-## 3) Sales Order Item
+### 4.2 Sales Order Item + Dampak Stok
 
-- [ ] Tambahkan item ke order dengan SKU normal yang BOM-nya lengkap.
-- [ ] Pastikan item berhasil dibuat.
-- [ ] Tambahkan SKU lain yang BOM-nya lebih kompleks.
+- [ ] Tambahkan item ke order dengan SKU yang BOM-nya lengkap.
+- [ ] Tambahkan SKU kedua dengan BOM lebih kompleks.
 - [ ] Ubah qty item lalu simpan.
-- [ ] Hapus 1 item lalu cek order tetap sehat.
-
-## 4) Dampak Stok dari Sales
-
-- [ ] Setelah tambah item sales, cek `stock movement` terbentuk.
-- [ ] Cek inventory yang dipakai BOM berkurang sesuai qty.
+- [ ] Hapus 1 item untuk cek stabilitas data order.
+- [ ] Pastikan stock movement sales terbentuk.
+- [ ] Pastikan inventory BOM berkurang sesuai qty.
 - [ ] Pastikan tidak muncul error `stock-tracked BOM rows must include an inventory reference`.
 - [ ] Pastikan movement tidak punya `inv_code` kosong.
+- [ ] Verifikasi jurnal akunting untuk sales sudah terposting.
 
-## 5) Payout Record
+## 5) Payout - Sampai Jurnal
 
-- [ ] Buat payout untuk order yang punya `ref_no`.
+### 5.1 Payout Record
+
+- [ ] Buat payout untuk order yang sudah punya `ref_no`.
 - [ ] Isi angka payout sederhana terlebih dulu.
-- [ ] Pastikan payout tersimpan dan linked ke order yang benar.
+- [ ] Pastikan payout tersimpan dan linked ke order benar.
 - [ ] Edit payout sekali untuk memastikan update normal.
+- [ ] Verifikasi jurnal akunting payout sudah terposting.
 
-## 6) Payout Transfer
+### 5.2 Payout Transfer
 
 - [ ] Buat transfer dari payout yang baru dibuat.
 - [ ] Pakai akun bank `111*`.
 - [ ] Pastikan transfer berhasil.
 - [ ] Cek validasi amount tidak melebihi saldo payout.
 - [ ] Cek channel `SALDO` berjalan tanpa error mapping akun.
+- [ ] Verifikasi jurnal akunting transfer sudah terposting.
 
-## 7) Journal
+## 6) Opex - Sampai Jurnal
 
-- [ ] Setelah sales item dibuat, cek journal sales terbentuk.
-- [ ] Setelah payout dibuat, cek journal payout terbentuk.
-- [ ] Setelah payout transfer dibuat, cek journal transfer terbentuk.
-- [ ] Pastikan akun debit/kredit masuk ke akun yang masuk akal.
+- [ ] Buat transaksi operational expense (opex) dengan akun biaya yang sesuai.
+- [ ] Pastikan nominal dan referensi transaksi tersimpan benar.
+- [ ] Jika ada edit/koreksi, pastikan update tidak merusak histori.
+- [ ] Verifikasi jurnal akunting opex sudah terposting.
 
-## 8) Warehouse Dasar
-
-- [ ] Buat 1 purchase order ke vendor.
-- [ ] Buat inbound dari PO tersebut.
-- [ ] Tambah inbound item.
-- [ ] Pastikan stock movement inbound terbentuk.
-- [ ] Cek stock balance bertambah sesuai item inbound.
-
-## 9) Stock Adjustment
-
-- [ ] Buat adjustment `IN`.
-- [ ] Buat adjustment `OUT`.
-- [ ] Pastikan `reason` memakai nilai yang valid.
-- [ ] Pastikan stock movement adjustment tersinkron.
-
-## 10) Error Handling
+## 7) Error Handling
 
 - [ ] Coba buat sales item dengan SKU nonaktif.
 - [ ] Coba buat payout dengan `ref_no` yang tidak ada.
@@ -80,31 +89,34 @@ Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data in
 - [ ] Coba buat inbound item dengan `inv_code` yang tidak ada.
 - [ ] Pastikan error message jelas dan tidak merusak data lain.
 
-## 11) Verifikasi Hasil
+## 8) Verifikasi End-to-End
 
 - [ ] Cek total row pada tabel/modul transaksi yang diuji.
 - [ ] Cocokkan 1 transaksi end-to-end:
-- [ ] order
-- [ ] item
-- [ ] stok
-- [ ] payout
-- [ ] transfer
-- [ ] jurnal
+- [ ] inbound
+- [ ] adjustment
+- [ ] sales order + item
+- [ ] payout + transfer
+- [ ] opex
+- [ ] jurnal per transaksi
 
-## 12) Urutan Test yang Disarankan
+## 9) Urutan Test yang Disarankan (Final)
 
-1. Sales order
-2. Sales item
-3. Stock movement
-4. Payout
-5. Transfer
-6. Journal
-7. Warehouse PO / inbound
-8. Adjustment
+1. Warehouse PO + inbound
+2. Stock adjustment
+3. Sales order + sales item + dampak stok
+4. Jurnal sales (P&L)
+5. Payout record + payout transfer
+6. Jurnal payout + transfer (P&L related)
+7. Opex
+8. Jurnal opex (P&L)
+9. Review posting balance sheet yang masih di-hold (inbound/adjustment) setelah keputusan owner keluar
 
-## 13) Catatan Operasional
+## 10) Catatan Operasional
 
 - `customer_id` boleh dikosongkan jika flow customer memang belum dipakai.
 - Channel `DIRECT` tidak harus dipaksa memakai flow saldo.
 - Channel `SALDO` sebaiknya diuji minimal satu transaksi end-to-end.
-- Jika `stock_balances` sedang kosong, isi ulang saldo awal dulu sebelum test flow sales yang memotong stok.
+- Jika `stock_balances` kosong, isi saldo awal dulu sebelum test sales.
+- Validasi akunting dilakukan di setiap tahapan transaksi, bukan di akhir saja.
+- Khusus warehouse inbound/adjustment: posting jurnal aset dagang masih status `hold sementara` sampai ada keputusan owner.

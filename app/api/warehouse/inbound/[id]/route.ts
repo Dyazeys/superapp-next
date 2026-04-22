@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
-import { jsonError } from "@/lib/api-error";
+import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { removeInboundItemMovement } from "@/lib/warehouse-stock";
 import { inboundDeliverySchema } from "@/schemas/warehouse-module";
@@ -16,6 +16,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const payload = inboundDeliverySchema.partial().parse(await request.json());
+    invariant(payload.qc_status === undefined, "Inbound status is managed by system and cannot be edited directly.");
 
     const inbound = await prisma.$transaction(async (tx) => {
       const current = await tx.inbound_deliveries.findUnique({
@@ -25,7 +26,7 @@ export async function PATCH(
       if (!current) {
         throw new Error("Inbound delivery was not found.");
       }
-      if (current.qc_status === "POSTED") {
+      if (current.qc_status === "PASSED") {
         throw new Error("Posted inbound is locked and cannot be edited.");
       }
 
@@ -64,7 +65,7 @@ export async function DELETE(
       if (!inbound) {
         throw new Error("Inbound delivery was not found.");
       }
-      if (inbound.qc_status === "POSTED") {
+      if (inbound.qc_status === "PASSED") {
         throw new Error("Posted inbound is locked and cannot be deleted.");
       }
 

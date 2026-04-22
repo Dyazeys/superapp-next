@@ -2,16 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeftClose } from "lucide-react";
+import { Ellipsis, LogOut, PanelLeftClose, UserPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ModuleNavItem } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
+import { signOut } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
 
 type ModuleSidebarProps = {
   collapsed: boolean;
   modules: ModuleNavItem[];
   moduleTitle: string;
+  userInitials: string;
   onToggle: () => void;
 };
 
@@ -27,26 +30,28 @@ const renderLink = (item: ModuleNavItem, pathname: string, level = 0) => {
       <Link
         href={item.href}
         className={cn(
-          "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all duration-200",
-          level === 0 ? "font-semibold" : "font-medium",
+          "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200",
+          level === 0 ? "font-medium" : "font-normal",
           active
             ? level === 0
               ? exactActive
-                ? "bg-slate-900 text-white shadow-sm shadow-slate-900/20"
-                : "bg-slate-100 text-slate-900 ring-1 ring-slate-300/70"
-              : "bg-slate-100 text-slate-900 ring-1 ring-slate-300/70"
+                ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                : "bg-white text-slate-900 ring-1 ring-slate-200"
+              : "bg-slate-100 text-slate-900 ring-1 ring-slate-200"
             : level === 0
-              ? "text-slate-800 hover:bg-slate-100/80"
-              : "text-slate-600 hover:bg-slate-100/70 hover:text-slate-900"
+              ? "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
         )}
       >
-        <Icon className="size-4 shrink-0" />
+        <Icon className={cn("size-4 shrink-0", active ? "text-sky-600" : "text-slate-400 group-hover:text-slate-600")} />
         <span className="flex-1">{item.label}</span>
         {item.badge ? (
           <Badge
             variant="outline"
             className={cn(
-              active ? "border-white/60 bg-white/10 text-white" : "border-slate-300/80 text-slate-700"
+              active
+                ? "border-sky-200 bg-sky-50 text-sky-700"
+                : "border-slate-300/80 bg-slate-100 text-slate-600"
             )}
           >
             {item.badge}
@@ -67,31 +72,106 @@ const renderLink = (item: ModuleNavItem, pathname: string, level = 0) => {
   );
 };
 
-export function ModuleSidebar({ collapsed, modules, moduleTitle, onToggle }: ModuleSidebarProps) {
+export function ModuleSidebar({
+  collapsed,
+  modules,
+  moduleTitle,
+  userInitials,
+  onToggle,
+}: ModuleSidebarProps) {
   const pathname = usePathname();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!profileMenuRef.current) return;
+      if (!profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
 
   if (collapsed) return null;
 
   return (
-    <aside className="flex h-screen flex-col bg-slate-50/60">
-      <div className="m-3 flex flex-1 flex-col overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
-        <div className="mb-2 flex items-center justify-between px-3 py-2">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.32em] text-slate-500">Navigasi</p>
-            <p className="text-lg font-semibold text-slate-900">{moduleTitle}</p>
+    <aside className="flex h-screen flex-col border-r border-slate-200/70 bg-slate-100/60">
+      <div className="flex h-screen w-[280px] flex-col px-4 py-4">
+        <div className="mb-3 flex items-center justify-between rounded-2xl px-2 py-2">
+          <div className="min-w-0">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-slate-400">Workspace</p>
+            <p className="truncate text-base font-medium text-slate-800">{moduleTitle}</p>
           </div>
           <Button
             variant="outline"
             size="icon"
-            className="size-10 rounded-xl"
+            className="size-9 rounded-xl border-slate-200 bg-white text-slate-500 hover:text-slate-800"
             onClick={onToggle}
             aria-label="Collapse modules"
           >
-            <PanelLeftClose className="size-5" />
+            <PanelLeftClose className="size-4" />
           </Button>
         </div>
-        <div className="flex-1 space-y-1 overflow-y-auto">
-          {modules.map((item) => renderLink(item, pathname))}
+
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
+          <div className="space-y-1 rounded-2xl bg-slate-50/80 p-2 ring-1 ring-slate-200/70">
+            {modules.map((item) => renderLink(item, pathname))}
+          </div>
+        </div>
+
+        <div className="relative mt-4 rounded-2xl bg-slate-50/80 p-2 ring-1 ring-slate-200/70" ref={profileMenuRef}>
+          {profileMenuOpen ? (
+            <div className="absolute right-2 bottom-[calc(100%+8px)] z-20 min-w-[190px] rounded-2xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10">
+              <Link
+                href="/profile"
+                onClick={() => setProfileMenuOpen(false)}
+                className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              >
+                <UserPen className="size-4 text-slate-500" />
+                <span>Edit profile</span>
+              </Link>
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              >
+                <LogOut className="size-4 text-slate-500" />
+                <span>Log out</span>
+              </button>
+            </div>
+          ) : null}
+
+          <div className="flex items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-slate-600">
+            <Link
+              href="/profile"
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-1 py-1 transition-colors hover:text-slate-900"
+            >
+              <span className="inline-flex size-8 items-center justify-center rounded-full bg-slate-900 text-sm font-medium text-white">
+                {userInitials || "OP"}
+              </span>
+              <span>Profile</span>
+            </Link>
+            <button
+              type="button"
+              aria-label="Open profile menu"
+              onClick={() => setProfileMenuOpen((prev) => !prev)}
+              className="inline-flex size-8 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-white hover:text-slate-900"
+            >
+              <Ellipsis className="size-4" />
+            </button>
+          </div>
         </div>
       </div>
     </aside>

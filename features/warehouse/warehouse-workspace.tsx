@@ -373,7 +373,7 @@ export function WarehouseWorkspace() {
       }),
       inboundColumnHelper.accessor("po_id", { header: "PO", cell: (info) => info.row.original.purchase_orders?.po_number ?? "-" }),
       inboundColumnHelper.accessor("surat_jalan_vendor", { header: "Vendor Note", cell: (info) => info.getValue() ?? "-" }),
-      inboundColumnHelper.accessor("qc_status", { header: "QC", cell: (info) => <StatusBadge label={info.getValue()} tone={info.getValue() === "PASSED" ? "success" : info.getValue() === "PARTIAL" ? "warning" : "neutral"} /> }),
+      inboundColumnHelper.accessor("qc_status", { header: "QC", cell: (info) => <StatusBadge label={info.getValue()} tone={info.getValue() === "PASSED" ? "success" : info.getValue() === "FAILED" ? "danger" : "neutral"} /> }),
       inboundColumnHelper.display({
         id: "items",
         header: "Items",
@@ -533,7 +533,7 @@ export function WarehouseWorkspace() {
       <datalist id="warehouse-inventory-codes">{(inventoryQuery.data ?? []).map((inventory) => <option key={inventory.inv_code} value={inventory.inv_code}>{inventory.inv_name}</option>)}</datalist>
       <datalist id="warehouse-boolean-values"><option value="true" /><option value="false" /></datalist>
       <datalist id="warehouse-po-statuses"><option value="OPEN" /><option value="PARTIAL" /><option value="CLOSED" /></datalist>
-      <datalist id="warehouse-qc-statuses"><option value="PENDING" /><option value="PARTIAL" /><option value="PASSED" /><option value="REJECTED" /></datalist>
+      <datalist id="warehouse-qc-statuses"><option value="PENDING" /><option value="PASSED" /><option value="FAILED" /></datalist>
       <datalist id="warehouse-adjustment-types"><option value="IN" /><option value="OUT" /></datalist>
 
       <section className="grid gap-6 xl:grid-cols-2">

@@ -388,11 +388,6 @@ export default function WarehouseInboundItemsPage() {
     [inventoryQuery.data],
   );
 
-  const getInventoryUnitPrice = useCallback(
-    (invCode: string) => inventoryQuery.data?.find((inventory) => inventory.inv_code === invCode)?.unit_price ?? null,
-    [inventoryQuery.data],
-  );
-
   const inboundItemDraftRef = useRef(inboundItemDraft);
 
   useEffect(() => {
@@ -456,20 +451,7 @@ export default function WarehouseInboundItemsPage() {
               label={row.original.master_inventory?.inv_name}
               options={inventoryOptions}
               disabled={inboundPosted || inventoryQuery.isLoading}
-              setInboundItemDraft={(updater) =>
-              setInboundItemDraft((prev) => {
-                const nextDraft = typeof updater === "function" ? updater(prev) : updater;
-                if (!prev || !nextDraft || nextDraft.inv_code === prev.inv_code) {
-                  return nextDraft;
-                }
-
-                const nextUnitCost = getInventoryUnitPrice(nextDraft.inv_code);
-                return {
-                  ...nextDraft,
-                  unit_cost: nextUnitCost ?? nextDraft.unit_cost,
-                };
-              })
-            }
+              setInboundItemDraft={setInboundItemDraft}
           />
         ),
       }),
@@ -566,7 +548,6 @@ export default function WarehouseInboundItemsPage() {
       actionPending,
       cancelEditingInboundItem,
       deleteInboundItem,
-      getInventoryUnitPrice,
       inboundPosted,
       inventoryOptions,
       inventoryQuery.isLoading,
@@ -619,7 +600,7 @@ export default function WarehouseInboundItemsPage() {
             {selectedInbound ? (
               <StatusBadge
                 label={selectedInbound.qc_status}
-                tone={selectedInbound.qc_status === "POSTED" ? "info" : "neutral"}
+                tone={selectedInbound.qc_status === "PASSED" ? "info" : "neutral"}
               />
             ) : null}
             {currentInboundId ? (
@@ -648,7 +629,7 @@ export default function WarehouseInboundItemsPage() {
         {selectedInbound ? (
           <div className="rounded-2xl border border-border/60 bg-background/70 px-4 py-3 text-sm text-muted-foreground">
             {inboundPosted
-              ? "Inbound ini sudah POSTED. Stock movement dan stock balance sudah final, jadi item tidak bisa diubah lagi."
+              ? "Inbound ini sudah PASSED (posted). Stock movement dan stock balance sudah final, jadi item tidak bisa diubah lagi."
               : "Inbound item masih draft. Isi dan rapikan item dulu, lalu klik Post stock untuk benar-benar menambah stok dan mengunci inbound."}
           </div>
         ) : null}

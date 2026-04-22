@@ -13,9 +13,10 @@
 }
 
 :root {
-  --font-sans: "Aptos", "Segoe UI Variable", "Trebuchet MS", sans-serif;
+  --font-sans: var(--font-plus-jakarta-sans), "Segoe UI Variable", "Trebuchet MS", sans-serif;
+  --font-heading: var(--font-sora), var(--font-sans);
   --font-geist-mono: "Cascadia Code", Consolas, monospace;
-  --background: #f4f7fb;
+  --background: #f6f7fb;
   --foreground: #0f172a;
   --card: #ffffff;
   --card-foreground: #0f172a;
@@ -52,11 +53,18 @@
   body {
     @apply min-h-screen bg-background text-foreground;
     background:
-      radial-gradient(circle at 15% -10%, rgba(148, 163, 184, 0.15), transparent 35%),
-      radial-gradient(circle at 85% -20%, rgba(30, 58, 138, 0.08), transparent 36%),
+      radial-gradient(circle at 15% -10%, rgba(148, 163, 184, 0.1), transparent 34%),
+      radial-gradient(circle at 90% -20%, rgba(15, 23, 42, 0.06), transparent 36%),
       var(--background);
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
   }
 }

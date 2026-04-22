@@ -10,19 +10,20 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   try {
-    const { itemId } = await params;
+    const { id, itemId } = await params;
     const payload = inboundItemPatchSchema.parse(await request.json());
 
     const item = await prisma.$transaction(async (tx) => {
       const current = await tx.inbound_items.findUniqueOrThrow({
         where: { id: itemId },
       });
+      invariant(current.inbound_id === id, "Inbound item does not belong to this inbound delivery.");
       const inbound = await tx.inbound_deliveries.findUnique({
         where: { id: current.inbound_id },
         select: { qc_status: true },
       });
       invariant(inbound, "Inbound delivery was not found.");
-      invariant(inbound.qc_status !== "POSTED", "Posted inbound is locked and cannot be edited.");
+      invariant(inbound.qc_status !== "PASSED", "Posted inbound is locked and cannot be edited.");
       const nextQtyReceived = payload.qty_received ?? current.qty_received;
       const nextQtyPassedQc = payload.qty_passed_qc ?? current.qty_passed_qc;
       const nextQtyRejectedQc = payload.qty_rejected_qc ?? current.qty_rejected_qc;
@@ -80,7 +81,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   try {
-    const { itemId } = await params;
+    const { id, itemId } = await params;
 
     await prisma.$transaction(async (tx) => {
       const current = await tx.inbound_items.findUniqueOrThrow({
@@ -90,12 +91,13 @@ export async function DELETE(
           inv_code: true,
         },
       });
+      invariant(current.inbound_id === id, "Inbound item does not belong to this inbound delivery.");
       const inbound = await tx.inbound_deliveries.findUnique({
         where: { id: current.inbound_id },
         select: { qc_status: true },
       });
       invariant(inbound, "Inbound delivery was not found.");
-      invariant(inbound.qc_status !== "POSTED", "Posted inbound is locked and cannot be deleted.");
+      invariant(inbound.qc_status !== "PASSED", "Posted inbound is locked and cannot be deleted.");
 
       await removeInboundItemMovement(tx, itemId, current.inv_code);
 

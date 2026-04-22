@@ -95,10 +95,10 @@ export const WAREHOUSE_BOOLEAN_OPTIONS = [
 ] as const;
 export { WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS, WAREHOUSE_PO_STATUS_OPTIONS, WAREHOUSE_QC_STATUS_OPTIONS };
 export const WAREHOUSE_INBOUND_EDITABLE_STATUS_OPTIONS = WAREHOUSE_QC_STATUS_OPTIONS.filter(
-  (status) => status !== "POSTED"
+  (status) => status !== "PASSED"
 );
 export function isInboundPosted(status: string | null | undefined) {
-  return status === "POSTED";
+  return status === "PASSED";
 }
 
 const WAREHOUSE_VENDOR_KEY = ["warehouse-vendors"] as const;
@@ -317,7 +317,11 @@ export function useWarehouseInbound(): InboundHook {
   const saveInbound = async (values: InboundDeliveryInput) => {
     try {
       const action = editingInbound
-        ? warehouseApi.inbound.update(editingInbound.id, values)
+        ? (() => {
+            const payload: Partial<InboundDeliveryInput> = { ...values };
+            delete payload.qc_status;
+            return warehouseApi.inbound.update(editingInbound.id, payload);
+          })()
         : warehouseApi.inbound.create(values);
       const inbound = await action;
 

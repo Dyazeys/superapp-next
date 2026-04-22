@@ -17,7 +17,7 @@ export async function POST(
         select: { id: true, qc_status: true },
       });
       invariant(current, "Inbound delivery was not found.");
-      invariant(current.qc_status !== "POSTED", "Inbound is already posted.");
+      invariant(current.qc_status !== "PASSED", "Inbound is already posted.");
 
       const items = await tx.inbound_items.findMany({
         where: { inbound_id: id },
@@ -31,7 +31,7 @@ export async function POST(
 
       return tx.inbound_deliveries.update({
         where: { id },
-        data: { qc_status: "POSTED" },
+        data: { qc_status: "PASSED" },
       });
     });
 
