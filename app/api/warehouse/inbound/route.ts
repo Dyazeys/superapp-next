@@ -40,9 +40,10 @@ export async function POST(request: NextRequest) {
     if (payload.po_id) {
       const purchaseOrder = await prisma.purchase_orders.findUnique({
         where: { id: payload.po_id },
-        select: { id: true },
+        select: { id: true, status: true },
       });
       invariant(purchaseOrder, "Purchase order was not found.");
+      invariant(purchaseOrder.status !== "CLOSED", "PO is closed and cannot receive new inbound.");
     }
 
     const inbound = await prisma.inbound_deliveries.create({

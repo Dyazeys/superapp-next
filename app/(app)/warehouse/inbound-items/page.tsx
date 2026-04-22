@@ -600,7 +600,13 @@ export default function WarehouseInboundItemsPage() {
             {selectedInbound ? (
               <StatusBadge
                 label={selectedInbound.qc_status}
-                tone={selectedInbound.qc_status === "PASSED" ? "info" : "neutral"}
+                tone={
+                  selectedInbound.qc_status === "PASSED"
+                    ? "success"
+                    : selectedInbound.qc_status === "FAILED"
+                      ? "danger"
+                      : "warning"
+                }
               />
             ) : null}
             {currentInboundId ? (
@@ -612,7 +618,7 @@ export default function WarehouseInboundItemsPage() {
                   onClick={() => postInbound(currentInboundId)}
                 >
                   {inboundPosted ? <Lock className="size-4" /> : <Upload className="size-4" />}
-                  {inboundPosted ? "Posted" : "Post stock"}
+                  {inboundPosted ? "Locked" : "Post stock"}
                 </Button>
                 <Button
                   size="sm"
@@ -629,7 +635,9 @@ export default function WarehouseInboundItemsPage() {
         {selectedInbound ? (
           <div className="rounded-2xl border border-border/60 bg-background/70 px-4 py-3 text-sm text-muted-foreground">
             {inboundPosted
-              ? "Inbound ini sudah PASSED (posted). Stock movement dan stock balance sudah final, jadi item tidak bisa diubah lagi."
+              ? selectedInbound.qc_status === "FAILED"
+                ? "Inbound ini sudah FAILED (posted tanpa qty passed). Data sudah lock dan tidak bisa diubah lagi."
+                : "Inbound ini sudah PASSED (posted). Stock movement dan stock balance sudah final, jadi item tidak bisa diubah lagi."
               : "Inbound item masih draft. Isi dan rapikan item dulu, lalu klik Post stock untuk benar-benar menambah stok dan mengunci inbound."}
           </div>
         ) : null}

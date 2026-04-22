@@ -188,7 +188,7 @@ Nilai valid ke depan:
   - business identifier tambahan yang boleh ikut di description/memo: `surat_jalan_vendor` atau nomor PO bila relevan
 - `WAREHOUSE_ADJUSTMENT`
   - isi langsung dengan `warehouse.adjustments.id`
-  - business identifier tambahan yang boleh ikut di description/memo: `approved_by`, `reason`, atau nomor dokumen manual bila ada
+  - business identifier tambahan yang boleh ikut di description/memo: `created_by`, `reason`, atau nomor dokumen manual bila ada
 
 ### Aturan pemetaan UUID
 - Bila source primary key sudah UUID, simpan apa adanya ke `journal_entries.reference_id`.

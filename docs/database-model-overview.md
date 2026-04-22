@@ -566,10 +566,12 @@ CREATE TABLE warehouse.adjustments (
   adjustment_date DATE NOT NULL,
   inv_code        VARCHAR(100) NOT NULL,
   adj_type        VARCHAR(10) NOT NULL,
+  post_status     VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
+  posted_at       TIMESTAMPTZ,
   qty             INT NOT NULL,
   reason          TEXT NOT NULL,
   notes           TEXT,
-  approved_by     VARCHAR(100),
+  created_by     VARCHAR(100),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   CONSTRAINT fk_adjustments_inv_code
     FOREIGN KEY (inv_code) REFERENCES product.master_inventory(inv_code) ON DELETE RESTRICT,

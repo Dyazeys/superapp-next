@@ -27,8 +27,6 @@ import {
   vendorSchema,
   WAREHOUSE_ADJUSTMENT_REASON_OPTIONS,
   WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS,
-  WAREHOUSE_PO_STATUS_OPTIONS,
-  WAREHOUSE_QC_STATUS_OPTIONS,
   type AdjustmentInput,
   type InboundDeliveryInput,
   type InboundItemInput,
@@ -62,20 +60,6 @@ function asBool(value: string) {
 
 function toDateInput(value: string | null | undefined) {
   return value ? value.slice(0, 10) : "";
-}
-
-function toPoStatus(value: string | null | undefined) {
-  if (!value) return "OPEN" as const;
-  return WAREHOUSE_PO_STATUS_OPTIONS.includes(value as (typeof WAREHOUSE_PO_STATUS_OPTIONS)[number])
-    ? (value as (typeof WAREHOUSE_PO_STATUS_OPTIONS)[number])
-    : "OPEN";
-}
-
-function toQcStatus(value: string | null | undefined) {
-  if (!value) return "PENDING" as const;
-  return WAREHOUSE_QC_STATUS_OPTIONS.includes(value as (typeof WAREHOUSE_QC_STATUS_OPTIONS)[number])
-    ? (value as (typeof WAREHOUSE_QC_STATUS_OPTIONS)[number])
-    : "PENDING";
 }
 
 function emptyInboundItemDraft(inboundId: string): InboundItemInput {
@@ -155,11 +139,11 @@ export function WarehouseWorkspace() {
   });
   const purchaseOrderForm = useForm<PurchaseOrderInput, unknown, PurchaseOrderInput>({
     resolver: zodResolver(purchaseOrderSchema),
-    defaultValues: { po_number: "", vendor_code: "", order_date: "", status: "OPEN" },
+    defaultValues: { po_number: "", vendor_code: "", order_date: "" },
   });
   const inboundForm = useForm<InboundDeliveryInput, unknown, InboundDeliveryInput>({
     resolver: zodResolver(inboundDeliverySchema),
-    defaultValues: { po_id: null, receive_date: "", surat_jalan_vendor: "", qc_status: "PENDING", received_by: "", notes: "" },
+    defaultValues: { po_id: null, receive_date: "", surat_jalan_vendor: "", received_by: "", notes: "" },
   });
   const adjustmentForm = useForm<AdjustmentFormValues, unknown, AdjustmentInput>({
     resolver: zodResolver(adjustmentSchema),
@@ -170,7 +154,7 @@ export function WarehouseWorkspace() {
       qty: 1,
       reason: WAREHOUSE_ADJUSTMENT_REASON_OPTIONS[0],
       notes: "",
-      approved_by: "",
+      created_by: "",
     },
   });
 
@@ -282,13 +266,13 @@ export function WarehouseWorkspace() {
 
   const openPurchaseOrderModal = useCallback((purchaseOrder?: PurchaseOrderRecord) => {
     setEditingPurchaseOrder(purchaseOrder ?? null);
-    purchaseOrderForm.reset({ po_number: purchaseOrder?.po_number ?? "", vendor_code: purchaseOrder?.vendor_code ?? "", order_date: toDateInput(purchaseOrder?.order_date), status: toPoStatus(purchaseOrder?.status) });
+    purchaseOrderForm.reset({ po_number: purchaseOrder?.po_number ?? "", vendor_code: purchaseOrder?.vendor_code ?? "", order_date: toDateInput(purchaseOrder?.order_date) });
     purchaseOrderModal.openModal();
   }, [purchaseOrderForm, purchaseOrderModal]);
 
   const openInboundModal = useCallback((inbound?: InboundDeliveryRecord) => {
     setEditingInbound(inbound ?? null);
-    inboundForm.reset({ po_id: inbound?.po_id ?? null, receive_date: toDateInput(inbound?.receive_date), surat_jalan_vendor: inbound?.surat_jalan_vendor ?? "", qc_status: toQcStatus(inbound?.qc_status), received_by: inbound?.received_by ?? "", notes: inbound?.notes ?? "" });
+    inboundForm.reset({ po_id: inbound?.po_id ?? null, receive_date: toDateInput(inbound?.receive_date), surat_jalan_vendor: inbound?.surat_jalan_vendor ?? "", received_by: inbound?.received_by ?? "", notes: inbound?.notes ?? "" });
     inboundModal.openModal();
   }, [inboundForm, inboundModal]);
 
@@ -303,7 +287,7 @@ export function WarehouseWorkspace() {
         (adjustment?.reason as (typeof WAREHOUSE_ADJUSTMENT_REASON_OPTIONS)[number] | undefined) ??
         WAREHOUSE_ADJUSTMENT_REASON_OPTIONS[0],
       notes: adjustment?.notes ?? "",
-      approved_by: adjustment?.approved_by ?? "",
+      created_by: adjustment?.created_by ?? "",
     });
     adjustmentModal.openModal();
   }, [adjustmentForm, adjustmentModal]);
@@ -373,7 +357,7 @@ export function WarehouseWorkspace() {
       }),
       inboundColumnHelper.accessor("po_id", { header: "PO", cell: (info) => info.row.original.purchase_orders?.po_number ?? "-" }),
       inboundColumnHelper.accessor("surat_jalan_vendor", { header: "Vendor Note", cell: (info) => info.getValue() ?? "-" }),
-      inboundColumnHelper.accessor("qc_status", { header: "QC", cell: (info) => <StatusBadge label={info.getValue()} tone={info.getValue() === "PASSED" ? "success" : info.getValue() === "FAILED" ? "danger" : "neutral"} /> }),
+      inboundColumnHelper.accessor("qc_status", { header: "QC", cell: (info) => <StatusBadge label={info.getValue()} tone={info.getValue() === "PASSED" ? "success" : info.getValue() === "FAILED" ? "danger" : "warning"} /> }),
       inboundColumnHelper.display({
         id: "items",
         header: "Items",
@@ -532,8 +516,6 @@ export function WarehouseWorkspace() {
       <datalist id="warehouse-po-ids">{(purchaseOrdersQuery.data ?? []).map((purchaseOrder) => <option key={purchaseOrder.id} value={purchaseOrder.id}>{purchaseOrder.po_number}</option>)}</datalist>
       <datalist id="warehouse-inventory-codes">{(inventoryQuery.data ?? []).map((inventory) => <option key={inventory.inv_code} value={inventory.inv_code}>{inventory.inv_name}</option>)}</datalist>
       <datalist id="warehouse-boolean-values"><option value="true" /><option value="false" /></datalist>
-      <datalist id="warehouse-po-statuses"><option value="OPEN" /><option value="PARTIAL" /><option value="CLOSED" /></datalist>
-      <datalist id="warehouse-qc-statuses"><option value="PENDING" /><option value="PASSED" /><option value="FAILED" /></datalist>
       <datalist id="warehouse-adjustment-types"><option value="IN" /><option value="OUT" /></datalist>
 
       <section className="grid gap-6 xl:grid-cols-2">
@@ -610,20 +592,39 @@ export function WarehouseWorkspace() {
           <FormField label="PO number" htmlFor="po_number" error={purchaseOrderForm.formState.errors.po_number?.message}><Input id="po_number" {...purchaseOrderForm.register("po_number")} /></FormField>
           <FormField label="Vendor code" htmlFor="po_vendor_code" error={purchaseOrderForm.formState.errors.vendor_code?.message}><Input id="po_vendor_code" list="warehouse-vendor-codes" {...purchaseOrderForm.register("vendor_code")} /></FormField>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="Order date" htmlFor="order_date" error={purchaseOrderForm.formState.errors.order_date?.message}><Input id="order_date" type="date" {...purchaseOrderForm.register("order_date")} /></FormField>
-          <FormField label="Status" htmlFor="po_status" error={purchaseOrderForm.formState.errors.status?.message}><Input id="po_status" list="warehouse-po-statuses" {...purchaseOrderForm.register("status")} /></FormField>
-        </div>
+        <FormField label="Order date" htmlFor="order_date" error={purchaseOrderForm.formState.errors.order_date?.message}><Input id="order_date" type="date" {...purchaseOrderForm.register("order_date")} /></FormField>
       </ModalFormShell>
 
       <ModalFormShell open={inboundModal.open} onOpenChange={inboundModal.setOpen} title={editingInbound ? "Edit inbound" : "Create inbound"} description="Inbound delivery header with warehouse receiving details." submitLabel={editingInbound ? "Save changes" : "Create inbound"} onSubmit={inboundForm.handleSubmit((values) => inboundMutation.mutate(values))}>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Receive date" htmlFor="receive_date" error={inboundForm.formState.errors.receive_date?.message}><Input id="receive_date" type="date" {...inboundForm.register("receive_date")} /></FormField>
-          <FormField label="PO id" htmlFor="po_id"><Input id="po_id" list="warehouse-po-ids" {...inboundForm.register("po_id")} /></FormField>
+          <FormField
+            label="PO id"
+            htmlFor="po_id"
+            helperText={
+              (purchaseOrdersQuery.data?.length ?? 0) === 0
+                ? "Belum ada purchase order."
+                : "PO CLOSED tetap tampil sebagai referensi, tapi tidak bisa dipilih untuk inbound baru."
+            }
+          >
+            <SelectNative id="po_id" {...inboundForm.register("po_id")}>
+              <option value="">No PO (optional)</option>
+              {(purchaseOrdersQuery.data ?? []).map((purchaseOrder) => (
+                <option
+                  key={purchaseOrder.id}
+                  value={purchaseOrder.id}
+                  disabled={purchaseOrder.status === "CLOSED" && purchaseOrder.id !== editingInbound?.po_id}
+                >
+                  {purchaseOrder.po_number}
+                  {purchaseOrder.status === "CLOSED" ? " (CLOSED)" : ""}
+                </option>
+              ))}
+            </SelectNative>
+          </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Vendor note" htmlFor="surat_jalan_vendor"><Input id="surat_jalan_vendor" {...inboundForm.register("surat_jalan_vendor")} /></FormField>
-          <FormField label="QC status" htmlFor="qc_status" error={inboundForm.formState.errors.qc_status?.message}><Input id="qc_status" list="warehouse-qc-statuses" {...inboundForm.register("qc_status")} /></FormField>
+          <FormField label="System status" htmlFor="workspace_inbound_status_hint"><Input id="workspace_inbound_status_hint" value={editingInbound?.qc_status ?? "PENDING"} disabled /></FormField>
         </div>
         <FormField label="Received by" htmlFor="received_by" error={inboundForm.formState.errors.received_by?.message}><Input id="received_by" {...inboundForm.register("received_by")} /></FormField>
         <FormField label="Notes" htmlFor="inbound_notes"><Textarea id="inbound_notes" {...inboundForm.register("notes")} /></FormField>
@@ -645,7 +646,7 @@ export function WarehouseWorkspace() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Quantity" htmlFor="adjustment_qty" error={adjustmentForm.formState.errors.qty?.message}><Input id="adjustment_qty" {...adjustmentForm.register("qty")} /></FormField>
-          <FormField label="Approved by" htmlFor="approved_by"><Input id="approved_by" {...adjustmentForm.register("approved_by")} /></FormField>
+          <FormField label="Created by" htmlFor="created_by"><Input id="created_by" {...adjustmentForm.register("created_by")} /></FormField>
         </div>
         <FormField label="Reason" htmlFor="reason" error={adjustmentForm.formState.errors.reason?.message}>
           <SelectNative id="reason" {...adjustmentForm.register("reason")}>

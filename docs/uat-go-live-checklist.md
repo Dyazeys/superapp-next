@@ -1,6 +1,6 @@
 # UAT & Go-Live Checklist (SuperApp Next ERP)
 
-Tanggal update: `2026-04-13`  
+Tanggal update: `2026-04-23`  
 Environment: `Local UAT (localhost + DB tunnel 55432)`  
 PIC: `Codex + Tim Operasional`
 
@@ -74,10 +74,28 @@ Status: **PARTIAL**
 
 - [x] Perbaikan UI kritikal login + header shell diterapkan.
 - [x] Menu non-prioritas tetap nonaktif sesuai fase rollout.
+- [x] PO `CLOSED` tidak bisa dipilih untuk inbound baru (backend + UI guard).
+- [x] Histori inbound/stock movement tetap terlihat walau PO terkait sudah `CLOSED`.
+- [x] Inbound posting mengunci dokumen saat status final (`PASSED`/`FAILED`).
 - [ ] Hak akses user sudah sesuai role (perlu test akun role-based).
 - [ ] Error message user-facing dievaluasi oleh user operasional.
 
 Status: **PARTIAL**
+
+## 9) Warehouse Hardening Backlog (Non-Blocker)
+
+Catatan: item di bawah **tidak memblokir fitur utama UAT saat ini**, tapi masuk checklist lanjutan.
+
+- [ ] Approval workflow maker-checker untuk inbound/adjustment posting.
+- [ ] Alur reverse/reopen posting dengan audit trail resmi.
+- [ ] Tolerance receiving vs PO (over/under receive rule).
+- [ ] Alasan QC fail per item + evidence attachment standar.
+- [ ] Penetapan metode valuasi stok final (moving average/FIFO) dan dampaknya ke accounting.
+- [ ] Penguncian role dan jejak `created_by/posted_by` dari user login riil.
+- [ ] Nomor dokumen operasional yang human-friendly (mis. `INB-YYYY-xxxxx`).
+- [ ] Skenario test regresi wajib: partial multi-delivery, full reject QC, reverse flow, reconciliation.
+
+Status: **PENDING**
 
 ## 7) Monitoring & Logs
 

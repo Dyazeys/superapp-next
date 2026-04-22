@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
-import { removeInboundItemMovement } from "@/lib/warehouse-stock";
-import { inboundItemSchema } from "@/schemas/warehouse-module";
+import { recalculatePurchaseOrderStatus } from "@/lib/warehouse-po-status";
+import { purchaseOrderItemSchema } from "@/schemas/warehouse-module";
 
 export async function GET(
   _request: NextRequest,
@@ -12,8 +12,8 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const items = await prisma.inbound_items.findMany({
-      where: { inbound_id: id },
+    const items = await prisma.purchase_order_items.findMany({
+      where: { po_id: id },
       orderBy: [{ created_at: "asc" }, { id: "asc" }],
       include: {
         master_inventory: {
@@ -27,7 +27,7 @@ export async function GET(
 
     return NextResponse.json(toJsonValue(items));
   } catch (error) {
-    return jsonError(error, "Failed to load inbound items.");
+    return jsonError(error, "Failed to load purchase order items.");
   }
 }
 
@@ -37,30 +37,27 @@ export async function POST(
 ) {
   try {
     const { id } = await params;
-    const payload = inboundItemSchema.parse({ ...(await request.json()), inbound_id: id });
+    const payload = purchaseOrderItemSchema.parse({ ...(await request.json()), po_id: id });
 
     const item = await prisma.$transaction(async (tx) => {
-      const inbound = await tx.inbound_deliveries.findUnique({
+      const purchaseOrder = await tx.purchase_orders.findUnique({
         where: { id },
-        select: { id: true, qc_status: true },
+        select: { id: true },
       });
-      invariant(inbound, "Inbound delivery was not found.");
-      invariant(inbound.qc_status === "PENDING", "Posted inbound is locked and cannot receive new item edits.");
+      invariant(purchaseOrder, "Purchase order was not found.");
 
       const inventory = await tx.master_inventory.findUnique({
         where: { inv_code: payload.inv_code },
         select: { inv_code: true, is_active: true },
       });
       invariant(inventory, "Inventory code was not found.");
-      invariant(inventory.is_active, "Inbound items require an active inventory item.");
+      invariant(inventory.is_active, "PO items require an active inventory item.");
 
-      const created = await tx.inbound_items.create({
+      const created = await tx.purchase_order_items.create({
         data: {
-          inbound_id: id,
+          po_id: id,
           inv_code: payload.inv_code,
-          qty_received: payload.qty_received,
-          qty_passed_qc: payload.qty_passed_qc,
-          qty_rejected_qc: payload.qty_rejected_qc,
+          qty_ordered: payload.qty_ordered,
           unit_cost: payload.unit_cost,
         },
         include: {
@@ -73,13 +70,13 @@ export async function POST(
         },
       });
 
-      await removeInboundItemMovement(tx, created.id, created.inv_code);
+      await recalculatePurchaseOrderStatus(tx, id);
 
       return created;
     });
 
     return NextResponse.json(toJsonValue(item), { status: 201 });
   } catch (error) {
-    return jsonError(error, "Failed to create inbound item.");
+    return jsonError(error, "Failed to create purchase order item.");
   }
 }

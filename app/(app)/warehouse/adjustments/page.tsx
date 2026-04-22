@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Lock, Pencil, Plus, Search, Trash2, Upload } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  isAdjustmentPosted,
   WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS,
   toDateInput,
   useWarehouseAdjustments,
@@ -92,22 +93,15 @@ function InventoryPicker({
 
     const rect = element.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
     const menuHeight = 260;
-    const desiredWidth = Math.max(rect.width + 80, 360);
-    const gap = 12;
-    const canOpenRight = rect.right + gap + desiredWidth <= viewportWidth - 16;
-    const fallbackWidth = Math.min(desiredWidth, viewportWidth - 32);
-    const centeredTop = rect.top + rect.height / 2 - menuHeight / 2;
-    const top = Math.max(16, Math.min(centeredTop, viewportHeight - menuHeight - 16));
-    const left = canOpenRight
-      ? rect.right + gap
-      : Math.min(rect.left, viewportWidth - fallbackWidth - 16);
+    const openAbove = rect.bottom + menuHeight > viewportHeight && rect.top > menuHeight;
+    const top = openAbove ? rect.top - 4 : rect.bottom + 4;
 
     setMenuStyle({
-      left,
+      left: rect.left,
       top,
-      width: canOpenRight ? desiredWidth : fallbackWidth,
+      width: rect.width,
+      transform: openAbove ? "translateY(-100%)" : undefined,
     });
   }, []);
 
@@ -265,29 +259,58 @@ export default function WarehouseAdjustmentsPage() {
       header: "Type",
       cell: (info) => <StatusBadge label={info.getValue()} tone={info.getValue() === "IN" ? "success" : "warning"} />,
     }),
+    columnHelper.accessor("post_status", {
+      header: "Posting",
+      cell: (info) => {
+        const posted = isAdjustmentPosted(info.getValue());
+        return <StatusBadge label={posted ? "LOCKED" : "DRAFT"} tone={posted ? "danger" : "info"} />;
+      },
+    }),
     columnHelper.accessor("qty", { header: "Qty" }),
     columnHelper.accessor("reason", { header: "Reason" }),
     columnHelper.accessor("notes", {
       header: "Catatan",
       cell: (info) => info.getValue() ?? "-",
     }),
-    columnHelper.accessor("approved_by", {
-      header: "Approved By",
+    columnHelper.accessor("created_by", {
+      header: "Created By",
       cell: (info) => info.getValue() ?? "-",
     }),
     columnHelper.display({
       id: "actions",
       header: "",
-      cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.openAdjustmentModal(row.original)}>
-            <Pencil className="size-3.5" />
-          </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.deleteAdjustment(row.original.id)}>
-            <Trash2 className="size-3.5" />
-          </Button>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const posted = isAdjustmentPosted(row.original.post_status);
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              size="icon-xs"
+              variant="outline"
+              disabled={posted}
+              onClick={() => hooks.openAdjustmentModal(row.original)}
+            >
+              <Pencil className="size-3.5" />
+            </Button>
+            <Button size="icon-xs" variant="outline" disabled={posted} onClick={() => hooks.deleteAdjustment(row.original.id)}>
+              <Trash2 className="size-3.5" />
+            </Button>
+            <Button
+              size="icon-xs"
+              variant="outline"
+              disabled={posted}
+              onClick={() => hooks.postAdjustment(row.original.id)}
+              className={cn(
+                posted
+                  ? "border-rose-300 bg-rose-50 text-rose-700 opacity-100"
+                  : "border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 hover:text-sky-800"
+              )}
+              title={posted ? "Already posted" : "Post stock movement"}
+            >
+              {posted ? <Lock className="size-3.5" /> : <Upload className="size-3.5" />}
+            </Button>
+          </div>
+        );
+      },
     }),
   ];
 
@@ -369,8 +392,8 @@ export default function WarehouseAdjustmentsPage() {
           </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="Approved by" htmlFor="approved_by">
-            <Input id="approved_by" {...adjustmentForm.register("approved_by")} />
+          <FormField label="Created by" htmlFor="created_by">
+            <Input id="created_by" {...adjustmentForm.register("created_by")} />
           </FormField>
           <FormField label="Reason" htmlFor="adjustment_reason" error={adjustmentForm.formState.errors.reason?.message}>
             <SelectNative id="adjustment_reason" {...adjustmentForm.register("reason")}>

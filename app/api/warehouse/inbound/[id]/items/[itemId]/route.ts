@@ -23,7 +23,7 @@ export async function PATCH(
         select: { qc_status: true },
       });
       invariant(inbound, "Inbound delivery was not found.");
-      invariant(inbound.qc_status !== "PASSED", "Posted inbound is locked and cannot be edited.");
+      invariant(inbound.qc_status === "PENDING", "Posted inbound is locked and cannot be edited.");
       const nextQtyReceived = payload.qty_received ?? current.qty_received;
       const nextQtyPassedQc = payload.qty_passed_qc ?? current.qty_passed_qc;
       const nextQtyRejectedQc = payload.qty_rejected_qc ?? current.qty_rejected_qc;
@@ -97,7 +97,7 @@ export async function DELETE(
         select: { qc_status: true },
       });
       invariant(inbound, "Inbound delivery was not found.");
-      invariant(inbound.qc_status !== "PASSED", "Posted inbound is locked and cannot be deleted.");
+      invariant(inbound.qc_status === "PENDING", "Posted inbound is locked and cannot be deleted.");
 
       await removeInboundItemMovement(tx, itemId, current.inv_code);
 

@@ -21,9 +21,24 @@ export type PurchaseOrderRecord = {
   created_at: string;
   updated_at: string | null;
   master_vendor?: VendorRecord | null;
+  purchase_order_items?: PurchaseOrderItemRecord[];
   _count?: {
     inbound_deliveries?: number;
+    purchase_order_items?: number;
   };
+};
+
+export type PurchaseOrderItemRecord = {
+  id: string;
+  po_id: string;
+  inv_code: string;
+  qty_ordered: number;
+  unit_cost: string | null;
+  created_at: string;
+  master_inventory?: {
+    inv_code: string;
+    inv_name: string;
+  } | null;
 };
 
 export type InboundDeliveryRecord = {
@@ -62,10 +77,12 @@ export type AdjustmentRecord = {
   adjustment_date: string;
   inv_code: string;
   adj_type: string;
+  post_status: string;
+  posted_at: string | null;
   qty: number;
   reason: string;
   notes: string | null;
-  approved_by: string | null;
+  created_by: string | null;
   created_at: string;
   master_inventory?: {
     inv_code: string;

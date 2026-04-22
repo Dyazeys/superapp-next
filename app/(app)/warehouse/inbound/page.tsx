@@ -14,7 +14,6 @@ import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import {
   isInboundPosted,
-  WAREHOUSE_INBOUND_EDITABLE_STATUS_OPTIONS,
   toDateInput,
   useWarehouseInbound,
   useWarehousePurchaseOrders,
@@ -63,10 +62,10 @@ export default function WarehouseInboundPage() {
           label={info.getValue()}
           tone={
             info.getValue() === "PASSED"
-                ? "success"
-                : info.getValue() === "FAILED"
-                  ? "danger"
-                  : "neutral"
+              ? "success"
+              : info.getValue() === "FAILED"
+                ? "danger"
+                : "warning"
           }
         />
       ),
@@ -143,14 +142,19 @@ export default function WarehouseInboundPage() {
             helperText={
               (purchaseOrdersQuery.data?.length ?? 0) === 0
                 ? "Belum ada purchase order. Buat PO dulu di menu Warehouse > Purchase Orders."
-                : undefined
+                : "PO dengan status CLOSED ditampilkan sebagai referensi, tapi tidak bisa dipilih untuk inbound baru."
             }
           >
             <SelectNative id="po_id" {...inboundForm.register("po_id")}>
               <option value="">No PO (optional)</option>
               {(purchaseOrdersQuery.data ?? []).map((purchaseOrder) => (
-                <option key={purchaseOrder.id} value={purchaseOrder.id}>
+                <option
+                  key={purchaseOrder.id}
+                  value={purchaseOrder.id}
+                  disabled={purchaseOrder.status === "CLOSED" && purchaseOrder.id !== editingInbound?.po_id}
+                >
                   {purchaseOrder.po_number}
+                  {purchaseOrder.status === "CLOSED" ? " (CLOSED)" : ""}
                 </option>
               ))}
             </SelectNative>
@@ -167,14 +171,8 @@ export default function WarehouseInboundPage() {
           <FormField label="Vendor note" htmlFor="surat_jalan_vendor">
             <Input id="surat_jalan_vendor" {...inboundForm.register("surat_jalan_vendor")} />
           </FormField>
-          <FormField label="QC status" htmlFor="qc_status" error={inboundForm.formState.errors.qc_status?.message}>
-            <SelectNative id="qc_status" {...inboundForm.register("qc_status")}>
-              {WAREHOUSE_INBOUND_EDITABLE_STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
-            </SelectNative>
+          <FormField label="System status" htmlFor="inbound_status_hint" helperText="QC status berubah otomatis setelah Post stock.">
+            <Input id="inbound_status_hint" value={editingInbound?.qc_status ?? "PENDING"} disabled />
           </FormField>
         </div>
         <FormField

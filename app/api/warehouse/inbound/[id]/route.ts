@@ -16,7 +16,6 @@ export async function PATCH(
   try {
     const { id } = await params;
     const payload = inboundDeliverySchema.partial().parse(await request.json());
-    invariant(payload.qc_status === undefined, "Inbound status is managed by system and cannot be edited directly.");
 
     const inbound = await prisma.$transaction(async (tx) => {
       const current = await tx.inbound_deliveries.findUnique({
@@ -26,8 +25,17 @@ export async function PATCH(
       if (!current) {
         throw new Error("Inbound delivery was not found.");
       }
-      if (current.qc_status === "PASSED") {
+      if (current.qc_status !== "PENDING") {
         throw new Error("Posted inbound is locked and cannot be edited.");
+      }
+
+      if (payload.po_id) {
+        const purchaseOrder = await tx.purchase_orders.findUnique({
+          where: { id: payload.po_id },
+          select: { id: true, status: true },
+        });
+        invariant(purchaseOrder, "Purchase order was not found.");
+        invariant(purchaseOrder.status !== "CLOSED", "PO is closed and cannot receive new inbound.");
       }
 
       return tx.inbound_deliveries.update({
@@ -37,7 +45,6 @@ export async function PATCH(
           receive_date: payload.receive_date === undefined ? undefined : asDateOnly(payload.receive_date),
           surat_jalan_vendor:
             payload.surat_jalan_vendor === undefined ? undefined : payload.surat_jalan_vendor || null,
-          qc_status: payload.qc_status,
           received_by: payload.received_by,
           notes: payload.notes === undefined ? undefined : payload.notes || null,
         },
@@ -65,7 +72,7 @@ export async function DELETE(
       if (!inbound) {
         throw new Error("Inbound delivery was not found.");
       }
-      if (inbound.qc_status === "PASSED") {
+      if (inbound.qc_status !== "PENDING") {
         throw new Error("Posted inbound is locked and cannot be deleted.");
       }
 

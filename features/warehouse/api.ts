@@ -2,6 +2,7 @@ import type {
   AdjustmentInput,
   InboundDeliveryInput,
   InboundItemInput,
+  PurchaseOrderItemInput,
   PurchaseOrderInput,
   VendorInput,
 } from "@/schemas/warehouse-module";
@@ -9,6 +10,7 @@ import type {
   AdjustmentRecord,
   InboundDeliveryRecord,
   InboundItemRecord,
+  PurchaseOrderItemRecord,
   PurchaseOrderRecord,
   StockBalanceRecord,
   StockMovementRecord,
@@ -50,6 +52,39 @@ export const warehouseApi = {
       requestJson<{ ok: true }>(`/api/warehouse/purchase-orders/${encodeURIComponent(id)}`, {
         method: "DELETE",
       }),
+    items: {
+      list: (poId: string) =>
+        requestJson<PurchaseOrderItemRecord[]>(
+          `/api/warehouse/purchase-orders/${encodeURIComponent(poId)}/items`
+        ),
+      create: (poId: string, payload: Omit<PurchaseOrderItemInput, "po_id">) =>
+        requestJson<PurchaseOrderItemRecord>(
+          `/api/warehouse/purchase-orders/${encodeURIComponent(poId)}/items`,
+          {
+            method: "POST",
+            body: JSON.stringify(payload),
+          }
+        ),
+      update: (
+        poId: string,
+        itemId: string,
+        payload: Partial<Omit<PurchaseOrderItemInput, "po_id">>
+      ) =>
+        requestJson<PurchaseOrderItemRecord>(
+          `/api/warehouse/purchase-orders/${encodeURIComponent(poId)}/items/${encodeURIComponent(itemId)}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify(payload),
+          }
+        ),
+      remove: (poId: string, itemId: string) =>
+        requestJson<{ ok: true }>(
+          `/api/warehouse/purchase-orders/${encodeURIComponent(poId)}/items/${encodeURIComponent(itemId)}`,
+          {
+            method: "DELETE",
+          }
+        ),
+    },
   },
   inbound: {
     list: () => requestJson<InboundDeliveryRecord[]>("/api/warehouse/inbound"),
@@ -111,6 +146,10 @@ export const warehouseApi = {
     remove: (id: string) =>
       requestJson<{ ok: true }>(`/api/warehouse/adjustments/${encodeURIComponent(id)}`, {
         method: "DELETE",
+      }),
+    post: (id: string) =>
+      requestJson<AdjustmentRecord>(`/api/warehouse/adjustments/${encodeURIComponent(id)}/post`, {
+        method: "POST",
       }),
   },
   stock: {

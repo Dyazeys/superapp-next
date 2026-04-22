@@ -3,6 +3,7 @@ import { z } from "zod";
 export const WAREHOUSE_PO_STATUS_OPTIONS = ["OPEN", "PARTIAL", "CLOSED"] as const;
 export const WAREHOUSE_QC_STATUS_OPTIONS = ["PENDING", "PASSED", "FAILED"] as const;
 export const WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS = ["IN", "OUT"] as const;
+export const WAREHOUSE_ADJUSTMENT_POST_STATUS_OPTIONS = ["DRAFT", "POSTED"] as const;
 export const WAREHOUSE_ADJUSTMENT_REASON_OPTIONS = [
   "Loss",
   "Surplus",
@@ -42,16 +43,39 @@ export const purchaseOrderSchema = z.object({
   po_number: z.string().min(1, "PO number is required").max(50),
   vendor_code: z.string().min(1, "Vendor is required").max(100),
   order_date: dateInput,
-  status: z.enum(WAREHOUSE_PO_STATUS_OPTIONS),
 });
 
 export const inboundDeliverySchema = z.object({
   po_id: z.string().optional().nullable(),
   receive_date: dateInput,
   surat_jalan_vendor: z.string().max(100).optional().nullable(),
-  qc_status: z.enum(WAREHOUSE_QC_STATUS_OPTIONS),
   received_by: z.string().min(1, "Receiver is required").max(100),
   notes: z.string().optional().nullable(),
+});
+
+export const purchaseOrderItemSchema = z.object({
+  po_id: z.string().min(1, "PO is required"),
+  inv_code: z.string().min(1, "Inventory code is required").max(100),
+  qty_ordered: z.coerce.number().int().min(1, "Ordered quantity must be at least 1"),
+  unit_cost: z
+    .union([decimalInput, z.literal(""), z.null(), z.undefined()])
+    .transform((value) => {
+      if (value === null || value === undefined || value === "") return null;
+      return String(value);
+    }),
+});
+
+export const purchaseOrderItemPatchSchema = z.object({
+  po_id: z.string().min(1, "PO is required").optional(),
+  inv_code: z.string().min(1, "Inventory code is required").max(100).optional(),
+  qty_ordered: z.coerce.number().int().min(1, "Ordered quantity must be at least 1").optional(),
+  unit_cost: z
+    .union([decimalInput, z.literal(""), z.null(), z.undefined()])
+    .transform((value) => {
+      if (value === null || value === undefined || value === "") return null;
+      return String(value);
+    })
+    .optional(),
 });
 
 export const inboundItemSchema = z.object({
@@ -106,12 +130,14 @@ export const adjustmentSchema = z.object({
   qty: z.coerce.number().int().min(1),
   reason: z.enum(WAREHOUSE_ADJUSTMENT_REASON_OPTIONS),
   notes: z.string().optional().nullable(),
-  approved_by: z.string().max(100).optional().nullable(),
+  created_by: z.string().max(100).optional().nullable(),
 });
 
 export type VendorInput = z.infer<typeof vendorSchema>;
 export type PurchaseOrderInput = z.infer<typeof purchaseOrderSchema>;
 export type InboundDeliveryInput = z.infer<typeof inboundDeliverySchema>;
+export type PurchaseOrderItemInput = z.infer<typeof purchaseOrderItemSchema>;
+export type PurchaseOrderItemPatchInput = z.infer<typeof purchaseOrderItemPatchSchema>;
 export type InboundItemInput = z.infer<typeof inboundItemSchema>;
 export type InboundItemPatchInput = z.infer<typeof inboundItemPatchSchema>;
 export type AdjustmentInput = z.infer<typeof adjustmentSchema>;

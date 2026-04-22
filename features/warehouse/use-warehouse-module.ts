@@ -14,6 +14,7 @@ import {
   inboundItemSchema,
   purchaseOrderSchema,
   vendorSchema,
+  WAREHOUSE_ADJUSTMENT_POST_STATUS_OPTIONS,
   WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS,
   WAREHOUSE_PO_STATUS_OPTIONS,
   WAREHOUSE_QC_STATUS_OPTIONS,
@@ -87,18 +88,28 @@ type AdjustmentHook = {
   openAdjustmentModal: (adjustment?: AdjustmentRecord) => void;
   saveAdjustment: (values: AdjustmentInput) => Promise<void>;
   deleteAdjustment: (id: string) => Promise<void>;
+  postAdjustment: (id: string) => Promise<void>;
 };
 
 export const WAREHOUSE_BOOLEAN_OPTIONS = [
   { label: "true", value: "true" },
   { label: "false", value: "false" },
 ] as const;
-export { WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS, WAREHOUSE_PO_STATUS_OPTIONS, WAREHOUSE_QC_STATUS_OPTIONS };
+export {
+  WAREHOUSE_ADJUSTMENT_POST_STATUS_OPTIONS,
+  WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS,
+  WAREHOUSE_PO_STATUS_OPTIONS,
+  WAREHOUSE_QC_STATUS_OPTIONS,
+};
 export const WAREHOUSE_INBOUND_EDITABLE_STATUS_OPTIONS = WAREHOUSE_QC_STATUS_OPTIONS.filter(
-  (status) => status !== "PASSED"
+  (status) => status === "PENDING"
 );
 export function isInboundPosted(status: string | null | undefined) {
-  return status === "PASSED";
+  return status === "PASSED" || status === "FAILED";
+}
+
+export function isAdjustmentPosted(status: string | null | undefined) {
+  return status === "POSTED";
 }
 
 const WAREHOUSE_VENDOR_KEY = ["warehouse-vendors"] as const;
@@ -112,20 +123,6 @@ const WAREHOUSE_INVENTORY_LOOKUP_KEY = ["warehouse-inventory-lookup"] as const;
 function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) {
   const queryClient = useQueryClient();
   return () => Promise.all(invalidateKeys.map((key) => queryClient.invalidateQueries({ queryKey: key })));
-}
-
-function toPoStatus(value: string | null | undefined) {
-  if (!value) return "OPEN" as const;
-  return WAREHOUSE_PO_STATUS_OPTIONS.includes(value as (typeof WAREHOUSE_PO_STATUS_OPTIONS)[number])
-    ? (value as (typeof WAREHOUSE_PO_STATUS_OPTIONS)[number])
-    : "OPEN";
-}
-
-function toQcStatus(value: string | null | undefined) {
-  if (!value) return "PENDING" as const;
-  return WAREHOUSE_QC_STATUS_OPTIONS.includes(value as (typeof WAREHOUSE_QC_STATUS_OPTIONS)[number])
-    ? (value as (typeof WAREHOUSE_QC_STATUS_OPTIONS)[number])
-    : "PENDING";
 }
 
 export function parseWarehouseBooleanInput(value: string) {
@@ -232,7 +229,6 @@ export function useWarehousePurchaseOrders(): PurchaseOrderHook {
       po_number: "",
       vendor_code: "",
       order_date: "",
-      status: "OPEN",
     },
   });
   const purchaseOrderModal = useModalState();
@@ -277,7 +273,6 @@ export function useWarehousePurchaseOrders(): PurchaseOrderHook {
       po_number: purchaseOrder?.po_number ?? "",
       vendor_code: purchaseOrder?.vendor_code ?? "",
       order_date: toDateInput(purchaseOrder?.order_date),
-      status: toPoStatus(purchaseOrder?.status),
     });
     purchaseOrderModal.openModal();
   };
@@ -301,7 +296,6 @@ export function useWarehouseInbound(): InboundHook {
       po_id: null,
       receive_date: "",
       surat_jalan_vendor: "",
-      qc_status: "PENDING",
       received_by: "",
       notes: "",
     },
@@ -317,11 +311,7 @@ export function useWarehouseInbound(): InboundHook {
   const saveInbound = async (values: InboundDeliveryInput) => {
     try {
       const action = editingInbound
-        ? (() => {
-            const payload: Partial<InboundDeliveryInput> = { ...values };
-            delete payload.qc_status;
-            return warehouseApi.inbound.update(editingInbound.id, payload);
-          })()
+        ? warehouseApi.inbound.update(editingInbound.id, values)
         : warehouseApi.inbound.create(values);
       const inbound = await action;
 
@@ -365,7 +355,6 @@ export function useWarehouseInbound(): InboundHook {
       po_id: inbound?.po_id ?? null,
       receive_date: toDateInput(inbound?.receive_date),
       surat_jalan_vendor: inbound?.surat_jalan_vendor ?? "",
-      qc_status: toQcStatus(inbound?.qc_status),
       received_by: inbound?.received_by ?? "",
       notes: inbound?.notes ?? "",
     });
@@ -528,7 +517,7 @@ export function useWarehouseAdjustments(): AdjustmentHook {
       qty: 1,
       reason: WAREHOUSE_ADJUSTMENT_REASON_OPTIONS[0],
       notes: "",
-      approved_by: "",
+      created_by: "",
     },
   });
   const adjustmentModal = useModalState();
@@ -571,6 +560,17 @@ export function useWarehouseAdjustments(): AdjustmentHook {
     }
   };
 
+  const postAdjustment = async (id: string) => {
+    try {
+      await warehouseApi.adjustments.post(id);
+      toast.success("Adjustment posted to stock");
+      await invalidate();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to post adjustment");
+      throw error;
+    }
+  };
+
   const openAdjustmentModal = (adjustment?: AdjustmentRecord) => {
     setEditingAdjustment(adjustment ?? null);
     adjustmentForm.reset({
@@ -582,7 +582,7 @@ export function useWarehouseAdjustments(): AdjustmentHook {
         (adjustment?.reason as (typeof WAREHOUSE_ADJUSTMENT_REASON_OPTIONS)[number] | undefined) ??
         WAREHOUSE_ADJUSTMENT_REASON_OPTIONS[0],
       notes: adjustment?.notes ?? "",
-      approved_by: adjustment?.approved_by ?? "",
+      created_by: adjustment?.created_by ?? "",
     });
     adjustmentModal.openModal();
   };
@@ -595,6 +595,7 @@ export function useWarehouseAdjustments(): AdjustmentHook {
     openAdjustmentModal,
     saveAdjustment,
     deleteAdjustment,
+    postAdjustment,
   };
 }
 

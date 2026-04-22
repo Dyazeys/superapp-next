@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
         po_number: payload.po_number,
         vendor_code: payload.vendor_code,
         order_date: asDateOnly(payload.order_date),
-        status: payload.status,
+        status: "OPEN",
       },
     });
 

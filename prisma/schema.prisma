@@ -272,6 +272,7 @@ model master_inventory {
   product_bom                                              product_bom[]
   adjustments                                              adjustments[]
   inbound_items                                            inbound_items[]
+  purchase_order_items                                     purchase_order_items[]
   returns                                                  returns[]
   stock_balances                                           stock_balances?
   stock_movements                                          stock_movements[]
@@ -398,10 +399,12 @@ model adjustments {
   adjustment_date  DateTime         @db.Date
   inv_code         String           @db.VarChar(100)
   adj_type         String           @db.VarChar(10)
+  post_status      String           @default("DRAFT") @db.VarChar(20)
+  posted_at        DateTime?        @db.Timestamptz(6)
   qty              Int
   reason           String
   notes            String?
-  approved_by      String?          @db.VarChar(100)
+  created_by       String?          @db.VarChar(100)
   created_at       DateTime         @default(now()) @db.Timestamptz(6)
   master_inventory master_inventory @relation(fields: [inv_code], references: [inv_code], map: "fk_adjustments_inv_code")
 
@@ -469,9 +472,26 @@ model purchase_orders {
   created_at         DateTime             @default(now()) @db.Timestamptz(6)
   updated_at         DateTime?            @db.Timestamptz(6)
   inbound_deliveries inbound_deliveries[]
+  purchase_order_items purchase_order_items[]
   master_vendor      master_vendor        @relation(fields: [vendor_code], references: [vendor_code], map: "fk_purchase_orders_vendor_code")
 
   @@index([vendor_code], map: "idx_warehouse_purchase_orders_vendor_code")
+  @@schema("warehouse")
+}
+
+model purchase_order_items {
+  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  po_id           String           @db.Uuid
+  inv_code        String           @db.VarChar(100)
+  qty_ordered     Int
+  unit_cost       Decimal?         @db.Decimal(18, 2)
+  created_at      DateTime         @default(now()) @db.Timestamptz(6)
+  purchase_orders purchase_orders  @relation(fields: [po_id], references: [id], onDelete: Cascade, map: "fk_purchase_order_items_po_id")
+  master_inventory master_inventory @relation(fields: [inv_code], references: [inv_code], onDelete: Restrict, map: "fk_purchase_order_items_inv_code")
+
+  @@index([po_id], map: "idx_warehouse_purchase_order_items_po_id")
+  @@index([inv_code], map: "idx_warehouse_purchase_order_items_inv_code")
+  @@index([po_id, inv_code], map: "idx_warehouse_purchase_order_items_po_inv")
   @@schema("warehouse")
 }
 
