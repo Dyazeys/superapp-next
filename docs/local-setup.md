@@ -33,8 +33,18 @@ The repo default is already set for this mode:
 - Host: `127.0.0.1`
 - Port: `55432`
 - Database: `superapp_db`
-- Username: `superapp_app`
-- Password: set in your local `.env`
+- Username: value from `DATABASE_URL` / `PRISMA_DATABASE_URL` (current default: `superapp_app`)
+- Password: value from `DATABASE_URL` / `PRISMA_DATABASE_URL` in local `.env`
+
+### VPS login credential reference
+
+Use these credential keys from your local `.env` when running in VPS tunnel mode:
+
+- App login email: `DEMO_ADMIN_EMAIL`
+- App login password: `DEMO_ADMIN_PASSWORD`
+- DB connection user/password: extracted from `DATABASE_URL` (or `PRISMA_DATABASE_URL`)
+
+Do not commit plaintext credentials into docs. Keep final secret values in each developer's local `.env` and team vault/password manager.
 
 ### SSH key
 
