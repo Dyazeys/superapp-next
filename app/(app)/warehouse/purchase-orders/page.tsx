@@ -7,6 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { z } from "zod";
 import { DataTable } from "@/components/data/data-table";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
@@ -28,6 +29,7 @@ import type { PurchaseOrderItemRecord, PurchaseOrderRecord } from "@/types/wareh
 
 const columnHelper = createColumnHelper<PurchaseOrderRecord>();
 const itemColumnHelper = createColumnHelper<PurchaseOrderItemRecord>();
+type PurchaseOrderItemFormValues = z.input<typeof purchaseOrderItemSchema>;
 
 export default function WarehousePurchaseOrdersPage() {
   const hooks = useWarehousePurchaseOrders();
@@ -53,7 +55,7 @@ export default function WarehousePurchaseOrdersPage() {
 
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<PurchaseOrderItemRecord | null>(null);
-  const itemForm = useForm<PurchaseOrderItemInput, unknown, PurchaseOrderItemInput>({
+  const itemForm = useForm<PurchaseOrderItemFormValues, unknown, PurchaseOrderItemInput>({
     resolver: zodResolver(purchaseOrderItemSchema),
     defaultValues: {
       po_id: currentPoId ?? "",
