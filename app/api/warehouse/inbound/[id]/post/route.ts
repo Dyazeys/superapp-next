@@ -38,11 +38,18 @@ export async function POST(
       const hasUnfinalizedQc = items.some(
         (item) => Number(item.qty_passed_qc) + Number(item.qty_rejected_qc) !== Number(item.qty_received)
       );
-      invariant(!hasUnfinalizedQc, "QC must be finalized per item before posting (passed + rejected must equal received).");
+      invariant(
+        !hasUnfinalizedQc,
+        "QC belum final. Pastikan setiap item: qty passed + qty rejected = qty received, lalu simpan itemnya."
+      );
 
       const totalPassed = items.reduce((sum, item) => sum + Number(item.qty_passed_qc || 0), 0);
       const totalRejected = items.reduce((sum, item) => sum + Number(item.qty_rejected_qc || 0), 0);
-      invariant(totalPassed > 0 || totalRejected > 0, "Inbound has no QC result to post.");
+      const totalReceived = items.reduce((sum, item) => sum + Number(item.qty_received || 0), 0);
+      invariant(
+        totalPassed > 0 || totalRejected > 0,
+        `Inbound belum punya hasil QC tersimpan (qty received: ${totalReceived}, passed: ${totalPassed}, rejected: ${totalRejected}). Kalau sudah isi di form, klik save per item dulu lalu post lagi.`
+      );
 
       for (const item of items) {
         await syncInboundItemMovement(tx, item.id);

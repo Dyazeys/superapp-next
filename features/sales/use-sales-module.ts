@@ -22,6 +22,7 @@ import type { ChannelLookupRecord, SalesCustomerRecord, SalesOrderItemRecord, Sa
 type ProductLookupRecord = {
   sku: string;
   product_name: string;
+  is_active: boolean;
 };
 
 type SalesOrderFormValues = Omit<SalesOrderInput, "channel_id" | "customer_id" | "is_historical" | "total_amount"> & {
@@ -43,8 +44,19 @@ type SalesOrdersHook = {
   orderModal: ReturnType<typeof useModalState>;
   editingOrder: SalesOrderRecord | null;
   openOrderModal: (order?: SalesOrderRecord) => void;
-  saveOrder: (values: SalesOrderInput) => Promise<SalesOrderRecord>;
+  saveOrder: (
+    values: SalesOrderInput,
+    options?: {
+      closeOnSuccess?: boolean;
+    }
+  ) => Promise<SalesOrderRecord | null>;
   deleteOrder: (orderNo: string) => Promise<void>;
+  postOrderStock: (
+    orderNo: string,
+    options?: {
+      silent?: boolean;
+    }
+  ) => Promise<{ ok: boolean; error?: string }>;
 };
 
 type SalesCustomersHook = {
@@ -137,12 +149,17 @@ export function useSalesProductsLookup() {
         throw new Error("Failed to load products");
       }
 
-      return (await response.json()) as ProductLookupRecord[];
+      const products = (await response.json()) as ProductLookupRecord[];
+      return products.filter((product) => product.is_active);
     },
   });
 }
 
 export function useSalesOrders(): SalesOrdersHook {
+  return useSalesOrdersInternal();
+}
+
+export function useSalesOrdersInternal(options?: { disableListQuery?: boolean }): SalesOrdersHook {
   const [editingOrder, setEditingOrder] = useState<SalesOrderRecord | null>(null);
   const orderModal = useModalState();
   const orderForm = useForm<SalesOrderFormValues, unknown, SalesOrderInput>({
@@ -159,7 +176,11 @@ export function useSalesOrders(): SalesOrdersHook {
       is_historical: false,
     },
   });
-  const ordersQuery = useQuery({ queryKey: SALES_ORDER_KEY, queryFn: salesApi.orders.list });
+  const ordersQuery = useQuery({
+    queryKey: SALES_ORDER_KEY,
+    queryFn: salesApi.orders.list,
+    enabled: !(options?.disableListQuery ?? false),
+  });
   const invalidate = useBaseMutation([
     SALES_ORDER_KEY,
     SALES_CUSTOMER_KEY,
@@ -168,19 +189,43 @@ export function useSalesOrders(): SalesOrdersHook {
     WAREHOUSE_STOCK_MOVEMENT_KEY,
   ]);
 
-  const saveOrder = async (values: SalesOrderInput) => {
+  const saveOrder = async (
+    values: SalesOrderInput,
+    options?: {
+      closeOnSuccess?: boolean;
+    }
+  ) => {
+    const closeOnSuccess = options?.closeOnSuccess ?? true;
+
     try {
       const action = editingOrder ? salesApi.orders.update(editingOrder.order_no, values) : salesApi.orders.create(values);
       const order = await action;
       toast.success(`Sales order ${editingOrder ? "updated" : "created"}`);
       await invalidate();
-      orderModal.closeModal();
-      setEditingOrder(null);
-      orderForm.reset();
+
+      if (closeOnSuccess) {
+        orderModal.closeModal();
+        setEditingOrder(null);
+        orderForm.reset();
+      } else {
+        setEditingOrder(order);
+        orderForm.reset({
+          order_no: order.order_no,
+          order_date: toDateInput(order.order_date),
+          ref_no: order.ref_no ?? "",
+          parent_order_no: order.parent_order_no ?? "",
+          channel_id: order.channel_id ?? null,
+          customer_id: order.customer_id ?? null,
+          total_amount: order.total_amount ?? "0",
+          status: toSalesStatus(order.status),
+          is_historical: order.is_historical ?? false,
+        });
+      }
+
       return order;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save sales order");
-      throw error;
+      return null;
     }
   };
 
@@ -191,7 +236,29 @@ export function useSalesOrders(): SalesOrdersHook {
       await invalidate();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete sales order");
-      throw error;
+    }
+  };
+
+  const postOrderStock = async (
+    orderNo: string,
+    options?: {
+      silent?: boolean;
+    }
+  ) => {
+    const silent = options?.silent ?? false;
+    try {
+      await salesApi.orders.post(orderNo);
+      if (!silent) {
+        toast.success("Sales order stock posted");
+      }
+      await invalidate();
+      return { ok: true as const };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to post sales order stock";
+      if (!silent) {
+        toast.error(message);
+      }
+      return { ok: false as const, error: message };
     }
   };
 
@@ -199,7 +266,7 @@ export function useSalesOrders(): SalesOrdersHook {
     setEditingOrder(order ?? null);
     orderForm.reset({
       order_no: order?.order_no ?? "",
-      order_date: toDateTimeInput(order?.order_date),
+      order_date: toDateInput(order?.order_date),
       ref_no: order?.ref_no ?? "",
       parent_order_no: order?.parent_order_no ?? "",
       channel_id: order?.channel_id ?? null,
@@ -219,6 +286,7 @@ export function useSalesOrders(): SalesOrdersHook {
     openOrderModal,
     saveOrder,
     deleteOrder,
+    postOrderStock,
   };
 }
 
@@ -252,7 +320,6 @@ export function useSalesCustomerMaster(): SalesCustomersHook {
       customerForm.reset();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save customer");
-      throw error;
     }
   };
 
@@ -263,7 +330,6 @@ export function useSalesCustomerMaster(): SalesCustomersHook {
       await invalidate();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete customer");
-      throw error;
     }
   };
 
@@ -340,7 +406,6 @@ export function useSalesOrderItems(selectedOrderNo?: string) {
       setItemDraft(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save sales item");
-      throw error;
     } finally {
       setActionPending(false);
     }
@@ -363,7 +428,6 @@ export function useSalesOrderItems(selectedOrderNo?: string) {
       setItemDraft(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to delete sales item");
-      throw error;
     } finally {
       setActionPending(false);
     }

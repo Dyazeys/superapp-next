@@ -1,5 +1,7 @@
 import "server-only";
 import { pgPool } from "@/db/postgres";
+import { payoutAdjustmentReferenceId } from "@/lib/payout-adjustment-journal";
+import { payoutSettlementReferenceId } from "@/lib/payout-journal";
 import type { PayoutReconciliationFilter } from "@/types/payout";
 
 type PayoutReconciliationMismatch = {
@@ -93,6 +95,26 @@ type BreakdownRow = {
   ref: string;
   sales_posted?: string;
   payout_posted?: string;
+};
+
+type PayoutSettlementSourceRow = {
+  payout_id: number;
+  channel_id: number;
+  ref: string;
+  piutang_account_id: string | null;
+};
+
+type PayoutAdjustmentSourceRow = {
+  adjustment_id: number;
+  channel_id: number;
+  ref: string;
+  piutang_account_id: string | null;
+};
+
+type PostedJournalAmountRow = {
+  reference_id: string;
+  account_id: string;
+  posted_amount: string;
 };
 
 type ReconciliationSqlFilters = {
@@ -217,6 +239,7 @@ const RECONCILIATION_QUERY_TEMPLATE = `
     JOIN sales.t_order o
       ON o.ref_no = p.ref
     WHERE o.channel_id IS NOT NULL
+      AND COALESCE(UPPER(p.payout_status), 'SETTLED') NOT IN ('FAILED', 'CANCELLED')
       AND (__PAYOUT_DATE_FILTER__)
     GROUP BY o.channel_id
   ),
@@ -243,6 +266,7 @@ const RECONCILIATION_QUERY_TEMPLATE = `
     JOIN sales.t_order o
       ON o.ref_no = p.ref
     WHERE o.channel_id IS NOT NULL
+      AND COALESCE(UPPER(p.payout_status), 'SETTLED') NOT IN ('FAILED', 'CANCELLED')
       AND (__TRANSFER_DATE_FILTER__)
     GROUP BY o.channel_id
   )
@@ -294,6 +318,7 @@ const RECONCILIATION_SUMMARY_QUERY_TEMPLATE = `
     LEFT JOIN sales.t_order o
       ON o.ref_no = p.ref
     WHERE o.channel_id IS NULL
+      AND COALESCE(UPPER(p.payout_status), 'SETTLED') NOT IN ('FAILED', 'CANCELLED')
       AND (__PAYOUT_DATE_FILTER__)
   ),
   adjustment_without_channel AS (
@@ -353,49 +378,38 @@ const SALES_POSTED_BREAKDOWN_QUERY_TEMPLATE = `
   ORDER BY o.channel_id, o.ref_no;
 `;
 
-const PAYOUT_POSTED_BREAKDOWN_QUERY_TEMPLATE = `
+const PAYOUT_SETTLEMENT_SOURCE_QUERY_TEMPLATE = `
   SELECT
+    p.payout_id,
     o.channel_id,
     p.ref,
-    COALESCE(SUM(jl.credit - jl.debit), 0)::numeric(18,2)::text AS payout_posted
+    c.piutang_account_id
   FROM payout.t_payout p
   JOIN sales.t_order o
     ON o.ref_no = p.ref
   JOIN channel.m_channel c
     ON c.channel_id = o.channel_id
-  JOIN accounting.journal_entries je
-    ON je.reference_type = 'PAYOUT_SETTLEMENT'
-   AND je.description = ('PAYOUT settlement posting for payout ' || p.payout_id || ' ref ' || p.ref || ' channel ' || c.channel_name)
-  JOIN accounting.journal_lines jl
-    ON jl.journal_entry_id = je.id
-   AND jl.account_id = c.piutang_account_id
   WHERE o.channel_id IS NOT NULL
     AND p.ref IS NOT NULL
-    AND (__JOURNAL_DATE_FILTER__)
-  GROUP BY o.channel_id, p.ref
-  ORDER BY o.channel_id, p.ref;
+    AND COALESCE(UPPER(p.payout_status), 'SETTLED') NOT IN ('FAILED', 'CANCELLED')
+    AND (__PAYOUT_DATE_FILTER__)
+  ORDER BY o.channel_id, p.ref, p.payout_id;
 `;
 
-const ADJUSTMENT_POSTED_BREAKDOWN_QUERY_TEMPLATE = `
+const ADJUSTMENT_SOURCE_QUERY_TEMPLATE = `
   SELECT
+    a.adjustment_id,
     COALESCE(a.channel_id, o.channel_id) AS channel_id,
     COALESCE(a.ref, 'ADJ#' || a.adjustment_id::text) AS ref,
-    COALESCE(SUM(jl.credit - jl.debit), 0)::numeric(18,2)::text AS payout_posted
+    c.piutang_account_id
   FROM payout.t_adjustments a
   LEFT JOIN sales.t_order o
     ON o.ref_no = a.ref
   JOIN channel.m_channel c
     ON c.channel_id = COALESCE(a.channel_id, o.channel_id)
-  JOIN accounting.journal_entries je
-    ON je.reference_type = 'PAYOUT_ADJUSTMENT'
-   AND je.description LIKE ('PAYOUT adjustment posting for adjustment ' || a.adjustment_id || ' %')
-  JOIN accounting.journal_lines jl
-    ON jl.journal_entry_id = je.id
-   AND jl.account_id = c.piutang_account_id
   WHERE COALESCE(a.channel_id, o.channel_id) IS NOT NULL
-    AND (__JOURNAL_DATE_FILTER__)
-  GROUP BY COALESCE(a.channel_id, o.channel_id), COALESCE(a.ref, 'ADJ#' || a.adjustment_id::text)
-  ORDER BY COALESCE(a.channel_id, o.channel_id), COALESCE(a.ref, 'ADJ#' || a.adjustment_id::text);
+    AND (__ADJUSTMENT_DATE_FILTER__)
+  ORDER BY COALESCE(a.channel_id, o.channel_id), COALESCE(a.ref, 'ADJ#' || a.adjustment_id::text), a.adjustment_id;
 `;
 
 function buildReconciliationQueries(filter?: PayoutReconciliationDateFilter) {
@@ -409,17 +423,94 @@ function buildReconciliationQueries(filter?: PayoutReconciliationDateFilter) {
     filters
   );
   const salesBreakdownQuery = applySqlFilters(SALES_POSTED_BREAKDOWN_QUERY_TEMPLATE, filters);
-  const payoutBreakdownQuery = applySqlFilters(PAYOUT_POSTED_BREAKDOWN_QUERY_TEMPLATE, filters);
-  const adjustmentBreakdownQuery = applySqlFilters(ADJUSTMENT_POSTED_BREAKDOWN_QUERY_TEMPLATE, filters);
+  const payoutSettlementSourceQuery = applySqlFilters(PAYOUT_SETTLEMENT_SOURCE_QUERY_TEMPLATE, filters);
+  const adjustmentSourceQuery = applySqlFilters(ADJUSTMENT_SOURCE_QUERY_TEMPLATE, filters);
 
   return {
     reconciliationQuery,
     summaryQuery,
     salesBreakdownQuery,
-    payoutBreakdownQuery,
-    adjustmentBreakdownQuery,
+    payoutSettlementSourceQuery,
+    adjustmentSourceQuery,
+    filters,
     params: filters.params,
   };
+}
+
+async function loadPostedJournalAmounts(
+  referenceType: "PAYOUT_SETTLEMENT" | "PAYOUT_ADJUSTMENT",
+  referenceIds: string[],
+  filters: ReconciliationSqlFilters
+) {
+  if (referenceIds.length === 0) {
+    return new Map<string, number>();
+  }
+
+  const referenceIdsParamIndex = filters.params.length + 1;
+  const referenceTypeParamIndex = filters.params.length + 2;
+  const query = `
+    SELECT
+      je.reference_id,
+      jl.account_id,
+      COALESCE(SUM(jl.credit - jl.debit), 0)::numeric(18,2)::text AS posted_amount
+    FROM accounting.journal_entries je
+    JOIN accounting.journal_lines jl
+      ON jl.journal_entry_id = je.id
+    WHERE je.reference_id::text = ANY($${referenceIdsParamIndex}::text[])
+      AND je.reference_type = $${referenceTypeParamIndex}
+      AND (${filters.journalDateFilterSql})
+    GROUP BY je.reference_id, jl.account_id
+  `;
+
+  const result = await pgPool.query<PostedJournalAmountRow>(query, [
+    ...filters.params,
+    referenceIds,
+    referenceType,
+  ]);
+
+  return new Map(
+    result.rows.map((row) => [`${row.reference_id}:${row.account_id}`, Number(row.posted_amount ?? "0")])
+  );
+}
+
+async function loadPayoutSettlementBreakdowns(
+  query: string,
+  params: string[],
+  filters: ReconciliationSqlFilters
+) {
+  const result = await pgPool.query<PayoutSettlementSourceRow>(query, params);
+  const referenceIds = result.rows.map((row) => payoutSettlementReferenceId(row.payout_id));
+  const postedByReferenceAndAccount = await loadPostedJournalAmounts("PAYOUT_SETTLEMENT", referenceIds, filters);
+
+  return result.rows.map<BreakdownRow>((row) => ({
+    channel_id: row.channel_id,
+    ref: row.ref,
+    payout_posted: (
+      postedByReferenceAndAccount.get(
+        `${payoutSettlementReferenceId(row.payout_id)}:${row.piutang_account_id ?? "__missing__"}`
+      ) ?? 0
+    ).toFixed(2),
+  }));
+}
+
+async function loadPayoutAdjustmentBreakdowns(
+  query: string,
+  params: string[],
+  filters: ReconciliationSqlFilters
+) {
+  const result = await pgPool.query<PayoutAdjustmentSourceRow>(query, params);
+  const referenceIds = result.rows.map((row) => payoutAdjustmentReferenceId(row.adjustment_id));
+  const postedByReferenceAndAccount = await loadPostedJournalAmounts("PAYOUT_ADJUSTMENT", referenceIds, filters);
+
+  return result.rows.map<BreakdownRow>((row) => ({
+    channel_id: row.channel_id,
+    ref: row.ref,
+    payout_posted: (
+      postedByReferenceAndAccount.get(
+        `${payoutAdjustmentReferenceId(row.adjustment_id)}:${row.piutang_account_id ?? "__missing__"}`
+      ) ?? 0
+    ).toFixed(2),
+  }));
 }
 
 const RECONCILIATION_RULES: PayoutReconciliationReport["rules"] = [
@@ -697,16 +788,16 @@ export async function getPayoutReconciliationReport(
   filter?: PayoutReconciliationDateFilter
 ): Promise<PayoutReconciliationReport> {
   const queries = buildReconciliationQueries(filter);
-  const [channelsResult, summaryResult, salesBreakdownResult, payoutBreakdownResult, adjustmentBreakdownResult] = await Promise.all([
+  const [channelsResult, summaryResult, salesBreakdownResult, payoutBreakdownRows, adjustmentBreakdownRows] = await Promise.all([
     pgPool.query<QueryRow>(queries.reconciliationQuery, queries.params),
     pgPool.query<SummaryRow>(queries.summaryQuery, queries.params),
     pgPool.query<BreakdownRow>(queries.salesBreakdownQuery, queries.params),
-    pgPool.query<BreakdownRow>(queries.payoutBreakdownQuery, queries.params),
-    pgPool.query<BreakdownRow>(queries.adjustmentBreakdownQuery, queries.params),
+    loadPayoutSettlementBreakdowns(queries.payoutSettlementSourceQuery, queries.params, queries.filters),
+    loadPayoutAdjustmentBreakdowns(queries.adjustmentSourceQuery, queries.params, queries.filters),
   ]);
 
   const summary = summaryResult.rows[0];
-  const combinedPayoutBreakdowns = [...payoutBreakdownResult.rows, ...adjustmentBreakdownResult.rows];
+  const combinedPayoutBreakdowns = [...payoutBreakdownRows, ...adjustmentBreakdownRows];
   const channels = channelsResult.rows.map((row) => {
     const breakdown = buildRefBreakdowns(row.channel_id, salesBreakdownResult.rows, combinedPayoutBreakdowns);
 

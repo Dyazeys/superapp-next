@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { isFailedPayoutStatus } from "@/lib/payout-status";
 import { syncPayoutTransferJournal } from "@/lib/payout-transfer-journal";
 import { payoutTransferSchema } from "@/schemas/payout-module";
 
@@ -50,6 +51,7 @@ async function validatePayoutTransferInput(
     select: {
       payout_id: true,
       ref: true,
+      payout_status: true,
       omset: true,
       t_order: {
         select: {
@@ -65,6 +67,7 @@ async function validatePayoutTransferInput(
 
   invariant(payout, "Payout was not found.");
   invariant(payout.ref, "Payout must be linked to an order reference.");
+  invariant(!isFailedPayoutStatus(payout.payout_status), "Failed payout cannot be transferred to bank.");
   invariant(payout.t_order?.m_channel?.saldo_account_id, "Channel saldo account mapping is missing.");
 
   const bankAccount = await tx.accounts.findUnique({

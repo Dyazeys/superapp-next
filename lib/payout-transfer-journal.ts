@@ -27,13 +27,13 @@ async function upsertPayoutTransferJournal(
         accountId: params.bankAccountId,
         debit: params.amount.toFixed(2),
         credit: "0.00",
-        memo: "Payout transfer debit bank account",
+        memo: "Dana masuk ke rekening bank dari payout",
       },
       {
         accountId: params.saldoAccountId,
         debit: "0.00",
         credit: params.amount.toFixed(2),
-        memo: "Payout transfer credit saldo channel",
+        memo: "Saldo channel dipindahkan ke rekening bank",
       },
     ],
   });
@@ -91,7 +91,10 @@ export async function syncPayoutTransferJournal(tx: Tx, transferId: string) {
     amount,
     bankAccountId: transfer.bank_account_id,
     saldoAccountId: channel.saldo_account_id,
-    description: `PAYOUT bank transfer for payout ${transfer.payout_id} ref ${transfer.t_payout?.ref ?? "-"} channel ${channel.channel_name} to bank ${transfer.accounts.code}${transfer.notes ? ` note ${transfer.notes}` : ""}`,
+    description:
+      `Transfer payout ${channel.channel_name} ke bank ${transfer.accounts.code}` +
+      ` ref ${transfer.t_payout?.ref ?? "-"}` +
+      `${transfer.notes ? ` - ${transfer.notes}` : ""}`,
   });
 }
 

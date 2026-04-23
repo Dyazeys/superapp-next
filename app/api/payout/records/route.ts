@@ -3,6 +3,7 @@ import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { syncPayoutSettlementJournal } from "@/lib/payout-journal";
+import { normalizePayoutStatus } from "@/lib/payout-status";
 import { payoutSchema } from "@/schemas/payout-module";
 
 function asDateOnly(value: string) {
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
           fee_affiliate: payload.fee_affiliate,
           shipping_cost: payload.shipping_cost,
           omset: payload.omset,
-          payout_status: payload.payout_status || null,
+          payout_status: normalizePayoutStatus(payload.payout_status) ?? "SETTLED",
         },
       });
 

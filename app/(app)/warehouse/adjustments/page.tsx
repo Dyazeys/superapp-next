@@ -20,6 +20,7 @@ import {
   toDateInput,
   useWarehouseAdjustments,
   useWarehouseInventoryLookup,
+  useWarehouseStockMovements,
 } from "@/features/warehouse/use-warehouse-module";
 import { WAREHOUSE_ADJUSTMENT_REASON_OPTIONS, type AdjustmentInput } from "@/schemas/warehouse-module";
 import type { AdjustmentRecord } from "@/types/warehouse";
@@ -216,7 +217,10 @@ function InventoryPicker({
 export default function WarehouseAdjustmentsPage() {
   const hooks = useWarehouseAdjustments();
   const inventoryQuery = useWarehouseInventoryLookup();
+  const stockMovementsQuery = useWarehouseStockMovements();
   const { adjustmentsQuery, adjustmentForm, adjustmentModal, editingAdjustment } = hooks;
+  const [detailAdjustment, setDetailAdjustment] = useState<AdjustmentRecord | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
   const inventoryOptions = useMemo(
     () =>
       (inventoryQuery.data ?? []).map((inventory) => ({
@@ -226,6 +230,26 @@ export default function WarehouseAdjustmentsPage() {
     [inventoryQuery.data],
   );
   const adjustmentRows = adjustmentsQuery.data ?? [];
+  const relatedMovementRows = useMemo(() => {
+    if (!detailAdjustment) return [];
+    return (stockMovementsQuery.data ?? [])
+      .filter(
+        (row) =>
+          row.reference_type === "ADJUSTMENT" &&
+          row.reference_id === detailAdjustment.id
+      )
+      .sort((a, b) => {
+        if (a.movement_date === b.movement_date) {
+          return b.created_at.localeCompare(a.created_at);
+        }
+        return b.movement_date.localeCompare(a.movement_date);
+      });
+  }, [detailAdjustment, stockMovementsQuery.data]);
+
+  const openAdjustmentDetail = useCallback((adjustment: AdjustmentRecord) => {
+    setDetailAdjustment(adjustment);
+    setDetailOpen(true);
+  }, []);
   const totalAdjustments = adjustmentRows.length;
   const adjustmentsIn = adjustmentRows.filter((row) => row.adj_type === "IN").length;
   const adjustmentsOut = totalAdjustments - adjustmentsIn;
@@ -250,7 +274,13 @@ export default function WarehouseAdjustmentsPage() {
       header: "Inventory",
       cell: (info) => (
         <div>
-          <p className="font-medium">{info.getValue()}</p>
+          <button
+            type="button"
+            className="text-left font-medium text-blue-600 hover:underline"
+            onClick={() => openAdjustmentDetail(info.row.original)}
+          >
+            {info.getValue()}
+          </button>
           <p className="text-xs text-muted-foreground">{info.row.original.master_inventory?.inv_name ?? ""}</p>
         </div>
       ),
@@ -408,6 +438,92 @@ export default function WarehouseAdjustmentsPage() {
         <FormField label="Catatan" htmlFor="adjustment_notes" error={adjustmentForm.formState.errors.notes?.message}>
           <Textarea id="adjustment_notes" rows={3} {...adjustmentForm.register("notes")} />
         </FormField>
+      </ModalFormShell>
+
+      <ModalFormShell
+        open={detailOpen}
+        onOpenChange={(open) => {
+          setDetailOpen(open);
+          if (!open) {
+            setDetailAdjustment(null);
+          }
+        }}
+        title={detailAdjustment ? `Detail adjustment ${detailAdjustment.inv_code}` : "Detail adjustment"}
+        description="Riwayat adjustment ini tetap bisa dibaca baik sebelum maupun sesudah diposting."
+        submitLabel="Close"
+        onSubmit={async () => {
+          setDetailOpen(false);
+          setDetailAdjustment(null);
+        }}
+      >
+        {detailAdjustment ? (
+          <div className="space-y-4">
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3">
+                <p className="text-xs text-slate-500">Tanggal</p>
+                <p className="text-sm font-medium text-slate-800">{toDateInput(detailAdjustment.adjustment_date)}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3">
+                <p className="text-xs text-slate-500">Status</p>
+                <div className="mt-1">
+                  <StatusBadge label={isAdjustmentPosted(detailAdjustment.post_status) ? "LOCKED" : "DRAFT"} tone={isAdjustmentPosted(detailAdjustment.post_status) ? "danger" : "info"} />
+                </div>
+              </div>
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3">
+                <p className="text-xs text-slate-500">SKU / Inventory</p>
+                <p className="text-sm font-medium text-slate-800">{detailAdjustment.inv_code}</p>
+                <p className="text-xs text-slate-500">{detailAdjustment.master_inventory?.inv_name ?? "-"}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3">
+                <p className="text-xs text-slate-500">Type & Qty</p>
+                <p className="text-sm font-medium text-slate-800">
+                  {detailAdjustment.adj_type} {detailAdjustment.qty.toLocaleString("id-ID")}
+                </p>
+              </div>
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3">
+                <p className="text-xs text-slate-500">Reason</p>
+                <p className="text-sm font-medium text-slate-800">{detailAdjustment.reason}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 p-3">
+                <p className="text-xs text-slate-500">Created by</p>
+                <p className="text-sm font-medium text-slate-800">{detailAdjustment.created_by ?? "-"}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-200/80 bg-white p-3">
+              <p className="mb-2 text-xs font-medium uppercase tracking-[0.08em] text-slate-500">Catatan</p>
+              <p className="text-sm text-slate-700">{detailAdjustment.notes?.trim() || "-"}</p>
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-slate-200/80 bg-white p-3">
+              <p className="text-xs font-medium uppercase tracking-[0.08em] text-slate-500">History Stock Movement</p>
+              {relatedMovementRows.length === 0 ? (
+                <p className="text-sm text-slate-500">
+                  {isAdjustmentPosted(detailAdjustment.post_status)
+                    ? "Belum ada movement terkait yang ditemukan."
+                    : "Adjustment ini belum diposting, jadi movement belum terbentuk."}
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {relatedMovementRows.map((movement) => (
+                    <div key={movement.id} className="rounded-lg border border-slate-200/80 bg-slate-50/80 p-2.5 text-sm text-slate-700">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-medium">{toDateInput(movement.movement_date)}</span>
+                        <span className={movement.qty_change >= 0 ? "font-medium text-emerald-700" : "font-medium text-rose-700"}>
+                          {movement.qty_change > 0 ? `+${movement.qty_change}` : movement.qty_change}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Running balance: {movement.running_balance.toLocaleString("id-ID")} | Ref: {movement.reference_id}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">{movement.notes || "-"}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
       </ModalFormShell>
     </PageShell>
   );

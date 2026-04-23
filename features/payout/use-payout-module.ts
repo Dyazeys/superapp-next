@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useModalState } from "@/hooks/use-modal-state";
 import { payoutApi } from "@/features/payout/api";
+import { isFailedPayoutStatus, normalizePayoutStatus } from "@/lib/payout-status";
 import {
   PAYOUT_ADJUSTMENT_TYPE_OPTIONS,
   PAYOUT_STATUS_OPTIONS,
@@ -75,10 +76,7 @@ function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) 
 }
 
 function toPayoutStatus(value: string | null | undefined) {
-  if (!value) return null;
-  return PAYOUT_STATUS_OPTIONS.includes(value as (typeof PAYOUT_STATUS_OPTIONS)[number])
-    ? (value as (typeof PAYOUT_STATUS_OPTIONS)[number])
-    : null;
+  return normalizePayoutStatus(value);
 }
 
 function toPayoutAdjustmentType(value: string | null | undefined) {
@@ -93,14 +91,8 @@ export function toDateInput(value: string | null | undefined) {
 }
 
 export function payoutStatusTone(status: string | null | undefined) {
-  const value = status?.toUpperCase() ?? "";
-
-  if (value.includes("PAID") || value.includes("DONE") || value.includes("SETTLED")) return "success" as const;
-  if (value.includes("PENDING") || value.includes("HOLD")) return "warning" as const;
-  if (value.includes("PROCESS")) return "info" as const;
-  if (value.includes("CANCEL") || value.includes("FAIL")) return "danger" as const;
-
-  return "neutral" as const;
+  if (!status) return "neutral" as const;
+  return isFailedPayoutStatus(status) ? ("danger" as const) : ("success" as const);
 }
 
 export function sumPayoutFees(
@@ -179,7 +171,7 @@ export function usePayouts(): PayoutsHook {
       fee_affiliate: "0",
       shipping_cost: "0",
       omset: "0",
-      payout_status: null,
+      payout_status: "SETTLED",
     },
   });
   const payoutsQuery = useQuery({
@@ -235,7 +227,7 @@ export function usePayouts(): PayoutsHook {
       fee_affiliate: payout?.fee_affiliate ?? "0",
       shipping_cost: payout?.shipping_cost ?? "0",
       omset: payout?.omset ?? "0",
-      payout_status: toPayoutStatus(payout?.payout_status),
+      payout_status: toPayoutStatus(payout?.payout_status) ?? "SETTLED",
     });
     payoutModal.openModal();
   };

@@ -197,7 +197,7 @@ export function SalesWorkspace() {
         header: "Channel",
         cell: (info) => info.row.original.m_channel?.channel_name ?? (info.getValue() ?? "-"),
       }),
-      orderColumnHelper.accessor("total_amount", { header: "Total" }),
+      orderColumnHelper.accessor("total_amount", { header: "Nilai order" }),
       orderColumnHelper.accessor("status", { header: "Status", cell: (info) => <StatusBadge label={info.getValue()} tone="info" /> }),
       orderColumnHelper.accessor("is_historical", {
         header: "Posting",
@@ -265,19 +265,18 @@ export function SalesWorkspace() {
         ) : getValue(),
       }),
       itemColumnHelper.accessor("discount_item", {
-        header: "Discount",
+        header: "Raw Discount",
         cell: ({ row, getValue }) => isEditingItemRow(row.original.id) ? (
           <Input value={itemDraft?.discount_item ?? getValue()} onChange={(e) => setItemDraft((current) => current ? { ...current, discount_item: e.target.value } : current)} className="h-8 w-24" />
         ) : getValue(),
       }),
       itemColumnHelper.display({
-        id: "net_amount",
-        header: "Net",
+        id: "subtotal_amount",
+        header: "Nilai total",
         cell: ({ row }) => {
           const qty = Number(isEditingItemRow(row.original.id) ? itemDraft?.qty ?? row.original.qty : row.original.qty);
           const price = Number(isEditingItemRow(row.original.id) ? itemDraft?.unit_price ?? row.original.unit_price : row.original.unit_price);
-          const discount = Number(isEditingItemRow(row.original.id) ? itemDraft?.discount_item ?? row.original.discount_item : row.original.discount_item);
-          return (qty * price - discount).toFixed(2);
+          return (qty * price).toFixed(2);
         },
       }),
       itemColumnHelper.display({
@@ -369,7 +368,7 @@ export function SalesWorkspace() {
           <FormField label="Customer id" htmlFor="customer_id"><Input id="customer_id" value={orderForm.watch("customer_id") == null ? "" : String(orderForm.watch("customer_id"))} onChange={(e) => orderForm.setValue("customer_id", e.target.value ? Number(e.target.value) : null)} /></FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          <FormField label="Total amount" htmlFor="total_amount" error={orderForm.formState.errors.total_amount?.message}><Input id="total_amount" {...orderForm.register("total_amount")} /></FormField>
+          <FormField label="Nilai order" htmlFor="total_amount" error={orderForm.formState.errors.total_amount?.message} helperText="Nilai dari master order untuk dicocokkan dengan total item."><Input id="total_amount" {...orderForm.register("total_amount")} /></FormField>
           <FormField label="Status" htmlFor="status" error={orderForm.formState.errors.status?.message}><Input id="status" list="sales-status-values" {...orderForm.register("status")} /></FormField>
           <FormField label="Historical" htmlFor="is_historical"><Input id="is_historical" list="sales-boolean-values" value={String(orderForm.watch("is_historical"))} onChange={(e) => orderForm.setValue("is_historical", asBool(e.target.value))} /></FormField>
         </div>

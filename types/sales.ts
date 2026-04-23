@@ -38,6 +38,25 @@ export type SalesOrderRecord = {
   _count?: {
     t_order_item?: number;
   };
+  posting_summary?: {
+    tracked_item_count: number;
+    posted_item_count: number;
+    unposted_item_count: number;
+    blocked_item_count: number;
+    posting_status: "NO_POSTING" | "POSTED" | "UNPOSTED" | "PARTIAL";
+  };
+};
+
+export type SalesOrderListResponse = {
+  data: SalesOrderRecord[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+  summary: {
+    normal_count: number;
+    historical_count: number;
+  };
 };
 
 export type SalesOrderItemRecord = {

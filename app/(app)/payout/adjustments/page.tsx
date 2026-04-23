@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
@@ -24,11 +26,49 @@ import type { PayoutAdjustmentRecord } from "@/types/payout";
 
 const columnHelper = createColumnHelper<PayoutAdjustmentRecord>();
 
+type AdjustmentPageFilter = {
+  ref: string | null;
+  channelId: number | null;
+};
+
+function getAdjustmentPageFilter(): AdjustmentPageFilter {
+  if (typeof window === "undefined") {
+    return { ref: null, channelId: null };
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const channelId = Number(searchParams.get("channel_id") ?? "");
+
+  return {
+    ref: searchParams.get("ref") || null,
+    channelId: Number.isFinite(channelId) && channelId > 0 ? channelId : null,
+  };
+}
+
 export default function PayoutAdjustmentsPage() {
   const hooks = usePayoutAdjustments();
   const orderLookupQuery = usePayoutOrders();
   const channelsQuery = usePayoutChannels();
-  const adjustmentRows = hooks.adjustmentsQuery.data ?? [];
+  const [pageFilter] = useState<AdjustmentPageFilter>(() => getAdjustmentPageFilter());
+
+  const adjustmentRows = useMemo(
+    () =>
+      (hooks.adjustmentsQuery.data ?? []).filter((row) => {
+        if (pageFilter.ref && row.ref !== pageFilter.ref) {
+          return false;
+        }
+
+        if (
+          pageFilter.channelId &&
+          (row.channel_id ?? row.m_channel?.channel_id ?? row.t_order?.m_channel?.channel_id ?? null) !== pageFilter.channelId
+        ) {
+          return false;
+        }
+
+        return true;
+      }),
+    [hooks.adjustmentsQuery.data, pageFilter.channelId, pageFilter.ref]
+  );
   const totalAdjustments = adjustmentRows.length;
   const totalAmount = adjustmentRows.reduce((sum, row) => sum + Number(row.amount), 0);
   const uniqueRefs = new Set(adjustmentRows.map((row) => row.ref ?? "")).size - (adjustmentRows.some((row) => !row.ref) ? 1 : 0);
@@ -43,34 +83,34 @@ export default function PayoutAdjustmentsPage() {
 
   const columns = [
     columnHelper.accessor("ref", {
-      header: "Reference",
+      header: "Referensi",
       cell: ({ row, getValue }) => (
         <div>
           <p className="font-medium">{getValue() ?? "-"}</p>
           <p className="text-xs text-muted-foreground">
-            {row.original.t_order?.order_no ?? "No linked order"} / {row.original.m_channel?.channel_name ?? row.original.t_order?.m_channel?.channel_name ?? "No channel"}
+            {row.original.t_order?.order_no ?? "Tanpa order"} / {row.original.m_channel?.channel_name ?? row.original.t_order?.m_channel?.channel_name ?? "Tanpa channel"}
           </p>
         </div>
       ),
     }),
     columnHelper.accessor("payout_date", {
-      header: "Payout Date",
+      header: "Tanggal payout",
       cell: (info) => formatShortDate(info.getValue()),
     }),
     columnHelper.accessor("adjustment_date", {
-      header: "Adjustment Date",
+      header: "Tanggal adjustment",
       cell: (info) => (info.getValue() ? formatShortDate(info.getValue() as string) : "-"),
     }),
     columnHelper.accessor("adjustment_type", {
-      header: "Type",
+      header: "Tipe",
       cell: (info) => <StatusBadge label={info.getValue() ?? "-"} tone="info" />,
     }),
     columnHelper.accessor("reason", {
-      header: "Reason",
+      header: "Alasan",
       cell: (info) => info.getValue() ?? "-",
     }),
     columnHelper.accessor("amount", {
-      header: "Amount",
+      header: "Nominal",
       cell: (info) => formatMoney(Number(info.getValue())),
     }),
     columnHelper.display({
@@ -92,39 +132,55 @@ export default function PayoutAdjustmentsPage() {
   return (
     <PageShell
       eyebrow="Payout"
-      title="Payout Adjustments"
-      description="Kelola payout adjustments untuk koreksi nilai payout. Setiap adjustment baru akan posting jurnal payout adjustment secara otomatis."
+      title="Adjustment Payout"
+      description="Kelola adjustment payout untuk koreksi nilai payout. Setiap adjustment baru akan mem-posting jurnal adjustment payout secara otomatis."
     >
-      <datalist id="payout-adjustment-refs">
-        {(orderLookupQuery.data ?? []).map((order) =>
-          order.ref_no ? (
-            <option key={order.order_no} value={order.ref_no}>
-              {order.order_no} / {order.m_channel?.channel_name ?? "No channel"}
-            </option>
-          ) : null
-        )}
-      </datalist>
       <div className="space-y-5">
+        <datalist id="payout-adjustment-refs">
+          {(orderLookupQuery.data ?? []).map((order) =>
+            order.ref_no ? (
+              <option key={order.order_no} value={order.ref_no}>
+                {order.order_no} / {order.m_channel?.channel_name ?? "Tanpa channel"}
+              </option>
+            ) : null
+          )}
+        </datalist>
+        {pageFilter.ref || pageFilter.channelId ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-border/70 bg-card/80 p-4 shadow-sm">
+            <p className="text-sm text-muted-foreground">
+              Menampilkan adjustment dengan filter
+              {pageFilter.ref ? ` ref ${pageFilter.ref}` : ""}
+              {pageFilter.ref && pageFilter.channelId ? " dan" : ""}
+              {pageFilter.channelId ? ` channel #${pageFilter.channelId}` : ""}.
+            </p>
+            <Link
+              href="/payout/adjustments"
+              className="text-sm font-medium text-foreground underline underline-offset-4 hover:text-foreground/80"
+            >
+              Lihat semua adjustment
+            </Link>
+          </div>
+        ) : null}
         <div className="grid gap-4 md:grid-cols-4">
-          <MetricCard title="Total adjustments" value={String(totalAdjustments)} subtitle="Jumlah adjustment yang terlihat." />
-          <MetricCard title="Total amount" value={formatMoney(totalAmount)} subtitle="Akumulasi amount dari data yang terlihat." />
-          <MetricCard title="Unique refs" value={String(Math.max(uniqueRefs, 0))} subtitle="Jumlah referensi unik (visible)." />
-          <MetricCard title="Latest date" value={latestDate} subtitle="Tanggal adjustment terbaru." />
+          <MetricCard title="Total adjustment" value={String(totalAdjustments)} subtitle="Jumlah adjustment yang terlihat." />
+          <MetricCard title="Total nominal" value={formatMoney(totalAmount)} subtitle="Akumulasi nominal dari data yang terlihat." />
+          <MetricCard title="Ref unik" value={String(Math.max(uniqueRefs, 0))} subtitle="Jumlah referensi unik yang tampil." />
+          <MetricCard title="Tanggal terbaru" value={latestDate} subtitle="Tanggal adjustment terbaru." />
         </div>
 
         <div className="flex justify-end">
           <Button size="sm" onClick={() => hooks.openAdjustmentModal()}>
             <Plus className="size-4" />
-            Add adjustment
+            Tambah adjustment
           </Button>
         </div>
-        <DataTable columns={columns} data={hooks.adjustmentsQuery.data ?? []} emptyMessage="No payout adjustments found." />
+        <DataTable columns={columns} data={adjustmentRows} emptyMessage="Belum ada adjustment payout." />
       </div>
 
       <ModalFormShell
         open={hooks.adjustmentModal.open}
         onOpenChange={hooks.adjustmentModal.setOpen}
-        title={hooks.editingAdjustment ? "Edit payout adjustment" : "Create payout adjustment"}
+        title={hooks.editingAdjustment ? "Ubah adjustment payout" : "Buat adjustment payout"}
         description="Adjustment akan sinkron ke jurnal payout adjustment dan ikut dihitung di reconciliation payout."
         isSubmitting={hooks.adjustmentForm.formState.isSubmitting}
         onSubmit={() => {
@@ -132,11 +188,15 @@ export default function PayoutAdjustmentsPage() {
         }}
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="Reference" htmlFor="adjustment_ref">
+          <FormField
+            label="Referensi"
+            htmlFor="adjustment_ref"
+            helperText="Boleh isi manual dari data marketplace, atau pilih suggestion ref order yang sudah ada."
+          >
             <Input id="adjustment_ref" list="payout-adjustment-refs" {...hooks.adjustmentForm.register("ref")} />
           </FormField>
           <FormField
-            label="Payout date"
+            label="Tanggal payout"
             htmlFor="adjustment_payout_date"
             error={hooks.adjustmentForm.formState.errors.payout_date?.message}
           >
@@ -145,19 +205,19 @@ export default function PayoutAdjustmentsPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
-            label="Adjustment date"
+            label="Tanggal adjustment"
             htmlFor="adjustment_date"
             error={hooks.adjustmentForm.formState.errors.adjustment_date?.message}
           >
             <Input id="adjustment_date" type="date" {...hooks.adjustmentForm.register("adjustment_date")} />
           </FormField>
           <FormField
-            label="Channel ID"
+            label="Channel"
             htmlFor="adjustment_channel_id"
             error={hooks.adjustmentForm.formState.errors.channel_id?.message}
             helperText={
               (channelsQuery.data?.length ?? 0) === 0
-                ? "Belum ada channel master. Isi dulu di menu Channel."
+                ? "Belum ada master channel. Lengkapi dulu di menu Channel."
                 : undefined
             }
           >
@@ -168,7 +228,7 @@ export default function PayoutAdjustmentsPage() {
                 hooks.adjustmentForm.setValue("channel_id", event.target.value ? Number(event.target.value) : null)
               }
             >
-              <option value="">No channel</option>
+              <option value="">Tanpa channel</option>
               {(channelsQuery.data ?? []).map((channel) => (
                 <option key={channel.channel_id} value={channel.channel_id}>
                   {channel.channel_name}
@@ -178,7 +238,7 @@ export default function PayoutAdjustmentsPage() {
           </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="Type" htmlFor="adjustment_type">
+          <FormField label="Tipe" htmlFor="adjustment_type">
             <SelectNative
               id="adjustment_type"
               value={hooks.adjustmentForm.watch("adjustment_type") ?? ""}
@@ -191,7 +251,7 @@ export default function PayoutAdjustmentsPage() {
                 )
               }
             >
-              <option value="">No type</option>
+              <option value="">Tanpa tipe</option>
               {PAYOUT_ADJUSTMENT_TYPE_OPTIONS.map((type) => (
                 <option key={type} value={type}>
                   {type}
@@ -199,11 +259,11 @@ export default function PayoutAdjustmentsPage() {
               ))}
             </SelectNative>
           </FormField>
-          <FormField label="Amount" htmlFor="adjustment_amount" error={hooks.adjustmentForm.formState.errors.amount?.message}>
+          <FormField label="Nominal" htmlFor="adjustment_amount" error={hooks.adjustmentForm.formState.errors.amount?.message}>
             <Input id="adjustment_amount" {...hooks.adjustmentForm.register("amount")} />
           </FormField>
         </div>
-        <FormField label="Reason" htmlFor="adjustment_reason">
+        <FormField label="Alasan" htmlFor="adjustment_reason">
           <Textarea id="adjustment_reason" {...hooks.adjustmentForm.register("reason")} />
         </FormField>
       </ModalFormShell>

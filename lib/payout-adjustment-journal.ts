@@ -131,22 +131,22 @@ export async function syncPayoutAdjustmentJournal(tx: Tx, adjustmentId: number) 
     referenceId,
     transactionDate,
     description:
-      `PAYOUT adjustment posting for adjustment ${adjustment.adjustment_id}` +
-      ` ref ${adjustment.ref ?? "-"} channel ${channel.channel_name}` +
-      ` type ${adjustment.adjustment_type ?? "-"}` +
-      `${adjustment.reason ? ` reason ${adjustment.reason}` : ""}`,
+      `Adjustment payout ${channel.channel_name}` +
+      ` ref ${adjustment.ref ?? "-"} ` +
+      `(${adjustment.adjustment_type ?? "-"})` +
+      `${adjustment.reason ? ` - ${adjustment.reason}` : ""}`,
     lines: [
       {
         accountId: channel.saldo_account_id,
         debit: amount,
         credit: 0,
-        memo: `Payout adjustment debit saldo for adjustment ${adjustment.adjustment_id}`,
+        memo: `Saldo channel bertambah dari adjustment payout ${adjustment.ref ?? adjustment.adjustment_id}`,
       },
       {
         accountId: channel.piutang_account_id,
         debit: 0,
         credit: amount,
-        memo: `Payout adjustment credit piutang for adjustment ${adjustment.adjustment_id}`,
+        memo: `Piutang channel disesuaikan untuk adjustment payout ${adjustment.ref ?? adjustment.adjustment_id}`,
       },
     ],
   });

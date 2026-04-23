@@ -39,6 +39,12 @@ export type PurchaseOrderItemRecord = {
     inv_code: string;
     inv_name: string;
   } | null;
+  po_qty_ordered_total?: number;
+  po_qty_received_total?: number;
+  po_qty_passed_total?: number;
+  po_qty_rejected_total?: number;
+  po_qty_remaining_total?: number;
+  po_fulfillment_status?: "OPEN" | "PARTIAL" | "CLOSED";
 };
 
 export type InboundDeliveryRecord = {
@@ -108,6 +114,11 @@ export type StockMovementRecord = {
   inv_code: string;
   reference_type: string;
   reference_id: string;
+  sale_reference?: {
+    item_id: number;
+    order_no: string | null;
+    sku: string | null;
+  } | null;
   qty_change: number;
   running_balance: number;
   notes: string | null;

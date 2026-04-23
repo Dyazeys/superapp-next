@@ -9,11 +9,15 @@ import type {
   PayoutRecord,
   PayoutTransferRecord,
 } from "@/types/payout";
+import type { SalesOrderListResponse } from "@/types/sales";
 import { requestJson } from "@/lib/request";
 
 export const payoutApi = {
   orders: {
-    list: () => requestJson<PayoutOrderLookupRecord[]>("/api/sales/orders"),
+    list: async () => {
+      const response = await requestJson<SalesOrderListResponse>("/api/sales/orders?page=1&page_size=100&posting_filter=ALL");
+      return response.data as PayoutOrderLookupRecord[];
+    },
   },
   channels: {
     list: () => requestJson<PayoutChannelRecord[]>("/api/sales/channels"),

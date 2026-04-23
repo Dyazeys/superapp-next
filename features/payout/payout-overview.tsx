@@ -4,15 +4,17 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, Building2, Landmark, ReceiptText } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import { formatCompactCurrency, formatMoney } from "@/lib/format";
+import { isSettledPayoutStatus } from "@/lib/payout-status";
 import { sumPayoutDeductions, usePayoutAdjustments, usePayouts } from "@/features/payout/use-payout-module";
 
 export function PayoutOverview() {
   const { payoutsQuery } = usePayouts();
   const { adjustmentsQuery } = usePayoutAdjustments();
 
-  const totalGross = (payoutsQuery.data ?? []).reduce((sum, payout) => sum + Number(payout.total_price), 0);
-  const totalNet = (payoutsQuery.data ?? []).reduce((sum, payout) => sum + Number(payout.omset), 0);
-  const totalDeductions = (payoutsQuery.data ?? []).reduce(
+  const settledPayouts = (payoutsQuery.data ?? []).filter((payout) => isSettledPayoutStatus(payout.payout_status));
+  const totalGross = settledPayouts.reduce((sum, payout) => sum + Number(payout.total_price), 0);
+  const totalNet = settledPayouts.reduce((sum, payout) => sum + Number(payout.omset), 0);
+  const totalDeductions = settledPayouts.reduce(
     (sum, payout) => sum + sumPayoutDeductions(payout),
     0
   );
@@ -23,7 +25,7 @@ export function PayoutOverview() {
 
   return (
     <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-5">
-      <WorkspacePanel title="Payout records" description="Kelola header payout menggunakan tabel payout yang sudah ada.">
+      <WorkspacePanel title="Data payout" description="Kelola header payout menggunakan tabel payout yang sudah ada.">
         <Link
           href="/payout/records"
           className="flex items-center justify-between rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm font-medium transition-colors hover:border-slate-400 hover:bg-slate-50"
@@ -38,7 +40,7 @@ export function PayoutOverview() {
         </Link>
       </WorkspacePanel>
 
-      <WorkspacePanel title="Payout adjustments" description="Kelola adjustments payout yang sudah tersedia di schema.">
+      <WorkspacePanel title="Adjustment payout" description="Kelola adjustment payout yang sudah tersedia di skema.">
         <Link
           href="/payout/adjustments"
           className="flex items-center justify-between rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm font-medium transition-colors hover:border-slate-400 hover:bg-slate-50"
@@ -53,7 +55,7 @@ export function PayoutOverview() {
         </Link>
       </WorkspacePanel>
 
-      <WorkspacePanel title="Bank transfers" description="Catat perpindahan saldo channel ke rekening bank secara manual.">
+      <WorkspacePanel title="Transfer bank" description="Catat perpindahan saldo channel ke rekening bank secara manual.">
         <Link
           href="/payout/transfers"
           className="flex items-center justify-between rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm font-medium transition-colors hover:border-slate-400 hover:bg-slate-50"
@@ -68,7 +70,7 @@ export function PayoutOverview() {
         </Link>
       </WorkspacePanel>
 
-      <WorkspacePanel title="Reconciliation" description="Bandingkan piutang, payout, saldo, dan transfer bank secara read-only per channel.">
+      <WorkspacePanel title="Rekonsiliasi" description="Bandingkan piutang, payout, saldo, dan transfer bank secara read-only per channel.">
         <Link
           href="/payout/reconciliation"
           className="flex items-center justify-between rounded-2xl border border-border/70 bg-background px-4 py-3 text-sm font-medium transition-colors hover:border-slate-400 hover:bg-slate-50"
@@ -84,20 +86,20 @@ export function PayoutOverview() {
       </WorkspacePanel>
 
       <WorkspacePanel
-        title="Net payout"
-        description={`${payoutsQuery.data?.length ?? 0} payout records terdeteksi dari ledger payout.`}
+        title="Payout bersih"
+        description={`${settledPayouts.length} payout settled terdeteksi dari ledger payout.`}
       >
         <div className="space-y-2">
           <p className="text-3xl font-semibold tracking-tight">{formatCompactCurrency(totalNet)}</p>
           <p className="text-sm text-muted-foreground">
-            Gross {formatMoney(totalGross)} dengan potongan/fee {formatMoney(totalDeductions)}.
+            Bruto {formatMoney(totalGross)} dengan potongan/biaya {formatMoney(totalDeductions)}.
           </p>
         </div>
       </WorkspacePanel>
 
       <WorkspacePanel
-        title="Adjustments value"
-        description={`${adjustmentsQuery.data?.length ?? 0} payout adjustments terhubung ke referensi dan channel.`}
+        title="Nilai adjustment"
+        description={`${adjustmentsQuery.data?.length ?? 0} adjustment payout terhubung ke referensi dan channel.`}
       >
         <div className="space-y-2">
           <p className="text-3xl font-semibold tracking-tight">{formatCompactCurrency(totalAdjustments)}</p>

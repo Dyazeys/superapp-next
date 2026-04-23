@@ -97,8 +97,7 @@ export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
     return;
   }
 
-  const grossAmount = item.qty * Number(item.unit_price);
-  const revenueAmount = Math.max(0, grossAmount - Number(item.discount_item));
+  const revenueAmount = Math.max(0, item.qty * Number(item.unit_price));
 
   const productHpp = Number(item.master_product?.total_hpp ?? "0");
   const hppAmount = (Number.isFinite(productHpp) ? productHpp : 0) * item.qty;

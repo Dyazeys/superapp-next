@@ -33,7 +33,30 @@ export async function GET(request: NextRequest) {
       take: journalId ? 500 : 300,
     });
 
-    return NextResponse.json(toJsonValue(journalLines));
+    const orderedJournalLines = journalLines
+      .map((line, index) => ({ line, index }))
+      .sort((a, b) => {
+        if (a.line.journal_entry_id !== b.line.journal_entry_id) {
+          return a.line.journal_entry_id > b.line.journal_entry_id ? -1 : 1;
+        }
+
+        const aAmount = Math.max(Number(a.line.debit), Number(a.line.credit));
+        const bAmount = Math.max(Number(b.line.debit), Number(b.line.credit));
+        if (aAmount !== bAmount) {
+          return aAmount - bAmount;
+        }
+
+        const aDebitFirst = Number(a.line.debit) > 0 ? 0 : 1;
+        const bDebitFirst = Number(b.line.debit) > 0 ? 0 : 1;
+        if (aDebitFirst !== bDebitFirst) {
+          return aDebitFirst - bDebitFirst;
+        }
+
+        return a.index - b.index;
+      })
+      .map((entry) => entry.line);
+
+    return NextResponse.json(toJsonValue(orderedJournalLines));
   } catch (error) {
     return jsonError(error, "Failed to load journal lines.");
   }

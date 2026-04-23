@@ -20,6 +20,8 @@ type ModalFormShellProps = {
   children: React.ReactNode;
   isSubmitting?: boolean;
   onSubmit?: () => void | Promise<void>;
+  dialogClassName?: string;
+  bodyClassName?: string;
 };
 
 export function ModalFormShell({
@@ -31,6 +33,8 @@ export function ModalFormShell({
   children,
   isSubmitting,
   onSubmit,
+  dialogClassName,
+  bodyClassName,
 }: ModalFormShellProps) {
   const [internalSubmitting, setInternalSubmitting] = useState(false);
   const submitPending = Boolean(isSubmitting || internalSubmitting);
@@ -50,12 +54,14 @@ export function ModalFormShell({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 sm:max-w-[700px]">
+      <DialogContent className={dialogClassName ?? "flex max-h-[90vh] flex-col gap-0 sm:max-w-[700px]"}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4 bg-white py-5 text-slate-900">{children}</div>
+        <div className={bodyClassName ?? "max-h-[70vh] space-y-4 overflow-y-auto bg-white py-5 pr-1 text-slate-900"}>
+          {children}
+        </div>
         <DialogFooter showCloseButton>
           <Button onClick={handleSubmit} disabled={submitPending}>
             {submitPending ? "Working..." : submitLabel}

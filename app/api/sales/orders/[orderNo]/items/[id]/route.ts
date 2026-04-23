@@ -48,12 +48,20 @@ export async function PATCH(
     const payload = salesOrderItemPatchSchema.parse(rawPayload);
     const has = (key: string) => Object.prototype.hasOwnProperty.call(rawPayload, key);
     const itemId = Number(id);
+    invariant(Number.isInteger(itemId) && itemId > 0, "Sales order item id is invalid.");
 
     const item = await prisma.$transaction(async (tx) => {
       const current = await tx.t_order_item.findUniqueOrThrow({
         where: { id: itemId },
-        select: { sku: true },
+        select: {
+          order_no: true,
+          sku: true,
+          qty: true,
+          unit_price: true,
+          discount_item: true,
+        },
       });
+      invariant(current.order_no === orderNo, "Sales order item was not found for this order.");
 
       const nextSku = payload.sku ?? current.sku;
       invariant(nextSku, "SKU is required.");
@@ -96,9 +104,17 @@ export async function DELETE(
   try {
     const { orderNo, id } = await params;
     const itemId = Number(id);
+    invariant(Number.isInteger(itemId) && itemId > 0, "Sales order item id is invalid.");
 
     await prisma.$transaction(async (tx) => {
-      await removeSalesOrderItemMovements(tx, itemId, orderNo);
+      const current = await tx.t_order_item.findUnique({
+        where: { id: itemId },
+        select: { order_no: true },
+      });
+      invariant(current, "Sales order item was not found.");
+      invariant(current.order_no === orderNo, "Sales order item was not found for this order.");
+
+      await removeSalesOrderItemMovements(tx, itemId, current.order_no);
       await deleteSalesOrderItemJournal(tx, itemId);
 
       await tx.t_order_item.delete({

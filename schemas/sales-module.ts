@@ -67,14 +67,6 @@ export const salesOrderItemSchema = z.object({
   qty: z.coerce.number().int().min(1),
   unit_price: decimalInput,
   discount_item: decimalInput.default("0"),
-}).superRefine((value, context) => {
-  if (Number(value.discount_item) > value.qty * Number(value.unit_price)) {
-    context.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["discount_item"],
-      message: "Discount cannot exceed the line gross amount",
-    });
-  }
 });
 
 export const salesOrderItemPatchSchema = z.object({
@@ -83,16 +75,6 @@ export const salesOrderItemPatchSchema = z.object({
   qty: z.coerce.number().int().min(1).optional(),
   unit_price: decimalInput.optional(),
   discount_item: decimalInput.optional(),
-}).superRefine((value, context) => {
-  if (value.discount_item !== undefined && value.qty !== undefined && value.unit_price !== undefined) {
-    if (Number(value.discount_item) > value.qty * Number(value.unit_price)) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["discount_item"],
-        message: "Discount cannot exceed the line gross amount",
-      });
-    }
-  }
 });
 
 export type SalesOrderInput = z.infer<typeof salesOrderSchema>;

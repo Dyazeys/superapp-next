@@ -46,7 +46,6 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
     badge: "Transaksi",
     children: [
       { label: "Sales Orders", href: "/sales/orders", icon: ReceiptText },
-      { label: "Sales Order Items", href: "/sales/order-items", icon: ReceiptText },
       { label: "Customers", href: "/sales/customers", icon: Users },
     ],
   },
@@ -59,7 +58,6 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Vendors", href: "/warehouse/vendors", icon: Warehouse },
       { label: "Purchase Orders", href: "/warehouse/purchase-orders", icon: Warehouse },
       { label: "Inbound", href: "/warehouse/inbound", icon: Warehouse },
-      { label: "Inbound Items", href: "/warehouse/inbound-items", icon: Warehouse },
       { label: "Adjustments", href: "/warehouse/adjustments", icon: Warehouse },
       { label: "Stock Balances", href: "/warehouse/stock-balances", icon: Warehouse },
       { label: "Stock Movements", href: "/warehouse/stock-movements", icon: Warehouse },
@@ -73,7 +71,6 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
     children: [
       { label: "Accounts", href: "/accounting/accounts", icon: ShieldCheck },
       { label: "Journals", href: "/accounting/journals", icon: ShieldCheck },
-      { label: "Journal Entries", href: "/accounting/journal-entries", icon: ShieldCheck },
       { label: "Channel Report", href: "/accounting/channel-report", icon: ShieldCheck },
     ],
   },

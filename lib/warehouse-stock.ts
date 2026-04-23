@@ -199,7 +199,7 @@ async function syncSalesOrderTotal(tx: Tx, orderNo: string) {
   });
 
   const totalAmount = items
-    .reduce((sum, item) => sum + item.qty * Number(item.unit_price) - Number(item.discount_item), 0)
+    .reduce((sum, item) => sum + item.qty * Number(item.unit_price), 0)
     .toFixed(2);
 
   await tx.t_order.update({

@@ -1,21 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Boxes, ReceiptText } from "lucide-react";
+import { ArrowRight, ReceiptText } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 
 const salesSections = [
   {
-    title: "Sales Orders",
-    description: "Kelola header pesanan tanpa mengubah integrasi stok & akuntansi yang ada.",
+    title: "Sales Transactions",
+    description: "Input order dan item dalam satu halaman transaksi supaya lebih cepat dan minim bolak-balik.",
     href: "/sales/orders",
     icon: ReceiptText,
-  },
-  {
-    title: "Sales Order Items",
-    description: "Kelola item pesanan dengan perilaku posting pergerakan stok yang sama.",
-    href: "/sales/order-items",
-    icon: Boxes,
   },
 ] as const;
 
@@ -23,15 +17,15 @@ export function SalesOverview() {
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-3">
-        <WorkspacePanel title="Alur kerja" description="Urutan umum untuk operasional penjualan.">
+        <WorkspacePanel title="Alur kerja" description="Urutan umum operasional penjualan harian.">
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start gap-3">
               <span className="mt-1 size-1.5 rounded-full bg-slate-400" />
-              <p>Buat/cek Sales Orders untuk transaksi utama.</p>
+              <p>Buat/cek Sales Order dan isi item pada halaman transaksi yang sama.</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="mt-1 size-1.5 rounded-full bg-slate-400" />
-              <p>Lengkapi Sales Order Items untuk detail barang dan qty.</p>
+              <p>Perubahan item langsung sinkron ke stok dan jurnal sesuai aturan existing.</p>
             </div>
           </div>
         </WorkspacePanel>
@@ -40,11 +34,11 @@ export function SalesOverview() {
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start gap-3">
               <span className="mt-1 size-1.5 rounded-full bg-slate-400" />
-              <p>Perubahan item tetap mengikuti perilaku posting yang sudah ada.</p>
+              <p>Order normal mem-posting stok dari BOM aktif stock-tracked.</p>
             </div>
             <div className="flex items-start gap-3">
               <span className="mt-1 size-1.5 rounded-full bg-slate-400" />
-              <p>Gunakan Warehouse ledger untuk audit jika ada selisih.</p>
+              <p>Order historical tetap aman karena tidak membuat posting stok.</p>
             </div>
           </div>
         </WorkspacePanel>
@@ -53,13 +47,13 @@ export function SalesOverview() {
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start gap-3">
               <span className="mt-1 size-1.5 rounded-full bg-slate-400" />
-              <p>Pastikan Channels rapi agar pelaporan lebih konsisten.</p>
+              <p>Pastikan Channels dan Products aktif agar input transaksi lancar.</p>
             </div>
           </div>
         </WorkspacePanel>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1 xl:grid-cols-1">
         {salesSections.map((section) => {
           const Icon = section.icon;
 

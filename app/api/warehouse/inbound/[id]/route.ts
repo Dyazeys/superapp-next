@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/db/prisma";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
@@ -7,6 +8,54 @@ import { inboundDeliverySchema } from "@/schemas/warehouse-module";
 
 function asDateOnly(value: string) {
   return new Date(`${value}T00:00:00.000Z`);
+}
+
+type Tx = Prisma.TransactionClient;
+
+async function seedInboundItemsFromPurchaseOrder(tx: Tx, inboundId: string, poId: string) {
+  const [poItems, existingItems] = await Promise.all([
+    tx.purchase_order_items.findMany({
+      where: { po_id: poId },
+      orderBy: [{ created_at: "asc" }, { id: "asc" }],
+      select: {
+        inv_code: true,
+        unit_cost: true,
+      },
+    }),
+    tx.inbound_items.findMany({
+      where: { inbound_id: inboundId },
+      select: { inv_code: true },
+    }),
+  ]);
+
+  const existingInvCodes = new Set(existingItems.map((item) => item.inv_code));
+  const uniquePoItemsByInvCode = new Map<string, { inv_code: string; unit_cost: Prisma.Decimal | null }>();
+
+  for (const item of poItems) {
+    if (!uniquePoItemsByInvCode.has(item.inv_code)) {
+      uniquePoItemsByInvCode.set(item.inv_code, {
+        inv_code: item.inv_code,
+        unit_cost: item.unit_cost,
+      });
+    }
+  }
+
+  for (const item of uniquePoItemsByInvCode.values()) {
+    if (existingInvCodes.has(item.inv_code)) {
+      continue;
+    }
+
+    await tx.inbound_items.create({
+      data: {
+        inbound_id: inboundId,
+        inv_code: item.inv_code,
+        qty_received: 0,
+        qty_passed_qc: 0,
+        qty_rejected_qc: 0,
+        unit_cost: item.unit_cost,
+      },
+    });
+  }
 }
 
 export async function PATCH(
@@ -20,7 +69,7 @@ export async function PATCH(
     const inbound = await prisma.$transaction(async (tx) => {
       const current = await tx.inbound_deliveries.findUnique({
         where: { id },
-        select: { qc_status: true },
+        select: { qc_status: true, po_id: true },
       });
       if (!current) {
         throw new Error("Inbound delivery was not found.");
@@ -38,7 +87,7 @@ export async function PATCH(
         invariant(purchaseOrder.status !== "CLOSED", "PO is closed and cannot receive new inbound.");
       }
 
-      return tx.inbound_deliveries.update({
+      const updated = await tx.inbound_deliveries.update({
         where: { id },
         data: {
           po_id: payload.po_id === undefined ? undefined : payload.po_id || null,
@@ -49,6 +98,12 @@ export async function PATCH(
           notes: payload.notes === undefined ? undefined : payload.notes || null,
         },
       });
+
+      if (updated.po_id) {
+        await seedInboundItemsFromPurchaseOrder(tx, updated.id, updated.po_id);
+      }
+
+      return updated;
     });
 
     return NextResponse.json(toJsonValue(inbound));

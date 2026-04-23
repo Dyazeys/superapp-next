@@ -1,6 +1,7 @@
 import { z } from "zod";
+import { CANONICAL_PAYOUT_STATUSES } from "@/lib/payout-status";
 
-export const PAYOUT_STATUS_OPTIONS = ["PENDING", "PROCESSING", "SETTLED", "PAID", "HOLD", "FAILED", "CANCELLED"] as const;
+export const PAYOUT_STATUS_OPTIONS = CANONICAL_PAYOUT_STATUSES;
 export const PAYOUT_ADJUSTMENT_TYPE_OPTIONS = ["MANUAL", "FEE", "REFUND", "REVERSAL", "PROMO", "OTHER"] as const;
 
 const decimalInput = z

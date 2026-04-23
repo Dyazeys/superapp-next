@@ -44,7 +44,24 @@ export default function WarehouseStockMovementsPage() {
     }),
     columnHelper.accessor("reference_id", {
       header: "Reference",
-      cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+      cell: (info) => {
+        const row = info.row.original;
+
+        if (row.reference_type === "SALE") {
+          const orderNo = row.sale_reference?.order_no;
+          const itemId = row.sale_reference?.item_id ?? info.getValue();
+          const sku = row.sale_reference?.sku;
+
+          return (
+            <div className="leading-tight">
+              <p className="font-mono text-xs">{orderNo ? `${orderNo} / item ${itemId}` : `item ${itemId}`}</p>
+              {sku ? <p className="text-[11px] text-muted-foreground">{sku}</p> : null}
+            </div>
+          );
+        }
+
+        return <span className="font-mono text-xs">{info.getValue()}</span>;
+      },
     }),
     columnHelper.accessor("qty_change", {
       header: "Change",

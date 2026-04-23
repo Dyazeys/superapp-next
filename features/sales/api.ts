@@ -1,6 +1,14 @@
 import type { SalesCustomerInput, SalesOrderInput, SalesOrderItemInput } from "@/schemas/sales-module";
-import type { ChannelLookupRecord, SalesCustomerRecord, SalesOrderItemRecord, SalesOrderRecord } from "@/types/sales";
+import type {
+  ChannelLookupRecord,
+  SalesCustomerRecord,
+  SalesOrderItemRecord,
+  SalesOrderListResponse,
+  SalesOrderRecord,
+} from "@/types/sales";
 import { requestJson } from "@/lib/request";
+
+type SalesOrderPostingFilter = "ALL" | "UNPOSTED" | "POSTED" | "NO_POSTING";
 
 export const salesApi = {
   channels: {
@@ -25,6 +33,18 @@ export const salesApi = {
   },
   orders: {
     list: () => requestJson<SalesOrderRecord[]>("/api/sales/orders"),
+    listPaged: (params: {
+      page: number;
+      page_size: number;
+      posting_filter: SalesOrderPostingFilter;
+    }) => {
+      const query = new URLSearchParams({
+        page: String(params.page),
+        page_size: String(params.page_size),
+        posting_filter: params.posting_filter,
+      });
+      return requestJson<SalesOrderListResponse>(`/api/sales/orders?${query.toString()}`);
+    },
     create: (payload: SalesOrderInput) =>
       requestJson<SalesOrderRecord>("/api/sales/orders", {
         method: "POST",
@@ -38,6 +58,10 @@ export const salesApi = {
     remove: (orderNo: string) =>
       requestJson<{ ok: true }>(`/api/sales/orders/${encodeURIComponent(orderNo)}`, {
         method: "DELETE",
+      }),
+    post: (orderNo: string) =>
+      requestJson<SalesOrderRecord>(`/api/sales/orders/${encodeURIComponent(orderNo)}/post`, {
+        method: "POST",
       }),
     items: {
       list: (orderNo: string) =>

@@ -65,7 +65,12 @@ type PurchaseOrderHook = {
   purchaseOrderModal: ReturnType<typeof useModalState>;
   editingPurchaseOrder: PurchaseOrderRecord | null;
   openPurchaseOrderModal: (purchaseOrder?: PurchaseOrderRecord) => void;
-  savePurchaseOrder: (values: PurchaseOrderInput) => Promise<void>;
+  savePurchaseOrder: (
+    values: PurchaseOrderInput,
+    options?: {
+      closeOnSuccess?: boolean;
+    }
+  ) => Promise<PurchaseOrderRecord>;
   deletePurchaseOrder: (id: string) => Promise<void>;
 };
 
@@ -75,7 +80,12 @@ type InboundHook = {
   inboundModal: ReturnType<typeof useModalState>;
   editingInbound: InboundDeliveryRecord | null;
   openInboundModal: (inbound?: InboundDeliveryRecord) => void;
-  saveInbound: (values: InboundDeliveryInput) => Promise<InboundDeliveryRecord>;
+  saveInbound: (
+    values: InboundDeliveryInput,
+    options?: {
+      closeOnSuccess?: boolean;
+    }
+  ) => Promise<InboundDeliveryRecord>;
   deleteInbound: (id: string) => Promise<void>;
   postInbound: (id: string) => Promise<void>;
 };
@@ -238,18 +248,37 @@ export function useWarehousePurchaseOrders(): PurchaseOrderHook {
   });
   const invalidate = useBaseMutation([WAREHOUSE_PURCHASE_ORDER_KEY, WAREHOUSE_INBOUND_KEY]);
 
-  const savePurchaseOrder = async (values: PurchaseOrderInput) => {
+  const savePurchaseOrder = async (
+    values: PurchaseOrderInput,
+    options?: {
+      closeOnSuccess?: boolean;
+    }
+  ) => {
+    const closeOnSuccess = options?.closeOnSuccess ?? true;
+
     try {
       const action = editingPurchaseOrder
         ? warehouseApi.purchaseOrders.update(editingPurchaseOrder.id, values)
         : warehouseApi.purchaseOrders.create(values);
+      const purchaseOrder = await action;
 
-      await action;
       toast.success(`Purchase order ${editingPurchaseOrder ? "updated" : "created"}`);
       await invalidate();
-      setEditingPurchaseOrder(null);
-      purchaseOrderModal.closeModal();
-      purchaseOrderForm.reset();
+
+      if (closeOnSuccess) {
+        setEditingPurchaseOrder(null);
+        purchaseOrderModal.closeModal();
+        purchaseOrderForm.reset();
+      } else {
+        setEditingPurchaseOrder(purchaseOrder);
+        purchaseOrderForm.reset({
+          po_number: purchaseOrder.po_number,
+          vendor_code: purchaseOrder.vendor_code,
+          order_date: toDateInput(purchaseOrder.order_date),
+        });
+      }
+
+      return purchaseOrder;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save purchase order");
       throw error;
@@ -308,7 +337,14 @@ export function useWarehouseInbound(): InboundHook {
     WAREHOUSE_STOCK_MOVEMENT_KEY,
   ]);
 
-  const saveInbound = async (values: InboundDeliveryInput) => {
+  const saveInbound = async (
+    values: InboundDeliveryInput,
+    options?: {
+      closeOnSuccess?: boolean;
+    }
+  ) => {
+    const closeOnSuccess = options?.closeOnSuccess ?? true;
+
     try {
       const action = editingInbound
         ? warehouseApi.inbound.update(editingInbound.id, values)
@@ -317,9 +353,22 @@ export function useWarehouseInbound(): InboundHook {
 
       toast.success(`Inbound ${editingInbound ? "updated" : "created"}`);
       await invalidate();
-      setEditingInbound(null);
-      inboundModal.closeModal();
-      inboundForm.reset();
+
+      if (closeOnSuccess) {
+        setEditingInbound(null);
+        inboundModal.closeModal();
+        inboundForm.reset();
+      } else {
+        setEditingInbound(inbound);
+        inboundForm.reset({
+          po_id: inbound.po_id ?? null,
+          receive_date: toDateInput(inbound.receive_date),
+          surat_jalan_vendor: inbound.surat_jalan_vendor ?? "",
+          received_by: inbound.received_by ?? "",
+          notes: inbound.notes ?? "",
+        });
+      }
+
       return inbound;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save inbound delivery");
@@ -345,7 +394,7 @@ export function useWarehouseInbound(): InboundHook {
       await invalidate();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to post inbound");
-      throw error;
+      return;
     }
   };
 

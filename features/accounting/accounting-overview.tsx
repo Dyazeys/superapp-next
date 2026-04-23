@@ -1,21 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpenText, Landmark, NotebookTabs, Wallet } from "lucide-react";
+import { ArrowRight, BookOpenText, Landmark, Wallet } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 
 const accountingSections = [
   {
-    title: "Journals",
-    description: "Daftar jurnal (read-first) dari tabel akuntansi yang sudah ada.",
+    title: "Workspace Jurnal",
+    description: "Header jurnal dan baris debit/kredit dalam satu halaman audit yang lebih manusiawi.",
     href: "/accounting/journals",
     icon: BookOpenText,
-  },
-  {
-    title: "Journal Entries",
-    description: "Detail debit/kredit untuk rekonsiliasi cepat berdasarkan referensi jurnal.",
-    href: "/accounting/journal-entries",
-    icon: NotebookTabs,
   },
   {
     title: "Accounts",
@@ -39,11 +33,7 @@ export function AccountingOverview() {
           <div className="space-y-3 text-sm text-muted-foreground">
             <div className="flex items-start gap-3">
               <span className="mt-1 size-1.5 rounded-full bg-slate-400" />
-              <p>Gunakan Journals untuk melihat sumber dan periodisasi.</p>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="mt-1 size-1.5 rounded-full bg-slate-400" />
-              <p>Masuk ke Journal Entries saat butuh detail debit/kredit.</p>
+              <p>Gunakan Workspace Jurnal untuk melihat header jurnal dan detail debit/kredit sekaligus.</p>
             </div>
           </div>
         </WorkspacePanel>
@@ -67,7 +57,7 @@ export function AccountingOverview() {
         </WorkspacePanel>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {accountingSections.map((section) => {
           const Icon = section.icon;
 

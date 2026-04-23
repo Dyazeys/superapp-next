@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { invariant } from "@/lib/api-error";
 import { upsertJournalEntryReplacingLines } from "@/lib/accounting-journal-upsert";
+import { isFailedPayoutStatus } from "@/lib/payout-status";
 
 type Tx = Prisma.TransactionClient;
 
@@ -89,6 +90,7 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
       payout_id: true,
       payout_date: true,
       ref: true,
+      payout_status: true,
       omset: true,
       fee_admin: true,
       fee_service: true,
@@ -108,6 +110,13 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
     },
     select: { id: true },
   });
+
+  if (isFailedPayoutStatus(payout.payout_status)) {
+    if (existing) {
+      await tx.journal_entries.delete({ where: { id: existing.id } });
+    }
+    return;
+  }
 
   if (!payout.ref) {
     if (existing) {
@@ -193,13 +202,13 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
       accountId: saldoAccountId,
       debit: amount,
       credit: 0,
-      memo: "Payout settlement debit saldo channel",
+      memo: `Saldo channel bertambah dari payout ref ${payout.ref}`,
     },
     {
       accountId: piutangAccountId,
       debit: 0,
       credit: amount,
-      memo: "Payout settlement credit piutang channel",
+      memo: `Piutang channel diselesaikan untuk payout ref ${payout.ref}`,
     },
     ...feeComponents.flatMap((component) =>
       feeExpenseAccountId
@@ -208,13 +217,13 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
               accountId: feeExpenseAccountId,
               debit: component.amount,
               credit: 0,
-              memo: `Marketplace fee expense (${component.label}) for payout ${payout.payout_id}`,
+              memo: `Biaya marketplace ${component.label} untuk payout ref ${payout.ref}`,
             },
             {
               accountId: saldoAccountId,
               debit: 0,
               credit: component.amount,
-              memo: `Marketplace fee deduction (${component.label}) from saldo for payout ${payout.payout_id}`,
+              memo: `Saldo channel berkurang untuk biaya ${component.label} payout ref ${payout.ref}`,
             },
           ]
         : []
@@ -224,7 +233,7 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
   await upsertPayoutSettlementJournal(tx, {
     referenceId,
     payoutDate: payout.payout_date,
-    description: `PAYOUT settlement posting for payout ${payout.payout_id} ref ${payout.ref} channel ${channel.channel_name}`,
+    description: `Penerimaan payout ${channel.channel_name} ref ${payout.ref}`,
     lines,
   });
 }
