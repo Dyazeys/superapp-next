@@ -1,6 +1,6 @@
 # Agent Onboarding
 
-Tanggal update: `2026-04-13`
+Tanggal update: `2026-04-23`
 
 Dokumen ini dipakai untuk mempercepat AI agent baru memahami proyek `superapp-next`.
 
@@ -51,6 +51,11 @@ npm run dev
 3. `master product` pricing lama (`price_mp`, `price_non_mp`) sudah deprecated di alur aplikasi.
 - Jangan jadikan kolom ini sebagai requirement import baru.
 4. Jika mengubah `.env`, selalu restart `next dev`.
+5. Jurnal otomatis sales order sedang di-hold.
+- Saat membaca flow sales, anggap source of truth operasionalnya ada di `sales.t_order`, `sales.t_order_item`, dan `warehouse.stock_movements`.
+- Jangan menandai tidak adanya jurnal `SALES_ORDER_ITEM` sebagai bug, kecuali owner sudah mengaktifkan kembali flow tersebut.
+6. Source jurnal penjualan untuk Income Statement sekarang ada di payout.
+- Saat audit accounting, baca `revenue`, `hpp`, `fee marketplace`, dan `saldo channel` dari flow `payout`, bukan dari jurnal sales order.
 
 ## 5) Status Data Saat Ini (Snapshot)
 
@@ -65,3 +70,4 @@ npm run dev
 2. Jangan commit file log lokal (`.next-*.log`).
 3. Untuk perubahan data/import, simpan evidence ke `docs/reports/`.
 4. Untuk perubahan flow penting, update docs terkait pada commit yang sama.
+5. Cek status hold sementara di docs sebelum menyimpulkan ada bug posting akunting.

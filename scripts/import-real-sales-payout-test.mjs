@@ -11,11 +11,9 @@ const prisma = new PrismaClient({
   log: ["error"],
 });
 
-const SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE = "SALES_ORDER_ITEM";
 const PAYOUT_JOURNAL_REFERENCE_TYPE = "PAYOUT_SETTLEMENT";
 const PAYOUT_ADJUSTMENT_JOURNAL_REFERENCE_TYPE = "PAYOUT_ADJUSTMENT";
 const PAYOUT_TRANSFER_JOURNAL_REFERENCE_TYPE = "PAYOUT_BANK_TRANSFER";
-const SALES_ORDER_ITEM_JOURNAL_NAMESPACE = "superapp:journal:sales-order-item:v1";
 const PAYOUT_JOURNAL_NAMESPACE = "superapp:payout-settlement:v1";
 const HPP_ACCOUNT_CODE = "51101";
 const INVENTORY_ACCOUNT_CODE = "13101";
@@ -57,10 +55,6 @@ function deterministicReferenceId(namespace, value) {
     hash.slice(16, 20).join(""),
     hash.slice(20, 32).join(""),
   ].join("-");
-}
-
-function salesOrderItemReferenceId(orderItemId) {
-  return deterministicReferenceId(SALES_ORDER_ITEM_JOURNAL_NAMESPACE, orderItemId);
 }
 
 function payoutSettlementReferenceId(payoutId) {
@@ -302,61 +296,7 @@ async function syncSalesOrderItemMovementAndJournal(tx, orderItemId) {
     await recalculateBalance(tx, bom.inv_code);
   }
 
-  const channel = item.t_order.m_channel;
-  assert(channel?.piutang_account_id, `Channel untuk ${item.t_order.order_no} belum punya akun piutang.`);
-
-  const revenueAccountId =
-    channel.revenue_account_id ?? (await findAccountIdByCode(tx, DEFAULT_REVENUE_ACCOUNT_CODE));
-  assert(revenueAccountId, `Akun pendapatan default ${DEFAULT_REVENUE_ACCOUNT_CODE} tidak ditemukan.`);
-
-  const revenueAmount = Math.max(0, item.qty * Number(item.unit_price));
-  const productHpp = Number(item.master_product?.total_hpp ?? 0);
-  const hppAmount = (Number.isFinite(productHpp) ? productHpp : 0) * item.qty;
-
-  const lines = [
-    {
-      accountId: channel.piutang_account_id,
-      debit: revenueAmount,
-      credit: 0,
-      memo: `Sales receivable for order ${item.order_no} item ${item.id}`,
-    },
-    {
-      accountId: revenueAccountId,
-      debit: 0,
-      credit: revenueAmount,
-      memo: `Sales revenue for order ${item.order_no} item ${item.id}`,
-    },
-  ];
-
-  if (hppAmount > 0) {
-    const hppAccountId = await findAccountIdByCode(tx, HPP_ACCOUNT_CODE);
-    const inventoryAccountId = await findAccountIdByCode(tx, INVENTORY_ACCOUNT_CODE);
-    assert(hppAccountId, `Akun HPP ${HPP_ACCOUNT_CODE} tidak ditemukan.`);
-    assert(inventoryAccountId, `Akun persediaan ${INVENTORY_ACCOUNT_CODE} tidak ditemukan.`);
-
-    lines.push(
-      {
-        accountId: hppAccountId,
-        debit: hppAmount,
-        credit: 0,
-        memo: `HPP for order ${item.order_no} item ${item.id}`,
-      },
-      {
-        accountId: inventoryAccountId,
-        debit: 0,
-        credit: hppAmount,
-        memo: `Inventory release for order ${item.order_no} item ${item.id}`,
-      }
-    );
-  }
-
-  await upsertJournalEntryReplacingLines(tx, {
-    referenceType: SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE,
-    referenceId: salesOrderItemReferenceId(orderItemId),
-    transactionDate: item.t_order.order_date,
-    description: `SALES posting for order ${item.order_no} item ${item.id} sku ${item.sku}${item.t_order.ref_no ? ` ref ${item.t_order.ref_no}` : ""}`,
-    lines,
-  });
+  return item;
 }
 
 async function syncPayoutSettlementJournal(tx, payoutId) {
@@ -367,6 +307,8 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
       payout_date: true,
       ref: true,
       payout_status: true,
+      total_price: true,
+      hpp: true,
       omset: true,
       fee_admin: true,
       fee_service: true,
@@ -394,7 +336,6 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
     where: { channel_id: order.channel_id },
     select: {
       channel_name: true,
-      piutang_account_id: true,
       revenue_account_id: true,
       saldo_account_id: true,
       revenue_account: {
@@ -406,7 +347,9 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
   });
 
   assert(channel?.saldo_account_id, `Channel ${order.channel_id} belum punya akun saldo.`);
-  assert(channel.piutang_account_id, `Channel ${order.channel_id} belum punya akun piutang.`);
+  const revenueAccountId =
+    channel.revenue_account_id ?? (await findAccountIdByCode(tx, DEFAULT_REVENUE_ACCOUNT_CODE));
+  assert(revenueAccountId, `Akun pendapatan default ${DEFAULT_REVENUE_ACCOUNT_CODE} tidak ditemukan.`);
 
   const feeComponents = [
     { amount: Number(payout.fee_admin), label: "admin" },
@@ -427,6 +370,18 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
 
   const amount = Number(payout.omset);
   assert(Number.isFinite(amount) && amount > 0, `Omset payout ${payout.ref} tidak valid.`);
+  const revenueAmount = Number(payout.total_price);
+  assert(Number.isFinite(revenueAmount) && revenueAmount > 0, `Nilai total payout ${payout.ref} tidak valid.`);
+  const hppAmount = Number(payout.hpp);
+
+  let hppAccountId = null;
+  let inventoryAccountId = null;
+  if (Number.isFinite(hppAmount) && hppAmount > 0) {
+    hppAccountId = await findAccountIdByCode(tx, HPP_ACCOUNT_CODE);
+    inventoryAccountId = await findAccountIdByCode(tx, INVENTORY_ACCOUNT_CODE);
+    assert(hppAccountId, `Akun HPP ${HPP_ACCOUNT_CODE} tidak ditemukan.`);
+    assert(inventoryAccountId, `Akun persediaan ${INVENTORY_ACCOUNT_CODE} tidak ditemukan.`);
+  }
 
   const lines = [
     {
@@ -436,10 +391,10 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
       memo: `Saldo channel bertambah dari payout ref ${payout.ref}`,
     },
     {
-      accountId: channel.piutang_account_id,
+      accountId: revenueAccountId,
       debit: 0,
-      credit: amount,
-      memo: `Piutang channel diselesaikan untuk payout ref ${payout.ref}`,
+      credit: revenueAmount,
+      memo: `Pendapatan payout untuk ref ${payout.ref}`,
     },
     ...feeComponents.flatMap((component) =>
       feeExpenseAccountId
@@ -459,6 +414,22 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
           ]
         : []
     ),
+    ...(Number.isFinite(hppAmount) && hppAmount > 0 && hppAccountId && inventoryAccountId
+      ? [
+          {
+            accountId: hppAccountId,
+            debit: hppAmount,
+            credit: 0,
+            memo: `HPP payout untuk ref ${payout.ref}`,
+          },
+          {
+            accountId: inventoryAccountId,
+            debit: 0,
+            credit: hppAmount,
+            memo: `Release inventory untuk payout ref ${payout.ref}`,
+          },
+        ]
+      : []),
   ];
 
   await upsertJournalEntryReplacingLines(tx, {
@@ -486,7 +457,6 @@ async function cleanupCurrentTransactions() {
       where: {
         reference_type: {
           in: [
-            SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE,
             PAYOUT_JOURNAL_REFERENCE_TYPE,
             PAYOUT_ADJUSTMENT_JOURNAL_REFERENCE_TYPE,
             PAYOUT_TRANSFER_JOURNAL_REFERENCE_TYPE,
@@ -714,16 +684,6 @@ async function importCandidates(candidates) {
 
       await syncPayoutSettlementJournal(tx, createdPayout.payout_id);
 
-      const salesJournal = await tx.journal_entries.findFirst({
-        where: {
-          reference_type: SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE,
-          reference_id: salesOrderItemReferenceId(createdItem.id),
-        },
-        include: {
-          journal_lines: true,
-        },
-      });
-
       const payoutJournal = await tx.journal_entries.findFirst({
         where: {
           reference_type: PAYOUT_JOURNAL_REFERENCE_TYPE,
@@ -749,7 +709,6 @@ async function importCandidates(candidates) {
         qty: Number(item.qty),
         total_amount: orderTotal,
         payout_omset: asMoney(candidate.payout.omset).toFixed(2),
-        sales_journal_lines: salesJournal?.journal_lines.length ?? 0,
         payout_journal_lines: payoutJournal?.journal_lines.length ?? 0,
         stock_movement_count: stockMovements.length,
       };
@@ -805,7 +764,7 @@ async function loadFinalSnapshot(candidates) {
     by: ["reference_type"],
     where: {
       reference_type: {
-        in: [SALES_ORDER_ITEM_JOURNAL_REFERENCE_TYPE, PAYOUT_JOURNAL_REFERENCE_TYPE],
+        in: [PAYOUT_JOURNAL_REFERENCE_TYPE],
       },
     },
     _count: {

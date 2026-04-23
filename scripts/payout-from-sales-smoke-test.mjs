@@ -29,10 +29,6 @@ function deterministicReferenceId(namespace, id) {
   ].join("-");
 }
 
-function deterministicSalesOrderItemReferenceId(orderItemId) {
-  return deterministicReferenceId("superapp:journal:sales-order-item:v1", orderItemId);
-}
-
 function payoutSettlementReferenceId(payoutId) {
   return deterministicReferenceId("superapp:payout-settlement:v1", payoutId);
 }
@@ -260,15 +256,6 @@ async function main() {
       [orderNo]
     );
 
-    const salesJournal = await fetchJournalSummary(
-      db,
-      "SALES_ORDER_ITEM",
-      deterministicSalesOrderItemReferenceId(createdItem.id)
-    );
-    const salesJournalLines = SMOKE_VERBOSE
-      ? await fetchJournalLines(db, "SALES_ORDER_ITEM", deterministicSalesOrderItemReferenceId(createdItem.id))
-      : [];
-
     const stockMovement = await fetchSingleRow(
       db,
       `
@@ -305,20 +292,15 @@ async function main() {
       step: "sales_order_posted",
       order_no: postedOrder.order_no,
       order_total_amount: persistedOrder?.total_amount ?? null,
-      sales_journal_count: salesJournal?.journal_count ?? 0,
-      sales_journal_lines: salesJournal?.line_count ?? 0,
-      sales_total_debit: salesJournal?.total_debit ?? "0",
-      sales_total_credit: salesJournal?.total_credit ?? "0",
       stock_movement_count: stockMovement?.movement_count ?? 0,
       stock_qty_sum: stockMovement?.qty_sum ?? 0,
       ...(SMOKE_VERBOSE
         ? {
-            sales_journal_detail: salesJournalLines,
             stock_movement_detail: stockMovementRows,
           }
         : {}),
       behavior:
-        "Begitu order diposting, stock movement dan jurnal penjualan terbentuk. Ini tahap yang membuat ref order siap dipakai payout.",
+        "Begitu order diposting, stock movement terbentuk. Ref order ini lalu dipakai payout sebagai sumber jurnal utama.",
     });
 
     const payoutPayload = {
@@ -364,7 +346,7 @@ async function main() {
       payout_journal_lines: payoutJournal?.line_count ?? 0,
       ...(SMOKE_VERBOSE ? { payout_journal_detail: payoutJournalLines } : {}),
       behavior:
-        "Saat payout dibuat dari ref order yang sama, piutang channel diselesaikan dan saldo channel bertambah sesuai jurnal payout settlement.",
+        "Saat payout dibuat dari ref order yang sama, jurnal payout menjadi sumber utama untuk revenue, HPP, fee marketplace, dan saldo channel.",
     });
 
     const createdAdjustment = await requestOrThrow("/api/payout/adjustments", {
@@ -465,10 +447,6 @@ async function main() {
       behavior:
         "Snapshot ini menunjukkan apakah payout flow dari order tadi terlihat MATCHED, EXPECTED, atau ERROR di halaman rekonsiliasi.",
     });
-
-    if ((salesJournal?.journal_count ?? 0) < 1 || (salesJournal?.line_count ?? 0) < 2) {
-      failures.push("Jurnal sales order item tidak terbentuk lengkap.");
-    }
 
     if ((stockMovement?.movement_count ?? 0) < Number(sku.tracked_rows)) {
       failures.push("Stock movement sales lebih sedikit dari komponen BOM yang diharapkan.");

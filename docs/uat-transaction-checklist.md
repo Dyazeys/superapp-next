@@ -1,6 +1,6 @@
 # UAT Transaction Checklist
 
-Tanggal update: `2026-04-22`
+Tanggal update: `2026-04-23`
 
 Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data inti dinyatakan aman.
 
@@ -9,6 +9,8 @@ Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data in
 - [x] Fokus UAT akunting saat ini: **Income Statement**.
 - [x] Posting yang berdampak utama ke **Balance Sheet** (khususnya aset dagang/persediaan) di-`hold` dulu sampai keputusan owner final terkait metode valuasi.
 - [x] Untuk modul warehouse, validasi sementara difokuskan ke integritas transaksi dan stok (`stock_movements`, `stock_balances`), bukan final posting jurnal aset.
+- [x] Jurnal otomatis dari **sales order** di-`hold` dulu. Flow sales saat ini divalidasi sampai `sales order -> sales item -> stock movement`, tanpa ekspektasi jurnal sales terbentuk.
+- [x] Mapping **Income Statement** untuk penjualan sekarang dibaca dari **payout** (`total_price`, `hpp`, fee marketplace, `omset`), bukan dari jurnal sales order.
 
 ## 1) Status Master Data
 
@@ -33,7 +35,7 @@ Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data in
 - [ ] Pastikan stock movement adjustment sinkron.
 - [ ] `Hold sementara`: verifikasi jurnal aset adjustment (menunggu keputusan owner valuasi persediaan).
 
-## 4) Sales - Sampai Jurnal
+## 4) Sales - Sampai Dampak Stok
 
 ### 4.1 Sales Order
 
@@ -53,7 +55,7 @@ Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data in
 - [ ] Pastikan inventory BOM berkurang sesuai qty.
 - [ ] Pastikan tidak muncul error `stock-tracked BOM rows must include an inventory reference`.
 - [ ] Pastikan movement tidak punya `inv_code` kosong.
-- [ ] Verifikasi jurnal akunting untuk sales sudah terposting.
+- [ ] Pastikan tidak ada ekspektasi jurnal sales otomatis pada tahap ini (memang sedang di-hold).
 
 ## 5) Payout - Sampai Jurnal
 
@@ -105,11 +107,11 @@ Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data in
 1. Warehouse PO + inbound
 2. Stock adjustment
 3. Sales order + sales item + dampak stok
-4. Jurnal sales (P&L)
-5. Payout record + payout transfer
-6. Jurnal payout + transfer (P&L related)
-7. Opex
-8. Jurnal opex (P&L)
+4. Payout record + payout transfer
+5. Jurnal payout + transfer (P&L related)
+6. Opex
+7. Jurnal opex (P&L)
+8. Review posting sales journal setelah owner siap mengaktifkan kembali
 9. Review posting balance sheet yang masih di-hold (inbound/adjustment) setelah keputusan owner keluar
 
 ## 10) Catatan Operasional
@@ -118,5 +120,6 @@ Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data in
 - Channel `DIRECT` tidak harus dipaksa memakai flow saldo.
 - Channel `SALDO` sebaiknya diuji minimal satu transaksi end-to-end.
 - Jika `stock_balances` kosong, isi saldo awal dulu sebelum test sales.
+- Sales order saat ini tetap boleh dipost ke stok, tetapi belum dipakai sebagai sumber jurnal akunting otomatis.
 - Validasi akunting dilakukan di setiap tahapan transaksi, bukan di akhir saja.
 - Khusus warehouse inbound/adjustment: posting jurnal aset dagang masih status `hold sementara` sampai ada keputusan owner.

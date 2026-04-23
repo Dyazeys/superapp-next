@@ -1,6 +1,6 @@
 # Known Issues (SuperApp Next ERP)
 
-Tanggal: `2026-04-22`
+Tanggal: `2026-04-23`
 
 ## Open
 
@@ -17,6 +17,12 @@ Tanggal: `2026-04-22`
 7. Posting jurnal untuk warehouse inbound/adjustment masih belum difinalkan (sengaja di-hold):
    - Keputusan sementara UAT: fokus Income Statement dulu.
    - Posting aset dagang/balance sheet menunggu keputusan owner terkait metode valuasi.
+8. Jurnal otomatis dari sales order sedang di-hold:
+   - Flow sales aktif saat ini hanya sampai order, item, dan stock movement.
+   - Jangan anggap tidak adanya jurnal sales sebagai bug selama keputusan hold ini masih berlaku.
+9. Source jurnal Income Statement untuk penjualan sudah dipindah ke payout:
+   - `sales.t_order` tetap dipakai sebagai data operasional dan referensi.
+   - Pembacaan `revenue`, `hpp`, `fee`, dan `saldo` untuk jurnal penjualan mengikuti data payout.
 
 ## Resolved
 

@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import { Client } from "pg";
 import dotenv from "dotenv";
 
@@ -16,27 +15,6 @@ if (!DATABASE_URL) {
 if (!["fast", "full"].includes(SMOKE_MODE)) {
   console.error(`Invalid smoke mode: ${SMOKE_MODE}. Use 'fast' or 'full'.`);
   process.exit(1);
-}
-
-function deterministicSalesOrderItemReferenceId(orderItemId) {
-  const hash = crypto
-    .createHash("sha1")
-    .update(`superapp:journal:sales-order-item:v1:${orderItemId}`)
-    .digest("hex")
-    .slice(0, 32)
-    .split("");
-
-  hash[12] = "5";
-  const variant = Number.parseInt(hash[16], 16);
-  hash[16] = ((variant & 0x3) | 0x8).toString(16);
-
-  return [
-    hash.slice(0, 8).join(""),
-    hash.slice(8, 12).join(""),
-    hash.slice(12, 16).join(""),
-    hash.slice(16, 20).join(""),
-    hash.slice(20, 32).join(""),
-  ].join("-");
 }
 
 async function request(path, options = {}) {
@@ -141,24 +119,6 @@ async function runPostingCheck(db, channel, testCase, createdOrderNos, checks, f
     total_amount: orderTotal.total_amount,
     expected_total_amount: expectedTotal,
   };
-
-  if (SMOKE_MODE === "full") {
-    const journal = (
-      await db.query(
-        `
-        SELECT COUNT(*)::int AS journal_count
-        FROM accounting.journal_entries
-        WHERE reference_type = 'SALES_ORDER_ITEM' AND reference_id = $1
-        `,
-        [deterministicSalesOrderItemReferenceId(createdItem.id)]
-      )
-    ).rows[0];
-    check.journal_count = journal.journal_count;
-
-    if (journal.journal_count < 1) {
-      failures.push(`${testCase.type}: journal tidak terbentuk untuk order item ${createdItem.id}`);
-    }
-  }
 
   checks.push(check);
 

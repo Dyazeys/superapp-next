@@ -2,7 +2,17 @@
 
 Dokumen ini menjelaskan model database inti SuperApp secara singkat dan padat.
 
-## Update Terakhir (20 April 2026)
+## Update Terakhir (23 April 2026)
+
+- Jurnal otomatis untuk `sales.t_order_item` sedang di-`hold`.
+- Flow sales aktif saat ini difokuskan ke data order, item, dan mutasi stok; jurnal payout/transfer tetap aktif.
+- Untuk kebutuhan Income Statement, source jurnal penjualan saat ini dipusatkan di `payout.t_payout`:
+  - `revenue` dibaca dari `total_price`
+  - `hpp` dibaca dari `hpp`
+  - `fee marketplace` dibaca dari kolom fee payout
+  - `saldo channel` dibaca dari `omset`
+
+## Update Sebelumnya (20 April 2026)
 
 - `warehouse.adjustments` sekarang punya kolom `notes` (catatan adjustment).
 - Input `warehouse.adjustments.adj_type` dibatasi ke `IN` / `OUT`.
@@ -125,6 +135,9 @@ Database PostgreSQL dipisah per domain:
 3. Payout marketplace masuk ke `payout` via `ref_no`.
 4. Mutasi stok dicatat di `warehouse.stock_movements` dan saldo di `stock_balances`.
 5. Dampak finansial dicatat ke `accounting.journal_entries` + `journal_lines`.
+   Catatan sementara:
+   - jurnal `sales` sedang di-hold
+   - jurnal `payout`, `payout adjustment`, `payout transfer`, dan `opex` tetap aktif
 
 ## Referensi Lanjutan
 

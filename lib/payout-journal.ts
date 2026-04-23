@@ -8,6 +8,9 @@ type Tx = Prisma.TransactionClient;
 
 const PAYOUT_JOURNAL_REFERENCE_TYPE = "PAYOUT_SETTLEMENT";
 const PAYOUT_JOURNAL_NAMESPACE = "superapp:payout-settlement:v1";
+const HPP_ACCOUNT_CODE = "51101";
+const INVENTORY_ACCOUNT_CODE = "13101";
+const DEFAULT_REVENUE_ACCOUNT_CODE = "41106";
 
 const MARKETPLACE_FEE_ACCOUNT_CODE_BY_REVENUE_CODE: Record<string, string> = {
   "41101": "61107",
@@ -91,6 +94,8 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
       payout_date: true,
       ref: true,
       payout_status: true,
+      total_price: true,
+      hpp: true,
       omset: true,
       fee_admin: true,
       fee_service: true,
@@ -143,7 +148,6 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
     where: { channel_id: order.channel_id },
     select: {
       channel_name: true,
-      piutang_account_id: true,
       revenue_account_id: true,
       saldo_account_id: true,
       revenue_account: {
@@ -160,12 +164,19 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
     return;
   }
 
-  invariant(channel.piutang_account_id, `Piutang account mapping is missing for channel ${channel.channel_name}.`);
   const saldoAccountId = channel.saldo_account_id;
-  const piutangAccountId = channel.piutang_account_id;
+  const revenueAccountId =
+    channel.revenue_account_id ?? (await findAccountIdByCode(tx, DEFAULT_REVENUE_ACCOUNT_CODE));
+  invariant(
+    revenueAccountId,
+    `Revenue account mapping is missing for channel ${channel.channel_name}, and default ${DEFAULT_REVENUE_ACCOUNT_CODE} was not found.`
+  );
 
   const amount = Number(payout.omset);
-  if (!Number.isFinite(amount) || amount <= 0) {
+  const revenueAmount = Number(payout.total_price);
+  const hppAmount = Number(payout.hpp);
+
+  if (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(revenueAmount) || revenueAmount <= 0) {
     if (existing) {
       await tx.journal_entries.delete({ where: { id: existing.id } });
     }
@@ -197,6 +208,22 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
     );
   }
 
+  let hppAccountId: string | null = null;
+  let inventoryAccountId: string | null = null;
+
+  if (Number.isFinite(hppAmount) && hppAmount > 0) {
+    [hppAccountId, inventoryAccountId] = await Promise.all([
+      findAccountIdByCode(tx, HPP_ACCOUNT_CODE),
+      findAccountIdByCode(tx, INVENTORY_ACCOUNT_CODE),
+    ]);
+
+    invariant(hppAccountId, `HPP account ${HPP_ACCOUNT_CODE} is missing for payout ref ${payout.ref}.`);
+    invariant(
+      inventoryAccountId,
+      `Inventory account ${INVENTORY_ACCOUNT_CODE} is missing for payout ref ${payout.ref}.`
+    );
+  }
+
   const lines = [
     {
       accountId: saldoAccountId,
@@ -205,10 +232,10 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
       memo: `Saldo channel bertambah dari payout ref ${payout.ref}`,
     },
     {
-      accountId: piutangAccountId,
+      accountId: revenueAccountId,
       debit: 0,
-      credit: amount,
-      memo: `Piutang channel diselesaikan untuk payout ref ${payout.ref}`,
+      credit: revenueAmount,
+      memo: `Pendapatan payout untuk ref ${payout.ref}`,
     },
     ...feeComponents.flatMap((component) =>
       feeExpenseAccountId
@@ -228,6 +255,22 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
           ]
         : []
     ),
+    ...(Number.isFinite(hppAmount) && hppAmount > 0 && hppAccountId && inventoryAccountId
+      ? [
+          {
+            accountId: hppAccountId,
+            debit: hppAmount,
+            credit: 0,
+            memo: `HPP payout untuk ref ${payout.ref}`,
+          },
+          {
+            accountId: inventoryAccountId,
+            debit: 0,
+            credit: hppAmount,
+            memo: `Release inventory untuk payout ref ${payout.ref}`,
+          },
+        ]
+      : []),
   ];
 
   await upsertPayoutSettlementJournal(tx, {
