@@ -60,7 +60,6 @@ export async function PATCH(
           fee_service: has("fee_service") ? payload.fee_service : undefined,
           fee_order_process: has("fee_order_process") ? payload.fee_order_process : undefined,
           fee_program: has("fee_program") ? payload.fee_program : undefined,
-          fee_transaction: has("fee_transaction") ? payload.fee_transaction : undefined,
           fee_affiliate: has("fee_affiliate") ? payload.fee_affiliate : undefined,
           shipping_cost: has("shipping_cost") ? payload.shipping_cost : undefined,
           omset: has("omset") ? payload.omset : undefined,

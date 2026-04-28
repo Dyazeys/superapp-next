@@ -1,6 +1,6 @@
 # UAT Transaction Checklist
 
-Tanggal update: `2026-04-23`
+Tanggal update: `2026-04-28`
 
 Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data inti dinyatakan aman.
 
@@ -61,27 +61,27 @@ Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data in
 
 ### 5.1 Payout Record
 
-- [ ] Buat payout untuk order yang sudah punya `ref_no`.
-- [ ] Isi angka payout sederhana terlebih dulu.
-- [ ] Pastikan payout tersimpan dan linked ke order benar.
-- [ ] Edit payout sekali untuk memastikan update normal.
-- [ ] Verifikasi jurnal akunting payout sudah terposting.
+- [x] Buat payout untuk order yang sudah punya `ref_no`.
+- [x] Isi angka payout sederhana terlebih dulu.
+- [x] Pastikan payout tersimpan dan linked ke order benar.
+- [x] Edit payout sekali untuk memastikan update normal.
+- [x] Verifikasi jurnal akunting payout sudah terposting.
 
 ### 5.2 Payout Transfer
 
-- [ ] Buat transfer dari payout yang baru dibuat.
-- [ ] Pakai akun bank `111*`.
-- [ ] Pastikan transfer berhasil.
-- [ ] Cek validasi amount tidak melebihi saldo payout.
-- [ ] Cek channel `SALDO` berjalan tanpa error mapping akun.
-- [ ] Verifikasi jurnal akunting transfer sudah terposting.
+- [x] Buat transfer dari payout yang baru dibuat.
+- [x] Pakai akun bank `111*`.
+- [x] Pastikan transfer berhasil.
+- [x] Cek validasi amount tidak melebihi saldo payout.
+- [x] Cek channel `SALDO` berjalan tanpa error mapping akun.
+- [x] Verifikasi jurnal akunting transfer sudah terposting.
 
 ## 6) Opex - Sampai Jurnal
 
-- [ ] Buat transaksi operational expense (opex) dengan akun biaya yang sesuai.
-- [ ] Pastikan nominal dan referensi transaksi tersimpan benar.
-- [ ] Jika ada edit/koreksi, pastikan update tidak merusak histori.
-- [ ] Verifikasi jurnal akunting opex sudah terposting.
+- [x] Buat transaksi operational expense (opex) dengan akun biaya yang sesuai.
+- [x] Pastikan nominal dan referensi transaksi tersimpan benar.
+- [x] Jika ada edit/koreksi, pastikan update tidak merusak histori.
+- [x] Verifikasi jurnal akunting opex sudah terposting.
 
 ## 7) Error Handling
 
@@ -123,3 +123,11 @@ Dokumen ini dipakai sebagai checklist pengujian transaksi setelah master data in
 - Sales order saat ini tetap boleh dipost ke stok, tetapi belum dipakai sebagai sumber jurnal akunting otomatis.
 - Validasi akunting dilakukan di setiap tahapan transaksi, bukan di akhir saja.
 - Khusus warehouse inbound/adjustment: posting jurnal aset dagang masih status `hold sementara` sampai ada keputusan owner.
+- Field `fee_transaction` sudah dipensiunkan dari flow payout aktif. Biaya transaksi lama digabung ke `fee_order_process`, dan UI payout tidak lagi menampilkan field terpisah.
+- Smoke test payout yang sudah lolos pada state code saat ini:
+  - `npm run payout:smoke`
+  - `npm run payout:flow:smoke compact`
+- Smoke test opex yang sudah lolos pada state code saat ini:
+  - `npm run opex:smoke`
+- Smoke test opex barter yang sudah lolos pada state code saat ini:
+  - `npm run opex:barter:smoke`

@@ -1,6 +1,6 @@
 # Docs Index
 
-Tanggal update: `2026-04-13`
+Tanggal update: `2026-04-28`
 
 Index ini membantu tim cari dokumen operasional tanpa buka satu per satu.
 
@@ -20,6 +20,9 @@ Index ini membantu tim cari dokumen operasional tanpa buka satu per satu.
 - `docs/database-model-overview.md`
 - `docs/data-classification-and-channel-settlement.md`
 - `docs/reference-system-standard.md`
+- `docs/payout-account-mapping-design.md`
+- `docs/payout-coa-structure-draft.md`
+- `docs/opex-coa-refactor-design.md`
 
 ## 3) Operasional Harian
 

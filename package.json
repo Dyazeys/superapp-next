@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "journal:smoke": "node ./scripts/journal-smoke-test.mjs",
+    "opex:barter:smoke": "node ./scripts/opex-barter-smoke-test.mjs",
+    "opex:smoke": "node ./scripts/opex-smoke-test.mjs",
     "payout:smoke": "node ./scripts/payout-smoke-test.mjs",
     "payout:flow:smoke": "node ./scripts/payout-from-sales-smoke-test.mjs",
     "payout:real-import:test": "node ./scripts/import-real-sales-payout-test.mjs",

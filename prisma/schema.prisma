@@ -35,6 +35,7 @@ model accounts {
   m_channel_m_channel_piutang_account                                    m_channel[]           @relation("m_channel_piutang_account")
   m_channel_m_channel_revenue_account                                    m_channel[]           @relation("m_channel_revenue_account")
   m_channel_m_channel_saldo_account                                      m_channel[]           @relation("m_channel_saldo_account")
+  operational_expense_barter_operational_expense_barter_expense_account_idToaccounts operational_expense_barter[] @relation("operational_expense_barter_expense_account_idToaccounts")
   operational_expenses_operational_expenses_expense_account_idToaccounts operational_expenses[] @relation("operational_expenses_expense_account_idToaccounts")
   operational_expenses_operational_expenses_payment_account_idToaccounts operational_expenses[] @relation("operational_expenses_payment_account_idToaccounts")
   payout_transfers_payout_transfers_bank_account_idToaccounts            payout_transfers[]    @relation("payout_transfers_bank_account_id")
@@ -80,6 +81,8 @@ model operational_expenses {
   expense_date                                               DateTime          @db.Date
   expense_account_id                                         String            @db.Uuid
   payment_account_id                                         String?           @db.Uuid
+  expense_label                                              String?           @db.VarChar(100)
+  status                                                     String            @default("DRAFT") @db.VarChar(20)
   is_product_barter                                          Boolean           @default(false)
   qty                                                        Int               @default(0)
   amount                                                     Decimal           @db.Decimal(18, 2)
@@ -87,14 +90,61 @@ model operational_expenses {
   receipt_url                                                String?           @db.VarChar(255)
   created_at                                                 DateTime          @default(now()) @db.Timestamptz(6)
   updated_at                                                 DateTime?         @db.Timestamptz(6)
+  posted_at                                                  DateTime?         @db.Timestamptz(6)
+  voided_at                                                  DateTime?         @db.Timestamptz(6)
   inv_code                                                   String?           @db.VarChar(100)
   accounts_operational_expenses_expense_account_idToaccounts accounts          @relation("operational_expenses_expense_account_idToaccounts", fields: [expense_account_id], references: [id], map: "fk_operational_expenses_expense_account_id")
   master_inventory                                           master_inventory? @relation(fields: [inv_code], references: [inv_code], onDelete: Restrict, map: "fk_operational_expenses_inv_code")
   accounts_operational_expenses_payment_account_idToaccounts accounts?         @relation("operational_expenses_payment_account_idToaccounts", fields: [payment_account_id], references: [id], onDelete: Restrict, map: "fk_operational_expenses_payment_account_id")
 
   @@index([expense_account_id], map: "idx_accounting_operational_expenses_expense_account_id")
+  @@index([expense_label], map: "idx_accounting_operational_expenses_expense_label")
   @@index([inv_code], map: "idx_accounting_operational_expenses_inv_code")
   @@index([payment_account_id], map: "idx_accounting_operational_expenses_payment_account_id")
+  @@index([status], map: "idx_accounting_operational_expenses_status")
+  @@schema("accounting")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model operational_expense_barter {
+  id                                                                         String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  barter_date                                                                DateTime                          @db.Date
+  expense_account_id                                                         String                            @db.Uuid
+  expense_label                                                              String?                           @db.VarChar(100)
+  description                                                                String
+  status                                                                     String                            @default("DRAFT") @db.VarChar(20)
+  total_amount                                                               Decimal                           @default(0.00) @db.Decimal(18, 2)
+  reference_no                                                               String?                           @db.VarChar(100)
+  notes_internal                                                             String?
+  created_at                                                                 DateTime                          @default(now()) @db.Timestamptz(6)
+  updated_at                                                                 DateTime?                         @db.Timestamptz(6)
+  posted_at                                                                  DateTime?                         @db.Timestamptz(6)
+  voided_at                                                                  DateTime?                         @db.Timestamptz(6)
+  accounts_operational_expense_barter_expense_account_idToaccounts          accounts                          @relation("operational_expense_barter_expense_account_idToaccounts", fields: [expense_account_id], references: [id], map: "fk_operational_expense_barter_expense_account_id")
+  operational_expense_barter_items                                           operational_expense_barter_items[]
+
+  @@index([barter_date], map: "idx_accounting_operational_expense_barter_date")
+  @@index([expense_account_id], map: "idx_accounting_operational_expense_barter_expense_account_id")
+  @@index([status], map: "idx_accounting_operational_expense_barter_status")
+  @@schema("accounting")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model operational_expense_barter_items {
+  id                                   String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  barter_id                            String                     @db.Uuid
+  inv_code                             String                     @db.VarChar(100)
+  qty                                  Int
+  unit_amount                          Decimal                    @default(0.00) @db.Decimal(18, 2)
+  line_amount                          Decimal                    @default(0.00) @db.Decimal(18, 2)
+  notes                                String?
+  created_at                           DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime?                  @db.Timestamptz(6)
+  operational_expense_barter           operational_expense_barter @relation(fields: [barter_id], references: [id], onDelete: Cascade, map: "fk_operational_expense_barter_items_barter_id")
+  master_inventory                     master_inventory           @relation(fields: [inv_code], references: [inv_code], onDelete: Restrict, map: "fk_operational_expense_barter_items_inv_code")
+
+  @@index([barter_id], map: "idx_accounting_operational_expense_barter_items_barter_id")
+  @@index([inv_code], map: "idx_accounting_operational_expense_barter_items_inv_code")
   @@schema("accounting")
 }
 
@@ -199,7 +249,6 @@ model t_payout {
   fee_service       Decimal  @default(0.00) @db.Decimal(18, 2)
   fee_order_process Decimal  @default(0.00) @db.Decimal(18, 2)
   fee_program       Decimal  @default(0.00) @db.Decimal(18, 2)
-  fee_transaction   Decimal  @default(0.00) @db.Decimal(18, 2)
   fee_affiliate     Decimal  @default(0.00) @db.Decimal(18, 2)
   shipping_cost     Decimal  @default(0.00) @db.Decimal(18, 2)
   omset             Decimal  @default(0.00) @db.Decimal(18, 2)
@@ -266,6 +315,7 @@ model master_inventory {
   created_at                                               DateTime               @default(now()) @db.Timestamptz(6)
   updated_at                                               DateTime?              @db.Timestamptz(6)
   is_active                                                Boolean                @default(true)
+  operational_expense_barter_items                         operational_expense_barter_items[]
   operational_expenses                                     operational_expenses[]
   master_product_master_product_inv_accTomaster_inventory  master_product[]       @relation("master_product_inv_accTomaster_inventory")
   master_product_master_product_inv_mainTomaster_inventory master_product[]       @relation("master_product_inv_mainTomaster_inventory")

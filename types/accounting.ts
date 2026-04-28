@@ -59,3 +59,75 @@ export type AccountingJournalEntryLineRecord = {
     created_at: string;
   };
 };
+
+export type AccountingOperationalExpenseRecord = {
+  id: string;
+  expense_date: string;
+  expense_account_id: string;
+  payment_account_id: string | null;
+  expense_label: string | null;
+  status: string;
+  is_product_barter: boolean;
+  qty: number;
+  amount: string;
+  description: string;
+  receipt_url: string | null;
+  created_at: string;
+  updated_at: string | null;
+  posted_at: string | null;
+  voided_at: string | null;
+  inv_code: string | null;
+  accounts_operational_expenses_expense_account_idToaccounts: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  accounts_operational_expenses_payment_account_idToaccounts: {
+    id: string;
+    code: string;
+    name: string;
+  } | null;
+  master_inventory: {
+    inv_code: string;
+    inv_name: string;
+  } | null;
+};
+
+export type AccountingOperationalExpenseBarterItemRecord = {
+  id: string;
+  barter_id: string;
+  inv_code: string;
+  qty: number;
+  unit_amount: string;
+  line_amount: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string | null;
+  master_inventory: {
+    inv_code: string;
+    inv_name: string;
+    is_active: boolean;
+  };
+};
+
+export type AccountingOperationalExpenseBarterRecord = {
+  id: string;
+  barter_date: string;
+  expense_account_id: string;
+  expense_label: string | null;
+  description: string;
+  status: string;
+  total_amount: string;
+  reference_no: string | null;
+  notes_internal: string | null;
+  created_at: string;
+  updated_at: string | null;
+  posted_at: string | null;
+  voided_at: string | null;
+  accounts_operational_expense_barter_expense_account_idToaccounts: {
+    id: string;
+    code: string;
+    name: string;
+  };
+  operational_expense_barter_items: AccountingOperationalExpenseBarterItemRecord[];
+};

@@ -168,6 +168,7 @@ Prinsip:
 ### Valid `reference_type`
 Nilai valid ke depan:
 - `PAYOUT_SETTLEMENT`
+- `OPERATIONAL_EXPENSE`
 - `SALES_ORDER`
 - `SALES_ORDER_ITEM`
 - `WAREHOUSE_INBOUND_ITEM`
@@ -177,6 +178,9 @@ Nilai valid ke depan:
 - `PAYOUT_SETTLEMENT`
   - isi dengan UUID deterministik dari `payout_id`
   - business identifier yang wajib ikut di description/memo: `payout_id` dan `ref_no`
+- `OPERATIONAL_EXPENSE`
+  - isi dengan UUID deterministik dari `operational_expenses.id`
+  - business identifier yang wajib ikut di description/memo: akun beban, `expense_label`, dan catatan transaksi
 - `SALES_ORDER`
   - isi dengan UUID deterministik dari `order_no`
   - business identifier yang wajib ikut di description/memo: `order_no`, dan `ref_no` bila ada
@@ -199,6 +203,7 @@ Nilai valid ke depan:
   - `superapp:journal:sales-order:v1`
   - `superapp:journal:sales-order-item:v1`
   - `superapp:journal:payout-settlement:v1`
+  - `superapp:journal:operational-expense:v1`
 
 ### Aturan yang tidak boleh dilanggar
 - `journal_entries.reference_id` tidak boleh diisi `order_no` mentah.
@@ -233,6 +238,7 @@ Nilai valid ke depan:
   - `SALE / String(t_order_item.id)`
 - `accounting.journal_entries`
   - `PAYOUT_SETTLEMENT / UUID(payout_id)`
+  - `OPERATIONAL_EXPENSE / UUID(operational_expenses.id)`
   - `SALES_ORDER / UUID(order_no)`
   - `SALES_ORDER_ITEM / UUID(order_item.id)`
   - `WAREHOUSE_INBOUND_ITEM / inbound_items.id`

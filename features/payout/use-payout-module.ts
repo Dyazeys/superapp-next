@@ -98,7 +98,7 @@ export function payoutStatusTone(status: string | null | undefined) {
 export function sumPayoutFees(
   payout: Pick<
     PayoutRecord,
-    "fee_admin" | "fee_service" | "fee_order_process" | "fee_program" | "fee_transaction" | "fee_affiliate"
+    "fee_admin" | "fee_service" | "fee_order_process" | "fee_program" | "fee_affiliate"
   >
 ) {
   return (
@@ -106,7 +106,6 @@ export function sumPayoutFees(
     Number(payout.fee_service) +
     Number(payout.fee_order_process) +
     Number(payout.fee_program) +
-    Number(payout.fee_transaction) +
     Number(payout.fee_affiliate)
   );
 }
@@ -120,7 +119,6 @@ export function sumPayoutDeductions(
     | "fee_service"
     | "fee_order_process"
     | "fee_program"
-    | "fee_transaction"
     | "fee_affiliate"
   >
 ) {
@@ -167,7 +165,6 @@ export function usePayouts(): PayoutsHook {
       fee_service: "0",
       fee_order_process: "0",
       fee_program: "0",
-      fee_transaction: "0",
       fee_affiliate: "0",
       shipping_cost: "0",
       omset: "0",
@@ -223,7 +220,6 @@ export function usePayouts(): PayoutsHook {
       fee_service: payout?.fee_service ?? "0",
       fee_order_process: payout?.fee_order_process ?? "0",
       fee_program: payout?.fee_program ?? "0",
-      fee_transaction: payout?.fee_transaction ?? "0",
       fee_affiliate: payout?.fee_affiliate ?? "0",
       shipping_cost: payout?.shipping_cost ?? "0",
       omset: payout?.omset ?? "0",

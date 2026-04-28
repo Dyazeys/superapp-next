@@ -50,7 +50,7 @@ async function recalculateBalance(tx: Tx, invCode: string) {
   });
 }
 
-async function recalculateBalances(tx: Tx, invCodes: Iterable<string>) {
+export async function recalculateBalances(tx: Tx, invCodes: Iterable<string>) {
   for (const invCode of new Set(Array.from(invCodes).filter(Boolean))) {
     await recalculateBalance(tx, invCode);
   }
@@ -186,6 +186,78 @@ export async function removeAdjustmentMovement(tx: Tx, adjustmentId: string, inv
   }
 
   await recalculateBalance(tx, invCode);
+}
+
+export async function syncOperationalExpenseBarterMovements(tx: Tx, barterId: string) {
+  const barter = await tx.operational_expense_barter.findUnique({
+    where: { id: barterId },
+    include: {
+      operational_expense_barter_items: {
+        select: {
+          id: true,
+          inv_code: true,
+          qty: true,
+        },
+      },
+      accounts_operational_expense_barter_expense_account_idToaccounts: {
+        select: {
+          code: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  const existingMovements = await tx.stock_movements.findMany({
+    where: {
+      reference_type: "OPERATIONAL_EXPENSE_BARTER",
+      reference_id: barterId,
+    },
+    select: {
+      id: true,
+      inv_code: true,
+    },
+  });
+
+  const affectedInvCodes = new Set(existingMovements.map((movement) => movement.inv_code));
+
+  if (!barter || barter.status !== "POSTED") {
+    if (existingMovements.length > 0) {
+      await tx.stock_movements.deleteMany({
+        where: {
+          reference_type: "OPERATIONAL_EXPENSE_BARTER",
+          reference_id: barterId,
+        },
+      });
+    }
+    await recalculateBalances(tx, affectedInvCodes);
+    return;
+  }
+
+  barter.operational_expense_barter_items.forEach((item) => affectedInvCodes.add(item.inv_code));
+
+  await tx.stock_movements.deleteMany({
+    where: {
+      reference_type: "OPERATIONAL_EXPENSE_BARTER",
+      reference_id: barterId,
+    },
+  });
+
+  if (barter.operational_expense_barter_items.length > 0) {
+    await tx.stock_movements.createMany({
+      data: barter.operational_expense_barter_items.map((item) => ({
+        movement_date: asUtcDate(barter.barter_date),
+        inv_code: item.inv_code,
+        reference_type: "OPERATIONAL_EXPENSE_BARTER",
+        reference_id: barterId,
+        qty_change: -item.qty,
+        running_balance: 0,
+        notes: `Opex barter ${barter.accounts_operational_expense_barter_expense_account_idToaccounts.code} - ${barter.description}`,
+      })),
+    });
+  }
+
+  await recalculateBalances(tx, affectedInvCodes);
 }
 
 async function syncSalesOrderTotal(tx: Tx, orderNo: string) {

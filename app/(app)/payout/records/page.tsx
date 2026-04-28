@@ -391,19 +391,13 @@ export default function PayoutRecordsPage() {
           <FormField
             label="Biaya proses pesanan"
             htmlFor="fee_order_process"
+            helperText="Sudah termasuk biaya transaksi lama bila ada histori data sebelumnya."
             error={hooks.payoutForm.formState.errors.fee_order_process?.message}
           >
             <Input id="fee_order_process" {...hooks.payoutForm.register("fee_order_process")} />
           </FormField>
         </div>
-        <div className="grid gap-4 md:grid-cols-4">
-          <FormField
-            label="Biaya transaksi"
-            htmlFor="fee_transaction"
-            error={hooks.payoutForm.formState.errors.fee_transaction?.message}
-          >
-            <Input id="fee_transaction" {...hooks.payoutForm.register("fee_transaction")} />
-          </FormField>
+        <div className="grid gap-4 md:grid-cols-3">
           <FormField
             label="Biaya afiliasi"
             htmlFor="fee_affiliate"

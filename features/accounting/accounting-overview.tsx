@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpenText, Landmark, Wallet } from "lucide-react";
+import { ArrowRight, BookOpenText, Landmark, ReceiptText, Wallet } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 
 const accountingSections = [
@@ -22,6 +22,12 @@ const accountingSections = [
     description: "Ringkasan accounting per channel berbasis jurnal yang sudah ada.",
     href: "/accounting/channel-report",
     icon: Wallet,
+  },
+  {
+    title: "Opex",
+    description: "Input biaya marketing dan operasional dengan label detail dan jurnal otomatis.",
+    href: "/accounting/operational-expenses",
+    icon: ReceiptText,
   },
 ] as const;
 
@@ -57,7 +63,7 @@ export function AccountingOverview() {
         </WorkspacePanel>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
         {accountingSections.map((section) => {
           const Icon = section.icon;
 

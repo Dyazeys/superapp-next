@@ -72,6 +72,8 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Accounts", href: "/accounting/accounts", icon: ShieldCheck },
       { label: "Journals", href: "/accounting/journals", icon: ShieldCheck },
       { label: "Channel Report", href: "/accounting/channel-report", icon: ShieldCheck },
+      { label: "Opex", href: "/accounting/operational-expenses", icon: ShieldCheck },
+      { label: "Opex Barter", href: "/accounting/operational-expense-barter", icon: ShieldCheck },
     ],
   },
   {

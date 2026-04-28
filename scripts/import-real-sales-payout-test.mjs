@@ -18,15 +18,17 @@ const PAYOUT_JOURNAL_NAMESPACE = "superapp:payout-settlement:v1";
 const HPP_ACCOUNT_CODE = "51101";
 const INVENTORY_ACCOUNT_CODE = "13101";
 const DEFAULT_REVENUE_ACCOUNT_CODE = "41106";
-
-const MARKETPLACE_FEE_ACCOUNT_CODE_BY_REVENUE_CODE = {
-  "41101": "61107",
-  "41102": "61108",
-  "41103": "61109",
-  "41104": "61110",
-  "41105": "61111",
-  "41106": "61112",
-  "41107": "61113",
+const SALES_DISCOUNT_ACCOUNT_CODE_BY_REVENUE_CODE = {
+  "41101": "42104",
+  "41102": "42105",
+};
+const DEFAULT_SALES_DISCOUNT_ACCOUNT_CODE = "42102";
+const MARKETPLACE_FEE_ACCOUNT_CODE_BY_COMPONENT = {
+  fee_admin: "61114",
+  fee_service: "61115",
+  fee_order_process: "61116",
+  fee_program: "61117",
+  fee_affiliate: "61118",
 };
 
 const TARGET_REFS = [
@@ -59,6 +61,68 @@ function deterministicReferenceId(namespace, value) {
 
 function payoutSettlementReferenceId(payoutId) {
   return deterministicReferenceId(PAYOUT_JOURNAL_NAMESPACE, payoutId);
+}
+
+function feeLabelsForChannel(channelName) {
+  const normalized = String(channelName ?? "").trim().toLowerCase();
+  const isShopee = normalized === "shopee";
+  const isTokopediaTiktok = normalized === "tokopedia" || normalized === "tiktok";
+
+  return {
+    fee_admin: "Admin Fee",
+    fee_service: isShopee ? "Biaya Layanan" : isTokopediaTiktok ? "Dynamic Commission" : "Service Fee",
+    fee_order_process: isShopee
+      ? "Biaya Proses Pesanan"
+      : isTokopediaTiktok
+        ? "Order Processing Fee"
+        : "Order Process Fee",
+    fee_program: isShopee
+      ? "Biaya Program"
+      : isTokopediaTiktok
+        ? "Extra Voucher & Bonus Cashback Service Fee"
+        : "Program Fee",
+    fee_affiliate: "Affiliate Commission",
+  };
+}
+
+function payoutSettlementProfileForChannel({ channelName, slug, revenueCode }) {
+  const normalizedName = String(channelName ?? "").trim().toLowerCase();
+  const normalizedSlug = String(slug ?? "").trim().toLowerCase();
+
+  if (normalizedName === "tokopedia" || normalizedName === "tiktok" || normalizedSlug === "tokopedia" || normalizedSlug === "tiktok") {
+    return {
+      settlementKey: "tokopedia-tiktokshop",
+      settlementLabel: "Tokopedia-Tiktokshop",
+      sellerDiscountAccountCode: "42105",
+      shippingCostAccountCode: "61120",
+      shippingCostLabel: "Shipping Cost",
+      feeLabels: feeLabelsForChannel("tiktok"),
+    };
+  }
+
+  if (normalizedName === "shopee" || normalizedSlug === "shopee") {
+    return {
+      settlementKey: "shopee",
+      settlementLabel: "Shopee",
+      sellerDiscountAccountCode: "42104",
+      shippingCostAccountCode: "61119",
+      shippingCostLabel: "Shipping Cost",
+      feeLabels: feeLabelsForChannel("shopee"),
+    };
+  }
+
+  const fallbackSellerDiscountAccountCode = revenueCode
+    ? SALES_DISCOUNT_ACCOUNT_CODE_BY_REVENUE_CODE[revenueCode] ?? DEFAULT_SALES_DISCOUNT_ACCOUNT_CODE
+    : DEFAULT_SALES_DISCOUNT_ACCOUNT_CODE;
+
+  return {
+    settlementKey: normalizedSlug || normalizedName || "default",
+    settlementLabel: channelName ?? "Unknown",
+    sellerDiscountAccountCode: fallbackSellerDiscountAccountCode,
+    shippingCostAccountCode: null,
+    shippingCostLabel: "Shipping Cost",
+    feeLabels: feeLabelsForChannel(channelName),
+  };
 }
 
 function parseCsv(filePath) {
@@ -310,12 +374,14 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
       total_price: true,
       hpp: true,
       omset: true,
+      seller_discount: true,
       fee_admin: true,
       fee_service: true,
       fee_order_process: true,
       fee_program: true,
       fee_transaction: true,
       fee_affiliate: true,
+      shipping_cost: true,
     },
   });
 
@@ -336,6 +402,7 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
     where: { channel_id: order.channel_id },
     select: {
       channel_name: true,
+      slug: true,
       revenue_account_id: true,
       saldo_account_id: true,
       revenue_account: {
@@ -350,29 +417,61 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
   const revenueAccountId =
     channel.revenue_account_id ?? (await findAccountIdByCode(tx, DEFAULT_REVENUE_ACCOUNT_CODE));
   assert(revenueAccountId, `Akun pendapatan default ${DEFAULT_REVENUE_ACCOUNT_CODE} tidak ditemukan.`);
-
-  const feeComponents = [
-    { amount: Number(payout.fee_admin), label: "admin" },
-    { amount: Number(payout.fee_service), label: "service" },
-    { amount: Number(payout.fee_order_process), label: "order process" },
-    { amount: Number(payout.fee_program), label: "program" },
-    { amount: Number(payout.fee_transaction), label: "transaction" },
-    { amount: Number(payout.fee_affiliate), label: "affiliate" },
-  ].filter((component) => Number.isFinite(component.amount) && component.amount > 0);
-
-  let feeExpenseAccountId = null;
-  if (feeComponents.length > 0) {
-    const feeAccountCode = MARKETPLACE_FEE_ACCOUNT_CODE_BY_REVENUE_CODE[channel.revenue_account?.code ?? ""] ?? null;
-    assert(feeAccountCode, `Mapping akun biaya marketplace belum ada untuk channel ${channel.channel_name}.`);
-    feeExpenseAccountId = await findAccountIdByCode(tx, feeAccountCode);
-    assert(feeExpenseAccountId, `Akun biaya marketplace ${feeAccountCode} tidak ditemukan.`);
-  }
+  const settlementProfile = payoutSettlementProfileForChannel({
+    channelName: channel.channel_name,
+    slug: channel.slug,
+    revenueCode: channel.revenue_account?.code,
+  });
 
   const amount = Number(payout.omset);
   assert(Number.isFinite(amount) && amount > 0, `Omset payout ${payout.ref} tidak valid.`);
   const revenueAmount = Number(payout.total_price);
   assert(Number.isFinite(revenueAmount) && revenueAmount > 0, `Nilai total payout ${payout.ref} tidak valid.`);
   const hppAmount = Number(payout.hpp);
+  const sellerDiscountAmount = Number(payout.seller_discount);
+  const shippingCostAmount = Number(payout.shipping_cost);
+
+  const feeComponents = [
+    { key: "fee_admin", amount: Number(payout.fee_admin), label: settlementProfile.feeLabels.fee_admin },
+    { key: "fee_service", amount: Number(payout.fee_service), label: settlementProfile.feeLabels.fee_service },
+    {
+      key: "fee_order_process",
+      amount: Number(payout.fee_order_process) + Number(payout.fee_transaction),
+      label: settlementProfile.feeLabels.fee_order_process,
+    },
+    { key: "fee_program", amount: Number(payout.fee_program), label: settlementProfile.feeLabels.fee_program },
+    { key: "fee_affiliate", amount: Number(payout.fee_affiliate), label: settlementProfile.feeLabels.fee_affiliate },
+  ].filter((component) => Number.isFinite(component.amount) && component.amount > 0);
+
+  const feeExpenseAccountIdByComponent = {};
+  if (feeComponents.length > 0) {
+    for (const component of feeComponents) {
+      const feeAccountCode = MARKETPLACE_FEE_ACCOUNT_CODE_BY_COMPONENT[component.key];
+      const feeExpenseAccountId = await findAccountIdByCode(tx, feeAccountCode);
+      assert(feeExpenseAccountId, `Akun biaya marketplace ${feeAccountCode} tidak ditemukan.`);
+      feeExpenseAccountIdByComponent[component.key] = feeExpenseAccountId;
+    }
+  }
+
+  let salesDiscountAccountId = null;
+  if (Number.isFinite(sellerDiscountAmount) && sellerDiscountAmount > 0) {
+    const salesDiscountAccountCode = settlementProfile.sellerDiscountAccountCode;
+    salesDiscountAccountId = await findAccountIdByCode(tx, salesDiscountAccountCode);
+    assert(salesDiscountAccountId, `Akun diskon penjualan ${salesDiscountAccountCode} tidak ditemukan.`);
+  }
+
+  let shippingCostAccountId = null;
+  if (Number.isFinite(shippingCostAmount) && shippingCostAmount > 0) {
+    assert(
+      settlementProfile.shippingCostAccountCode,
+      `Mapping akun shipping cost belum ada untuk settlement ${settlementProfile.settlementLabel}.`
+    );
+    shippingCostAccountId = await findAccountIdByCode(tx, settlementProfile.shippingCostAccountCode);
+    assert(
+      shippingCostAccountId,
+      `Akun shipping cost ${settlementProfile.shippingCostAccountCode} tidak ditemukan.`
+    );
+  }
 
   let hppAccountId = null;
   let inventoryAccountId = null;
@@ -396,20 +495,34 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
       credit: revenueAmount,
       memo: `Pendapatan payout untuk ref ${payout.ref}`,
     },
+    ...(Number.isFinite(sellerDiscountAmount) && sellerDiscountAmount > 0 && salesDiscountAccountId
+      ? [
+          {
+            accountId: salesDiscountAccountId,
+            debit: sellerDiscountAmount,
+            credit: 0,
+            memo: `Diskon seller payout untuk ref ${payout.ref}`,
+          },
+        ]
+      : []),
+    ...(Number.isFinite(shippingCostAmount) && shippingCostAmount > 0 && shippingCostAccountId
+      ? [
+          {
+            accountId: shippingCostAccountId,
+            debit: shippingCostAmount,
+            credit: 0,
+            memo: `${settlementProfile.shippingCostLabel} untuk payout ref ${payout.ref}`,
+          },
+        ]
+      : []),
     ...feeComponents.flatMap((component) =>
-      feeExpenseAccountId
+      feeExpenseAccountIdByComponent[component.key]
         ? [
             {
-              accountId: feeExpenseAccountId,
+              accountId: feeExpenseAccountIdByComponent[component.key],
               debit: component.amount,
               credit: 0,
-              memo: `Biaya marketplace ${component.label} untuk payout ref ${payout.ref}`,
-            },
-            {
-              accountId: channel.saldo_account_id,
-              debit: 0,
-              credit: component.amount,
-              memo: `Saldo channel berkurang untuk biaya ${component.label} payout ref ${payout.ref}`,
+              memo: `${component.label} untuk payout ref ${payout.ref}`,
             },
           ]
         : []
@@ -436,7 +549,7 @@ async function syncPayoutSettlementJournal(tx, payoutId) {
     referenceType: PAYOUT_JOURNAL_REFERENCE_TYPE,
     referenceId: payoutSettlementReferenceId(payoutId),
     transactionDate: payout.payout_date,
-    description: `Penerimaan payout ${channel.channel_name} ref ${payout.ref}`,
+    description: `Penerimaan payout ${settlementProfile.settlementLabel} ref ${payout.ref}`,
     lines,
   });
 }

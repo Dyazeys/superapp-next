@@ -12,6 +12,19 @@ Folder ini menyiapkan format CSV untuk import **master data saja**.
 - `inventory`
 - `vendor`
 
+## Di luar scope ini
+
+Import `operational_expenses` bukan bagian dari endpoint master-data karena itu transaksi, bukan master.
+Jika perlu seed/template transaksi opex kosong, gunakan:
+
+- `data/master-upload/templates-empty/accounting/operational_expenses.csv`
+
+Format terbaru template opex sudah mencakup:
+
+- `expense_label`
+  - dipakai untuk detail subkategori seperti `Wifi`, `Insentif`, `BBM`, dll
+  - tidak perlu membuat akun COA baru untuk setiap detail kecil
+
 Semua import berjalan lewat endpoint:
 
 - `POST /api/imports/master-data/{master}`

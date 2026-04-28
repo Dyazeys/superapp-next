@@ -11,15 +11,32 @@ const PAYOUT_JOURNAL_NAMESPACE = "superapp:payout-settlement:v1";
 const HPP_ACCOUNT_CODE = "51101";
 const INVENTORY_ACCOUNT_CODE = "13101";
 const DEFAULT_REVENUE_ACCOUNT_CODE = "41106";
+const SALES_DISCOUNT_ACCOUNT_CODE_BY_REVENUE_CODE: Record<string, string> = {
+  "41101": "42104",
+  "41102": "42105",
+};
+const DEFAULT_SALES_DISCOUNT_ACCOUNT_CODE = "42102";
+const MARKETPLACE_FEE_ACCOUNT_CODE_BY_COMPONENT = {
+  fee_admin: "61114",
+  fee_service: "61115",
+  fee_order_process: "61116",
+  fee_program: "61117",
+  fee_affiliate: "61118",
+} as const;
+type FeeComponentKey = keyof typeof MARKETPLACE_FEE_ACCOUNT_CODE_BY_COMPONENT;
+type FeeComponent = {
+  key: FeeComponentKey;
+  amount: number;
+  label: string;
+};
 
-const MARKETPLACE_FEE_ACCOUNT_CODE_BY_REVENUE_CODE: Record<string, string> = {
-  "41101": "61107",
-  "41102": "61108",
-  "41103": "61109",
-  "41104": "61110",
-  "41105": "61111",
-  "41106": "61112",
-  "41107": "61113",
+type PayoutSettlementProfile = {
+  settlementKey: string;
+  settlementLabel: string;
+  sellerDiscountAccountCode: string;
+  shippingCostAccountCode: string | null;
+  shippingCostLabel: string;
+  feeLabels: Record<FeeComponentKey, string>;
 };
 
 export function payoutSettlementReferenceId(payoutId: number) {
@@ -76,12 +93,70 @@ async function findAccountIdByCode(tx: Tx, code: string) {
   return account?.id ?? null;
 }
 
-function marketplaceFeeAccountCodeForRevenueCode(revenueCode: string | null | undefined) {
-  if (!revenueCode) {
-    return null;
+function feeLabelsForChannel(channelName: string | null | undefined) {
+  const normalized = String(channelName ?? "").trim().toLowerCase();
+  const isShopee = normalized === "shopee";
+  const isTokopediaTiktok = normalized === "tokopedia" || normalized === "tiktok";
+
+  return {
+    fee_admin: "Admin Fee",
+    fee_service: isShopee ? "Biaya Layanan" : isTokopediaTiktok ? "Dynamic Commission" : "Service Fee",
+    fee_order_process: isShopee
+      ? "Biaya Proses Pesanan"
+      : isTokopediaTiktok
+        ? "Order Processing Fee"
+        : "Order Process Fee",
+    fee_program: isShopee
+      ? "Biaya Program"
+      : isTokopediaTiktok
+        ? "Extra Voucher & Bonus Cashback Service Fee"
+        : "Program Fee",
+    fee_affiliate: "Affiliate Commission",
+  } satisfies Record<FeeComponentKey, string>;
+}
+
+function payoutSettlementProfileForChannel(params: {
+  channelName: string | null | undefined;
+  slug: string | null | undefined;
+  revenueCode: string | null | undefined;
+}) {
+  const normalizedName = String(params.channelName ?? "").trim().toLowerCase();
+  const normalizedSlug = String(params.slug ?? "").trim().toLowerCase();
+
+  if (normalizedName === "tokopedia" || normalizedName === "tiktok" || normalizedSlug === "tokopedia" || normalizedSlug === "tiktok") {
+    return {
+      settlementKey: "tokopedia-tiktokshop",
+      settlementLabel: "Tokopedia-Tiktokshop",
+      sellerDiscountAccountCode: "42105",
+      shippingCostAccountCode: "61120",
+      shippingCostLabel: "Shipping Cost",
+      feeLabels: feeLabelsForChannel("tiktok"),
+    } satisfies PayoutSettlementProfile;
   }
 
-  return MARKETPLACE_FEE_ACCOUNT_CODE_BY_REVENUE_CODE[revenueCode] ?? null;
+  if (normalizedName === "shopee" || normalizedSlug === "shopee") {
+    return {
+      settlementKey: "shopee",
+      settlementLabel: "Shopee",
+      sellerDiscountAccountCode: "42104",
+      shippingCostAccountCode: "61119",
+      shippingCostLabel: "Shipping Cost",
+      feeLabels: feeLabelsForChannel("shopee"),
+    } satisfies PayoutSettlementProfile;
+  }
+
+  const fallbackSellerDiscountAccountCode = params.revenueCode
+    ? SALES_DISCOUNT_ACCOUNT_CODE_BY_REVENUE_CODE[params.revenueCode] ?? DEFAULT_SALES_DISCOUNT_ACCOUNT_CODE
+    : DEFAULT_SALES_DISCOUNT_ACCOUNT_CODE;
+
+  return {
+    settlementKey: normalizedSlug || normalizedName || "default",
+    settlementLabel: params.channelName ?? "Unknown",
+    sellerDiscountAccountCode: fallbackSellerDiscountAccountCode,
+    shippingCostAccountCode: null,
+    shippingCostLabel: "Shipping Cost",
+    feeLabels: feeLabelsForChannel(params.channelName),
+  } satisfies PayoutSettlementProfile;
 }
 
 export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
@@ -97,12 +172,13 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
       total_price: true,
       hpp: true,
       omset: true,
+      seller_discount: true,
       fee_admin: true,
       fee_service: true,
       fee_order_process: true,
       fee_program: true,
-      fee_transaction: true,
       fee_affiliate: true,
+      shipping_cost: true,
     },
   });
 
@@ -148,6 +224,7 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
     where: { channel_id: order.channel_id },
     select: {
       channel_name: true,
+      slug: true,
       revenue_account_id: true,
       saldo_account_id: true,
       revenue_account: {
@@ -171,10 +248,17 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
     revenueAccountId,
     `Revenue account mapping is missing for channel ${channel.channel_name}, and default ${DEFAULT_REVENUE_ACCOUNT_CODE} was not found.`
   );
+  const settlementProfile = payoutSettlementProfileForChannel({
+    channelName: channel.channel_name,
+    slug: channel.slug,
+    revenueCode: channel.revenue_account?.code,
+  });
 
   const amount = Number(payout.omset);
   const revenueAmount = Number(payout.total_price);
   const hppAmount = Number(payout.hpp);
+  const sellerDiscountAmount = Number(payout.seller_discount);
+  const shippingCostAmount = Number(payout.shipping_cost);
 
   if (!Number.isFinite(amount) || amount <= 0 || !Number.isFinite(revenueAmount) || revenueAmount <= 0) {
     if (existing) {
@@ -184,27 +268,52 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
   }
 
   const feeComponents = [
-    { amount: Number(payout.fee_admin), label: "admin" },
-    { amount: Number(payout.fee_service), label: "service" },
-    { amount: Number(payout.fee_order_process), label: "order process" },
-    { amount: Number(payout.fee_program), label: "program" },
-    { amount: Number(payout.fee_transaction), label: "transaction" },
-    { amount: Number(payout.fee_affiliate), label: "affiliate" },
-  ].filter((component) => Number.isFinite(component.amount) && component.amount > 0);
+    { key: "fee_admin", amount: Number(payout.fee_admin), label: settlementProfile.feeLabels.fee_admin },
+    { key: "fee_service", amount: Number(payout.fee_service), label: settlementProfile.feeLabels.fee_service },
+    {
+      key: "fee_order_process",
+      amount: Number(payout.fee_order_process),
+      label: settlementProfile.feeLabels.fee_order_process,
+    },
+    { key: "fee_program", amount: Number(payout.fee_program), label: settlementProfile.feeLabels.fee_program },
+    { key: "fee_affiliate", amount: Number(payout.fee_affiliate), label: settlementProfile.feeLabels.fee_affiliate },
+  ] satisfies FeeComponent[];
+  const activeFeeComponents = feeComponents.filter((component) => Number.isFinite(component.amount) && component.amount > 0);
 
-  let feeExpenseAccountId: string | null = null;
+  const feeExpenseAccountIdByComponent: Partial<Record<FeeComponentKey, string>> = {};
+  let salesDiscountAccountId: string | null = null;
+  let shippingCostAccountId: string | null = null;
 
-  if (feeComponents.length > 0) {
-    const feeExpenseAccountCode = marketplaceFeeAccountCodeForRevenueCode(channel.revenue_account?.code);
+  if (Number.isFinite(sellerDiscountAmount) && sellerDiscountAmount > 0) {
+    const salesDiscountAccountCode = settlementProfile.sellerDiscountAccountCode;
+    salesDiscountAccountId = await findAccountIdByCode(tx, salesDiscountAccountCode);
     invariant(
-      feeExpenseAccountCode,
-      `Marketplace fee expense mapping is missing for channel ${channel.channel_name}.`
+      salesDiscountAccountId,
+      `Sales discount account ${salesDiscountAccountCode} is missing for payout ref ${payout.ref}.`
     );
+  }
 
-    feeExpenseAccountId = await findAccountIdByCode(tx, feeExpenseAccountCode);
+  if (activeFeeComponents.length > 0) {
+    for (const component of activeFeeComponents) {
+      const feeExpenseAccountCode = MARKETPLACE_FEE_ACCOUNT_CODE_BY_COMPONENT[component.key];
+      const feeExpenseAccountId = await findAccountIdByCode(tx, feeExpenseAccountCode);
+      invariant(
+        feeExpenseAccountId,
+        `Marketplace fee expense account ${feeExpenseAccountCode} is missing for channel ${channel.channel_name}.`
+      );
+      feeExpenseAccountIdByComponent[component.key] = feeExpenseAccountId;
+    }
+  }
+
+  if (Number.isFinite(shippingCostAmount) && shippingCostAmount > 0) {
     invariant(
-      feeExpenseAccountId,
-      `Marketplace fee expense account ${feeExpenseAccountCode} is missing for channel ${channel.channel_name}.`
+      settlementProfile.shippingCostAccountCode,
+      `Shipping cost account mapping is missing for settlement ${settlementProfile.settlementLabel}.`
+    );
+    shippingCostAccountId = await findAccountIdByCode(tx, settlementProfile.shippingCostAccountCode);
+    invariant(
+      shippingCostAccountId,
+      `Shipping cost account ${settlementProfile.shippingCostAccountCode} is missing for payout ref ${payout.ref}.`
     );
   }
 
@@ -237,24 +346,41 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
       credit: revenueAmount,
       memo: `Pendapatan payout untuk ref ${payout.ref}`,
     },
-    ...feeComponents.flatMap((component) =>
-      feeExpenseAccountId
-        ? [
-            {
-              accountId: feeExpenseAccountId,
-              debit: component.amount,
-              credit: 0,
-              memo: `Biaya marketplace ${component.label} untuk payout ref ${payout.ref}`,
-            },
-            {
-              accountId: saldoAccountId,
-              debit: 0,
-              credit: component.amount,
-              memo: `Saldo channel berkurang untuk biaya ${component.label} payout ref ${payout.ref}`,
-            },
-          ]
-        : []
-    ),
+    ...(Number.isFinite(sellerDiscountAmount) && sellerDiscountAmount > 0 && salesDiscountAccountId
+      ? [
+          {
+            accountId: salesDiscountAccountId,
+            debit: sellerDiscountAmount,
+            credit: 0,
+            memo: `Diskon seller payout untuk ref ${payout.ref}`,
+          },
+        ]
+      : []),
+    ...(Number.isFinite(shippingCostAmount) && shippingCostAmount > 0 && shippingCostAccountId
+      ? [
+          {
+            accountId: shippingCostAccountId,
+            debit: shippingCostAmount,
+            credit: 0,
+            memo: `${settlementProfile.shippingCostLabel} untuk payout ref ${payout.ref}`,
+          },
+        ]
+      : []),
+    ...activeFeeComponents.flatMap((component) => {
+      const feeExpenseAccountId = feeExpenseAccountIdByComponent[component.key];
+      if (!feeExpenseAccountId) {
+        return [];
+      }
+
+      return [
+        {
+          accountId: feeExpenseAccountId,
+          debit: component.amount,
+          credit: 0,
+          memo: `${component.label} untuk payout ref ${payout.ref}`,
+        },
+      ];
+    }),
     ...(Number.isFinite(hppAmount) && hppAmount > 0 && hppAccountId && inventoryAccountId
       ? [
           {
@@ -276,7 +402,7 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
   await upsertPayoutSettlementJournal(tx, {
     referenceId,
     payoutDate: payout.payout_date,
-    description: `Penerimaan payout ${channel.channel_name} ref ${payout.ref}`,
+    description: `Penerimaan payout ${settlementProfile.settlementLabel} ref ${payout.ref}`,
     lines,
   });
 }

@@ -34,7 +34,6 @@ export type PayoutRecord = {
   fee_service: string;
   fee_order_process: string;
   fee_program: string;
-  fee_transaction: string;
   fee_affiliate: string;
   shipping_cost: string;
   omset: string;

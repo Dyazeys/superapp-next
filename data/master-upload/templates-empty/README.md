@@ -24,3 +24,4 @@ Total empty tables: 12
 - Kolom auto-generated (id serial/uuid) dan timestamp audit (`created_at`, `updated_at`) sengaja tidak dimasukkan.
 - Beberapa tabel butuh referensi FK yang harus sudah ada terlebih dahulu.
 - Untuk `auth.users`, pastikan `password_hash` sudah dalam format hash (bukan plain password).
+- Untuk `accounting/operational_expenses.csv`, kolom `expense_label` dipakai untuk detail subkategori tanpa membuat akun baru.

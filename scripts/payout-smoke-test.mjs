@@ -81,6 +81,7 @@ async function main() {
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
 
+  let createdOrderNo = null;
   let payoutId = null;
   let adjustmentId = null;
   let transferId = null;
@@ -88,7 +89,7 @@ async function main() {
   const checks = [];
 
   try {
-    const order = (
+    let order = (
       await db.query(`
         SELECT
           o.ref_no,
@@ -98,9 +99,12 @@ async function main() {
         FROM sales.t_order o
         JOIN channel.m_channel c
           ON c.channel_id = o.channel_id
+        LEFT JOIN payout.t_payout p
+          ON p.ref = o.ref_no
         WHERE o.ref_no IS NOT NULL
           AND c.piutang_account_id IS NOT NULL
           AND c.saldo_account_id IS NOT NULL
+          AND p.payout_id IS NULL
         ORDER BY o.order_date DESC, o.order_no DESC
         LIMIT 1
       `)
@@ -115,6 +119,50 @@ async function main() {
         LIMIT 1
       `)
     ).rows[0];
+
+    if (!order || !bankAccount) {
+      const fallbackChannel = (
+        await db.query(`
+          SELECT channel_id, channel_name
+          FROM channel.m_channel
+          WHERE piutang_account_id IS NOT NULL
+            AND saldo_account_id IS NOT NULL
+          ORDER BY channel_id ASC
+          LIMIT 1
+        `)
+      ).rows[0];
+
+      if (!fallbackChannel || !bankAccount) {
+        throw new Error("Seed data tidak cukup untuk payout smoke test.");
+      }
+
+      const today = new Date().toISOString().slice(0, 10);
+      const uniqueSuffix = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      createdOrderNo = `SMOKE-PAYOUT-${uniqueSuffix}`.slice(0, 50);
+      const createdRefNo = `SMOKE-PAYOUT-REF-${uniqueSuffix}`.slice(0, 100);
+
+      await requestOrThrow("/api/sales/orders", {
+        method: "POST",
+        body: JSON.stringify({
+          order_no: createdOrderNo,
+          order_date: today,
+          ref_no: createdRefNo,
+          parent_order_no: null,
+          channel_id: fallbackChannel.channel_id,
+          customer_id: null,
+          total_amount: "0",
+          status: "PICKUP",
+          is_historical: false,
+        }),
+      });
+
+      order = {
+        order_no: createdOrderNo,
+        ref_no: createdRefNo,
+        channel_id: fallbackChannel.channel_id,
+        channel_name: fallbackChannel.channel_name,
+      };
+    }
 
     if (!order || !bankAccount) {
       throw new Error("Seed data tidak cukup untuk payout smoke test.");
@@ -132,7 +180,6 @@ async function main() {
       fee_service: "0",
       fee_order_process: "0",
       fee_program: "0",
-      fee_transaction: "0",
       fee_affiliate: "0",
       shipping_cost: "0",
       omset: "150000",
@@ -281,6 +328,14 @@ async function main() {
         await requestOrThrow(`/api/payout/records/${payoutId}`, { method: "DELETE" });
       } catch (error) {
         console.error(`cleanup_payout_failed:${payoutId}:${String(error)}`);
+      }
+    }
+
+    if (createdOrderNo) {
+      try {
+        await requestOrThrow(`/api/sales/orders/${encodeURIComponent(createdOrderNo)}`, { method: "DELETE" });
+      } catch (error) {
+        console.error(`cleanup_order_failed:${createdOrderNo}:${String(error)}`);
       }
     }
 

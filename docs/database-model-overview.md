@@ -487,7 +487,6 @@ CREATE TABLE payout.t_payout (
   fee_service       NUMERIC(18,2) NOT NULL DEFAULT 0.00,
   fee_order_process NUMERIC(18,2) NOT NULL DEFAULT 0.00,
   fee_program       NUMERIC(18,2) NOT NULL DEFAULT 0.00,
-  fee_transaction   NUMERIC(18,2) NOT NULL DEFAULT 0.00,
   fee_affiliate     NUMERIC(18,2) NOT NULL DEFAULT 0.00,
   shipping_cost     NUMERIC(18,2) NOT NULL DEFAULT 0.00,
   omset             NUMERIC(18,2) NOT NULL DEFAULT 0.00,

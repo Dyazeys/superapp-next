@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
           fee_service: payload.fee_service,
           fee_order_process: payload.fee_order_process,
           fee_program: payload.fee_program,
-          fee_transaction: payload.fee_transaction,
           fee_affiliate: payload.fee_affiliate,
           shipping_cost: payload.shipping_cost,
           omset: payload.omset,
