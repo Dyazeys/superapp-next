@@ -33,18 +33,39 @@ type MetricCardProps = {
   subtitle?: string;
   icon?: React.ReactNode;
   className?: string;
+  titleClassName?: string;
+  valueClassName?: string;
+  subtitleClassName?: string;
 };
 
-export function MetricCard({ title, value, subtitle, icon, className }: MetricCardProps) {
+export function MetricCard({
+  title,
+  value,
+  subtitle,
+  icon,
+  className,
+  titleClassName,
+  valueClassName,
+  subtitleClassName,
+}: MetricCardProps) {
   return (
     <Card size="sm" className={cn("bg-white/95", className)}>
       <CardContent className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{title}</p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-foreground">{value}</p>
-          {subtitle ? <p className="mt-1 text-xs leading-5 text-slate-600">{subtitle}</p> : null}
+          <p className={cn("text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500", titleClassName)}>
+            {title}
+          </p>
+          <p
+            className={cn(
+              "mt-2 overflow-hidden text-[clamp(1.9rem,2.2vw,2.5rem)] leading-none font-bold tracking-tight text-foreground",
+              valueClassName
+            )}
+          >
+            {value}
+          </p>
+          {subtitle ? <p className={cn("mt-1 text-xs leading-5 text-slate-600", subtitleClassName)}>{subtitle}</p> : null}
         </div>
-        {icon ? <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-2 text-foreground/80">{icon}</div> : null}
+        {icon ? <div className="shrink-0 rounded-xl border border-slate-200/70 bg-slate-50 p-2 text-foreground/80">{icon}</div> : null}
       </CardContent>
     </Card>
   );

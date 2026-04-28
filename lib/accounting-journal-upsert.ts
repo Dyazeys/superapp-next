@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { invariant } from "@/lib/api-error";
 
 type Tx = Prisma.TransactionClient;
 
@@ -17,7 +18,19 @@ type UpsertJournalParams = {
   lines: JournalLineInput[];
 };
 
+function toCents(value: string) {
+  const amount = Number(value);
+  invariant(Number.isFinite(amount), `Invalid journal amount: ${value}`);
+  return Math.round(amount * 100);
+}
+
 export async function upsertJournalEntryReplacingLines(tx: Tx, params: UpsertJournalParams) {
+  const totalDebit = params.lines.reduce((sum, line) => sum + toCents(line.debit), 0);
+  const totalCredit = params.lines.reduce((sum, line) => sum + toCents(line.credit), 0);
+
+  invariant(params.lines.length > 0, "Journal entry must contain at least one line.");
+  invariant(totalDebit === totalCredit, `Journal entry is not balanced. Debit ${totalDebit / 100}, credit ${totalCredit / 100}.`);
+
   const existing = await tx.journal_entries.findFirst({
     where: {
       reference_type: params.referenceType,

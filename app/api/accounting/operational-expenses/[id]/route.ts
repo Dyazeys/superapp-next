@@ -67,6 +67,7 @@ export async function PATCH(
         where: { id },
       });
       invariant(!current.is_product_barter, "Legacy barter rows must be handled through the Opex Barter flow.");
+      invariant(current.status === "DRAFT", "Only draft opex can be edited.");
       invariant(payload.is_product_barter !== true, "Use Opex Barter module for inventory release / barter transactions.");
 
       const nextState = {
@@ -146,6 +147,19 @@ export async function DELETE(
     const { id } = await params;
 
     await prisma.$transaction(async (tx) => {
+      const current = await tx.operational_expenses.findUnique({
+        where: { id },
+        select: {
+          id: true,
+          status: true,
+          is_product_barter: true,
+        },
+      });
+
+      invariant(current, "Operational expense was not found.", 404);
+      invariant(!current.is_product_barter, "Legacy barter rows must be handled through the Opex Barter flow.");
+      invariant(current.status === "DRAFT", "Only draft opex can be deleted.");
+
       await deleteOperationalExpenseJournal(tx, id);
       await tx.operational_expenses.delete({
         where: { id },

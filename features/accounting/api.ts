@@ -42,6 +42,11 @@ export const accountingApi = {
         method: "POST",
         body: JSON.stringify({}),
       }),
+    void: (id: string) =>
+      requestJson<AccountingOperationalExpenseRecord>(`/api/accounting/operational-expenses/${encodeURIComponent(id)}/void`, {
+        method: "POST",
+        body: JSON.stringify({}),
+      }),
     remove: (id: string) =>
       requestJson<{ ok: true }>(`/api/accounting/operational-expenses/${encodeURIComponent(id)}`, {
         method: "DELETE",

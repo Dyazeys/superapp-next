@@ -111,6 +111,21 @@ async function fetchJournalLineCodes(db, referenceId) {
   return result.rows;
 }
 
+async function cleanupOperationalExpense(db, expenseId) {
+  const referenceId = operationalExpenseReferenceId(expenseId);
+
+  await db.query(
+    `
+      DELETE FROM accounting.journal_entries
+      WHERE reference_type = 'OPERATIONAL_EXPENSE'
+        AND reference_id = $1
+    `,
+    [referenceId]
+  );
+
+  await db.query(`DELETE FROM accounting.operational_expenses WHERE id = $1`, [expenseId]);
+}
+
 async function main() {
   const db = new Client({ connectionString: DATABASE_URL });
   await db.connect();
@@ -207,16 +222,49 @@ async function main() {
     const operationalJournal = await fetchJournalSummary(db, operationalReferenceId);
     const manualLines = await fetchJournalLineCodes(db, manualReferenceId);
     const operationalLines = await fetchJournalLineCodes(db, operationalReferenceId);
+    const manualPatchAfterPost = await request(`/api/accounting/operational-expenses/${manualExpenseId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        description: "Should fail after post",
+      }),
+    });
+    const manualDeleteAfterPost = await request(`/api/accounting/operational-expenses/${manualExpenseId}`, {
+      method: "DELETE",
+    });
+    const operationalPatchAfterPost = await request(`/api/accounting/operational-expenses/${operationalExpenseId}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        description: "Should fail after post",
+      }),
+    });
+    const operationalDeleteAfterPost = await request(`/api/accounting/operational-expenses/${operationalExpenseId}`, {
+      method: "DELETE",
+    });
+
+    const voidedManualExpense = await requestOrThrow(`/api/accounting/operational-expenses/${manualExpenseId}/void`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    const voidedOperationalExpense = await requestOrThrow(`/api/accounting/operational-expenses/${operationalExpenseId}/void`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
 
     checks.push({
       manual_expense_id: manualExpenseId,
       manual_amount_after_update: updatedManualExpense.amount,
       manual_status_after_post: postedManualExpense.status,
+      manual_status_after_void: voidedManualExpense.status,
+      manual_patch_after_post_status: manualPatchAfterPost.status,
+      manual_delete_after_post_status: manualDeleteAfterPost.status,
       manual_journal_count: manualJournal?.journal_count ?? 0,
       manual_line_count: manualJournal?.line_count ?? 0,
       manual_line_codes: manualLines.map((line) => line.code),
       operational_expense_id: operationalExpenseId,
       operational_status_after_post: postedOperationalExpense.status,
+      operational_status_after_void: voidedOperationalExpense.status,
+      operational_patch_after_post_status: operationalPatchAfterPost.status,
+      operational_delete_after_post_status: operationalDeleteAfterPost.status,
       operational_journal_count: operationalJournal?.journal_count ?? 0,
       operational_line_count: operationalJournal?.line_count ?? 0,
       operational_line_codes: operationalLines.map((line) => line.code),
@@ -228,6 +276,30 @@ async function main() {
 
     if ((operationalJournal?.journal_count ?? 0) < 1 || (operationalJournal?.line_count ?? 0) !== 2) {
       failures.push("Operational opex journal tidak terbentuk tepat 2 baris.");
+    }
+
+    if (voidedManualExpense.status !== "VOID") {
+      failures.push("Manual opex yang sudah diposting harus bisa di-void.");
+    }
+
+    if (voidedOperationalExpense.status !== "VOID") {
+      failures.push("Operational opex yang sudah diposting harus bisa di-void.");
+    }
+
+    if (manualPatchAfterPost.status !== 400) {
+      failures.push("Manual opex yang sudah diposting harus menolak PATCH.");
+    }
+
+    if (manualDeleteAfterPost.status !== 400) {
+      failures.push("Manual opex yang sudah diposting harus menolak DELETE.");
+    }
+
+    if (operationalPatchAfterPost.status !== 400) {
+      failures.push("Operational opex yang sudah diposting harus menolak PATCH.");
+    }
+
+    if (operationalDeleteAfterPost.status !== 400) {
+      failures.push("Operational opex yang sudah diposting harus menolak DELETE.");
     }
 
     if (!manualLines.some((line) => line.code === marketingAccount.code && Number(line.debit) > 0)) {
@@ -261,7 +333,7 @@ async function main() {
   } finally {
     if (operationalExpenseId) {
       try {
-        await requestOrThrow(`/api/accounting/operational-expenses/${operationalExpenseId}`, { method: "DELETE" });
+        await cleanupOperationalExpense(db, operationalExpenseId);
       } catch (error) {
         console.error(`cleanup_opex_operational_failed:${operationalExpenseId}:${String(error)}`);
       }
@@ -269,7 +341,7 @@ async function main() {
 
     if (manualExpenseId) {
       try {
-        await requestOrThrow(`/api/accounting/operational-expenses/${manualExpenseId}`, { method: "DELETE" });
+        await cleanupOperationalExpense(db, manualExpenseId);
       } catch (error) {
         console.error(`cleanup_opex_manual_failed:${manualExpenseId}:${String(error)}`);
       }

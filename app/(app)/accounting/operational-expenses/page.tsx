@@ -1,5 +1,5 @@
-import { OperationalExpensesWorkspace } from "@/features/accounting/operational-expenses-workspace";
+import { OperationalExpensesHub } from "@/features/accounting/operational-expenses-hub";
 
 export default function AccountingOperationalExpensesPage() {
-  return <OperationalExpensesWorkspace />;
+  return <OperationalExpensesHub />;
 }

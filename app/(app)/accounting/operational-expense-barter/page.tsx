@@ -1,5 +1,5 @@
-import { OperationalExpenseBarterWorkspace } from "@/features/accounting/operational-expense-barter-workspace";
+import { redirect } from "next/navigation";
 
 export default function OperationalExpenseBarterPage() {
-  return <OperationalExpenseBarterWorkspace />;
+  redirect("/accounting/operational-expenses?mode=barter");
 }

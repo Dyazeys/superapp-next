@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Pencil, Plus, ReceiptText, Trash2 } from "lucide-react";
+import { Pencil, Plus, ReceiptText, RotateCcw, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
 import { StatusBadge } from "@/components/feedback/status-badge";
@@ -148,6 +148,7 @@ export function OperationalExpensesWorkspace() {
   const totalAmount = filteredRows.reduce((sum, row) => sum + Number(row.amount), 0);
   const draftCount = filteredRows.filter((row) => row.status === "DRAFT").length;
   const postedCount = filteredRows.filter((row) => row.status === "POSTED").length;
+  const voidCount = filteredRows.filter((row) => row.status === "VOID").length;
   const marketingCount = filteredRows.filter((row) =>
     row.accounts_operational_expenses_expense_account_idToaccounts.code.startsWith("611")
   ).length;
@@ -212,10 +213,28 @@ export function OperationalExpensesWorkspace() {
           >
             Post
           </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.openExpenseModal(row.original)}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => hooks.voidExpense(row.original.id)}
+            disabled={row.original.status !== "POSTED"}
+          >
+            Void
+          </Button>
+          <Button
+            size="icon-xs"
+            variant="outline"
+            onClick={() => hooks.openExpenseModal(row.original)}
+            disabled={row.original.status !== "DRAFT"}
+          >
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.deleteExpense(row.original.id)}>
+          <Button
+            size="icon-xs"
+            variant="outline"
+            onClick={() => hooks.deleteExpense(row.original.id)}
+            disabled={row.original.status !== "DRAFT"}
+          >
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -230,11 +249,28 @@ export function OperationalExpensesWorkspace() {
       description="Input opex marketing dan operasional dengan akun leaf yang rapi, label detail, dan jurnal otomatis."
     >
       <div className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-6">
-          <MetricCard title="Total opex" value={String(totalRows)} subtitle="Jumlah transaksi yang terlihat." icon={<ReceiptText className="size-4" />} />
-          <MetricCard title="Total nominal" value={formatRupiah(totalAmount)} subtitle="Akumulasi nominal opex yang terlihat." />
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-12">
+          <MetricCard
+            title="Total opex"
+            value={String(totalRows)}
+            subtitle="Jumlah transaksi yang terlihat."
+            icon={<ReceiptText className="size-4" />}
+            className="2xl:col-span-2"
+          />
+          <MetricCard
+            title="Total nominal"
+            value={formatRupiah(totalAmount)}
+            subtitle="Akumulasi nominal opex yang terlihat."
+            className="md:col-span-2 xl:col-span-2 2xl:col-span-3"
+          />
           <MetricCard title="Draft" value={String(draftCount)} subtitle="Opex yang belum diposting." />
           <MetricCard title="Posted" value={String(postedCount)} subtitle="Opex yang sudah membentuk jurnal." />
+          <MetricCard
+            title="Void"
+            value={String(voidCount)}
+            subtitle="Opex yang sudah dibatalkan."
+            icon={<RotateCcw className="size-4" />}
+          />
           <MetricCard title="Marketing" value={String(marketingCount)} subtitle="Transaksi akun 611xx." />
           <MetricCard title="Operasional" value={String(operationalCount)} subtitle="Transaksi akun 621xx." />
         </div>

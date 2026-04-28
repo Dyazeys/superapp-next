@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, BookOpenText, Landmark, ReceiptText, Wallet } from "lucide-react";
+import { ArrowRight, BookOpenText, Landmark, ReceiptText } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 
 const accountingSections = [
@@ -18,14 +18,8 @@ const accountingSections = [
     icon: Landmark,
   },
   {
-    title: "Channel Report",
-    description: "Ringkasan accounting per channel berbasis jurnal yang sudah ada.",
-    href: "/accounting/channel-report",
-    icon: Wallet,
-  },
-  {
     title: "Opex",
-    description: "Input biaya marketing dan operasional dengan label detail dan jurnal otomatis.",
+    description: "Satu halaman untuk opex manual dan opex barter dengan jurnal otomatis.",
     href: "/accounting/operational-expenses",
     icon: ReceiptText,
   },

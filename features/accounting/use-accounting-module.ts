@@ -169,6 +169,18 @@ export function useAccountingOperationalExpenseManager() {
     }
   };
 
+  const voidExpense = async (id: string) => {
+    try {
+      const expense = await accountingApi.operationalExpenses.void(id);
+      toast.success("Opex voided");
+      await invalidate();
+      return expense;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to void operational expense");
+      throw error;
+    }
+  };
+
   const openExpenseModal = (expense?: AccountingOperationalExpenseRecord) => {
     setEditingExpense(expense ?? null);
     expenseForm.reset({
@@ -194,6 +206,7 @@ export function useAccountingOperationalExpenseManager() {
     openExpenseModal,
     saveExpense,
     postExpense,
+    voidExpense,
     deleteExpense,
   };
 }
