@@ -1,9 +1,7 @@
 import { AlertTriangle } from "lucide-react";
-import { PageShell } from "@/components/foundation/page-shell";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
-import { Input } from "@/components/ui/input";
-import { SelectNative } from "@/components/ui/select-native";
 import { prisma } from "@/db/prisma";
+import { ReportPnlFilters } from "@/features/analytics/report-pnl-filters";
 import { getProfitAndLossReport } from "@/lib/pnl-report";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +17,20 @@ function formatMoney(value: number) {
 
 function firstValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function buildMonthOptions(year = 2026) {
+  return Array.from({ length: 12 }, (_, index) => {
+    const date = new Date(Date.UTC(year, index, 1));
+    const value = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    const label = new Intl.DateTimeFormat("id-ID", {
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(date);
+
+    return { value, label };
+  });
 }
 
 function toneClass(value: number) {
@@ -106,37 +118,29 @@ export default async function DashboardReportPnlPage({
       channel_name: true,
     },
   });
+  const monthOptions = buildMonthOptions(2026);
+  const channelOptions = [
+    { value: "", label: "Semua channel" },
+    ...channels.map((channel) => ({
+      value: String(channel.channel_id),
+      label: channel.channel_name,
+    })),
+  ];
 
   return (
-    <PageShell
-      eyebrow="Dashboard"
-      title="Report PNL"
-      description="Format PNL yang lebih nyaman dibaca untuk lihat sales, margin, biaya marketplace, biaya marketing, biaya operasional, dan net profit."
-      className="[&>section:first-child_p:first-child]:text-[10px] [&>section:first-child_h1]:text-2xl [&>section:first-child_h1]:leading-none [&>section:first-child_p:last-child]:text-xs [&>section:first-child_p:last-child]:leading-5"
-    >
+    <div className="space-y-6">
       <WorkspacePanel
         title="Filter Report"
         description="Pilih bulan dan channel untuk melihat laporan PNL."
         titleClassName="text-2xl leading-none"
         descriptionClassName="text-xs leading-5"
       >
-        <form className="grid gap-3 md:grid-cols-[180px_minmax(0,1fr)_auto]">
-          <Input type="month" name="month" defaultValue={report.monthValue} />
-          <SelectNative name="channelId" defaultValue={report.channelId ? String(report.channelId) : ""}>
-            <option value="">Semua channel</option>
-            {channels.map((channel) => (
-              <option key={channel.channel_id} value={String(channel.channel_id)}>
-                {channel.channel_name}
-              </option>
-            ))}
-          </SelectNative>
-          <button
-            type="submit"
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-900 bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-          >
-            Tampilkan report
-          </button>
-        </form>
+        <ReportPnlFilters
+          monthOptions={monthOptions}
+          channelOptions={channelOptions}
+          defaultMonth={report.monthValue}
+          defaultChannelId={report.channelId ? String(report.channelId) : ""}
+        />
         <div className="mt-4 flex flex-wrap gap-2 text-xs">
           <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-slate-700">
             Bulan: <span className="font-medium">{report.monthLabel}</span>
@@ -211,6 +215,6 @@ export default async function DashboardReportPnlPage({
           </div>
         </WorkspacePanel>
       </section>
-    </PageShell>
+    </div>
   );
 }

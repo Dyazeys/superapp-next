@@ -5,18 +5,25 @@ import {
   BookOpenText,
   Boxes,
   Calculator,
+  Camera,
   ChartBar,
   ClipboardList,
   FolderTree,
+  Gauge,
+  Globe,
   HandCoins,
   Handshake,
   Landmark,
   LayoutGrid,
   LayoutDashboard,
   ListOrdered,
+  Megaphone,
+  MonitorPlay,
   PackageSearch,
   PanelLeft,
+  PenSquare,
   Puzzle,
+  ScanSearch,
   ScrollText,
   RadioTower,
   ReceiptText,
@@ -24,6 +31,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Tags,
+  Tv,
   UserRound,
   Users,
   Warehouse,
@@ -45,25 +53,40 @@ export type ModuleNavItem = {
   children?: ModuleNavItem[];
 };
 
+const MARKETING_MODULE_ITEM: ModuleNavItem = {
+  label: "Marketing",
+  href: "/marketing",
+  icon: Megaphone,
+  badge: "Workspace",
+  children: [
+    { label: "Performa Produk", href: "/marketing/product-performance", icon: ScanSearch },
+    { label: "Traffic", href: "/marketing/traffic", icon: Globe },
+    { label: "Iklan MP", href: "/marketing/mp-ads", icon: ChartBar },
+    { label: "Live Streaming", href: "/marketing/live-streaming", icon: MonitorPlay },
+  ],
+};
+
+const CONTENT_MODULE_ITEM: ModuleNavItem = {
+  label: "Konten",
+  href: "/content",
+  icon: PenSquare,
+  badge: "Workspace",
+  children: [
+    { label: "Tiktok", href: "/content/tiktok", icon: Tv },
+    { label: "Instagram", href: "/content/instagram", icon: Camera },
+  ],
+};
+
 export const TOP_NAV_ITEMS: TopNavItem[] = [
   { id: "erp", label: "ERP", icon: LayoutGrid },
-  { id: "analytics", label: "Analytic", icon: ChartBar, disabled: true },
+  { id: "analytics", label: "Analytic", icon: ChartBar },
   { id: "crm", label: "CRM", icon: Users, disabled: true },
   { id: "team", label: "Team", icon: ShieldCheck, disabled: true },
   { id: "assistant", label: "AI Assistant", icon: Bot, disabled: true },
 ];
 
 export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-    badge: "Transaksi",
-    children: [
-      { label: "Overview", href: "/dashboard", icon: LayoutDashboard },
-      { label: "Report PNL", href: "/dashboard/report-pnl", icon: ScrollText },
-    ],
-  },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, badge: "Transaksi" },
   {
     label: "Sales",
     href: "/sales",
@@ -135,5 +158,24 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Channels", href: "/channel/channels", icon: RadioTower },
     ],
   },
+  MARKETING_MODULE_ITEM,
+  CONTENT_MODULE_ITEM,
   { label: "Workspace", href: "/workspace", icon: PanelLeft, badge: "UI" },
+];
+
+export const ANALYTICS_MODULE_ITEMS: ModuleNavItem[] = [
+  {
+    label: "Report PNL",
+    href: "/dashboard/report-pnl",
+    icon: ScrollText,
+    badge: "Report",
+  },
+  {
+    label: "Budget Meters",
+    href: "/dashboard/budget-meters",
+    icon: Gauge,
+    badge: "Budget",
+  },
+  MARKETING_MODULE_ITEM,
+  CONTENT_MODULE_ITEM,
 ];

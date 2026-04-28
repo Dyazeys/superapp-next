@@ -3,21 +3,38 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ModuleSidebar } from "@/components/shell/module-sidebar";
-import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS } from "@/lib/navigation";
+import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS, ANALYTICS_MODULE_ITEMS } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { PanelLeftOpen } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
+function topNavForPath(pathname: string) {
+  if (
+    ANALYTICS_MODULE_ITEMS.some(
+      (module) => pathname === module.href || pathname.startsWith(`${module.href}/`)
+    )
+  ) {
+    return "analytics" as const;
+  }
+
+  return "erp" as const;
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [activeTop, setActiveTop] = useState(TOP_NAV_ITEMS[0].id);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
+  const [activeTop, setActiveTop] = useState<(typeof TOP_NAV_ITEMS)[number]["id"]>(topNavForPath(pathname));
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { data: session } = useSession();
   const activeTopItem = TOP_NAV_ITEMS.find((item) => item.id === activeTop) ?? TOP_NAV_ITEMS[0];
 
-  const sidebarModules = activeTop === "erp" ? ERP_MODULE_ITEMS : [];
+  useEffect(() => {
+    setActiveTop(topNavForPath(pathname));
+  }, [pathname]);
+
+  const sidebarModules =
+    activeTop === "erp" ? ERP_MODULE_ITEMS : activeTop === "analytics" ? ANALYTICS_MODULE_ITEMS : [];
 
   const navMatch = sidebarModules.find(
     (module) => pathname === module.href || pathname.startsWith(`${module.href}/`)
@@ -46,6 +63,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/sales/orders": "Kelola sales order tanpa mengubah mekanisme posting stok yang sudah berjalan.",
       "/sales/order-items": "Kelola detail item order untuk aliran stok dan perhitungan yang konsisten.",
       "/sales/customers": "Kelola customer master minimal untuk referensi sales order dan ringkasan order per customer.",
+      "/marketing": "Ruang kerja marketing untuk menyiapkan area analisis performa produk, traffic, iklan, dan live streaming.",
+      "/marketing/product-performance": "Placeholder awal untuk evaluasi performa produk dari sisi sales, margin, dan promosi.",
+      "/marketing/traffic": "Placeholder awal untuk membaca sumber traffic dan kualitas funnel kunjungan.",
+      "/marketing/mp-ads": "Placeholder awal untuk monitoring iklan marketplace, spend, dan efisiensi campaign.",
+      "/marketing/live-streaming": "Placeholder awal untuk recap performa live streaming dan dampaknya ke penjualan.",
+      "/content": "Ruang kerja konten untuk memisahkan evaluasi TikTok dan Instagram dalam satu area yang rapi.",
+      "/content/tiktok": "Placeholder awal untuk evaluasi performa konten TikTok dan ritme posting.",
+      "/content/instagram": "Placeholder awal untuk evaluasi feed, reels, story, dan arah konten Instagram.",
       "/channel": "Kelola struktur master channel untuk referensi transaksi lintas modul.",
       "/channel/groups": "Kelola pengelompokan channel untuk struktur referensi yang rapi.",
       "/channel/categories": "Kelola kategori channel untuk konsistensi segmentasi channel.",
@@ -55,6 +80,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/accounting/journal-entries": "Lihat detail debit/kredit untuk rekonsiliasi cepat.",
       "/accounting/accounts": "Lihat COA dan relasi parent untuk struktur akun.",
       "/accounting/channel-report": "Ringkasan accounting per channel berbasis jurnal: sales, payout, saldo, transfer, outstanding, dan status.",
+      "/dashboard/budget-meters": "Monitor budget dan realisasi beban bulanan sebagai titik awal kontrol biaya di modul analytic.",
+      "/dashboard/report-pnl": "Laporan profit and loss bulanan dengan filter channel untuk membaca sales, margin, dan biaya utama.",
       "/payout": "Ringkasan payout, adjustment, dan nilai bersih berdasarkan data yang ada.",
       "/payout/records": "Kelola header payout dan cek nilai gross/net.",
       "/payout/adjustments": "Kelola adjustment payout sesuai referensi yang sudah ada.",
