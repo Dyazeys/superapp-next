@@ -8,8 +8,8 @@ import { LoginForm } from "@/components/auth/login-form";
 const TOP_NAV_SUMMARY: Record<string, string> = {
   erp: "Pusat proses operasional dan finansial lintas divisi.",
   analytics: "Insight performa marketing untuk memantau kampanye dan pertumbuhan channel.",
-  crm: "Kelola customer lifecycle, aktivitas, dan relasi tim sales.",
-  team: "Sistem tugas dan absensi tim untuk menjaga ritme kerja tetap rapi dan terukur.",
+  task: "Workspace personal untuk tugas harian, KPI, absensi, dan ritme kerja individu.",
+  team: "Ruang koordinasi tim untuk meeting, notulen, tindak lanjut, dan kontrol akses aplikasi.",
   assistant: "Asisten AI untuk tanya jawab cepat seputar penggunaan sistem dan alur kerja.",
 };
 
@@ -44,7 +44,9 @@ export default async function LoginPage() {
               <div className="space-y-5">
                 <div className="space-y-2">
                   <h1 className="text-3xl font-semibold text-slate-900">Welcome Back</h1>
-                  <p className="text-sm text-slate-500">Masuk untuk mengakses dashboard operasional dan modul ERP.</p>
+                  <p className="text-sm text-slate-500">
+                    Masuk untuk mengakses dashboard operasional, modul ERP, dan workspace Team.
+                  </p>
                 </div>
                 <LoginForm />
               </div>
@@ -118,8 +120,9 @@ export default async function LoginPage() {
                 Kelola operasional tim dalam satu workspace.
               </h2>
               <p className="max-w-lg text-sm text-slate-600">
-                ERP untuk operasional dan finansial, Analytic untuk insight marketing, CRM untuk relasi pelanggan,
-                Team untuk tugas dan absensi, serta AI Assistant untuk tanya-jawab cepat seputar sistem.
+                ERP untuk input dan perapihan data operasional, Analytic untuk visualisasi dan insight, Task untuk
+                ritme kerja personal, Team untuk koordinasi dan akses aplikasi, serta AI Assistant untuk tanya-jawab
+                cepat seputar sistem.
               </p>
             </div>
 

@@ -168,8 +168,26 @@ model users {
   updated_at    DateTime? @db.Timestamptz(6)
   is_active     Boolean   @default(true)
   roles         roles?    @relation(fields: [role_id], references: [id], onDelete: Restrict)
+  profile       user_profiles?
 
   @@index([role_id], map: "idx_auth_users_role_id")
+  @@schema("auth")
+}
+
+model user_profiles {
+  user_id       String    @id @db.Uuid
+  display_name  String?   @db.VarChar(150)
+  phone         String?   @db.VarChar(50)
+  avatar_url    String?   @db.VarChar(500)
+  job_title     String?   @db.VarChar(100)
+  department    String?   @db.VarChar(100)
+  timezone      String?   @db.VarChar(100)
+  locale        String?   @db.VarChar(20)
+  bio           String?
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+  user          users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
   @@schema("auth")
 }
 

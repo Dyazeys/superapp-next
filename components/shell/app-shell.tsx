@@ -1,16 +1,34 @@
 "use client";
 
 import Link from "next/link";
+import type { Session } from "next-auth";
 import { Button } from "@/components/ui/button";
 import { ModuleSidebar } from "@/components/shell/module-sidebar";
-import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS, ANALYTICS_MODULE_ITEMS } from "@/lib/navigation";
+import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS, ANALYTICS_MODULE_ITEMS, TASK_MODULE_ITEMS, TEAM_MODULE_ITEMS, type ModuleNavItem } from "@/lib/navigation";
+import { hasAnyPermission, hasPermission } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
-import { PanelLeftOpen } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { Bot, PanelLeftOpen } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
 function topNavForPath(pathname: string) {
+  if (
+    TASK_MODULE_ITEMS.some(
+      (module) => pathname === module.href || pathname.startsWith(`${module.href}/`)
+    )
+  ) {
+    return "task" as const;
+  }
+
+  if (
+    TEAM_MODULE_ITEMS.some(
+      (module) => pathname === module.href || pathname.startsWith(`${module.href}/`)
+    )
+  ) {
+    return "team" as const;
+  }
+
   if (
     ANALYTICS_MODULE_ITEMS.some(
       (module) => pathname === module.href || pathname.startsWith(`${module.href}/`)
@@ -22,19 +40,82 @@ function topNavForPath(pathname: string) {
   return "erp" as const;
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+function overviewPathForTopNav(topId: (typeof TOP_NAV_ITEMS)[number]["id"]) {
+  switch (topId) {
+    case "analytics":
+      return "/analytics";
+    case "task":
+      return "/task";
+    case "team":
+      return "/team";
+    case "erp":
+    default:
+      return "/dashboard";
+  }
+}
+
+function filterModuleItems(items: ModuleNavItem[], permissions: string[]): ModuleNavItem[] {
+  return items.reduce<ModuleNavItem[]>((visibleItems, item) => {
+      const filteredChildren = item.children?.length ? filterModuleItems(item.children, permissions) : undefined;
+      const canView =
+        (item.permission ? hasPermission(permissions, item.permission) : false) ||
+        (item.permissionAny ? hasAnyPermission(permissions, item.permissionAny) : false) ||
+        (!item.permission && !item.permissionAny);
+      if (!canView && !filteredChildren?.length) {
+        return visibleItems;
+      }
+
+      visibleItems.push({
+        ...item,
+        children: filteredChildren,
+      });
+
+      return visibleItems;
+    }, []);
+}
+
+export function AppShell({
+  children,
+  initialSession,
+}: {
+  children: React.ReactNode;
+  initialSession?: Session | null;
+}) {
   const pathname = usePathname();
+  const router = useRouter();
   const [activeTop, setActiveTop] = useState<(typeof TOP_NAV_ITEMS)[number]["id"]>(topNavForPath(pathname));
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { data: session } = useSession();
-  const activeTopItem = TOP_NAV_ITEMS.find((item) => item.id === activeTop) ?? TOP_NAV_ITEMS[0];
+  const { data: session, status } = useSession();
+  const resolvedSession = status === "loading" ? (session ?? initialSession) : session;
+  const permissions = resolvedSession?.user?.permissions ?? [];
+  const filteredErpModules = filterModuleItems(ERP_MODULE_ITEMS, permissions);
+  const filteredAnalyticsModules = filterModuleItems(ANALYTICS_MODULE_ITEMS, permissions);
+  const filteredTaskModules = filterModuleItems(TASK_MODULE_ITEMS, permissions);
+  const filteredTeamModules = filterModuleItems(TEAM_MODULE_ITEMS, permissions);
+  const visibleTopNavItems = TOP_NAV_ITEMS.filter((item) => {
+    if (item.disabled) return true;
+    if (item.id === "erp") return filteredErpModules.length > 0;
+    if (item.id === "analytics") return filteredAnalyticsModules.length > 0;
+    if (item.id === "task") return filteredTaskModules.length > 0;
+    if (item.id === "team") return filteredTeamModules.length > 0;
+    return true;
+  });
+  const activeTopItem = visibleTopNavItems.find((item) => item.id === activeTop) ?? visibleTopNavItems[0] ?? TOP_NAV_ITEMS[0];
 
   useEffect(() => {
     setActiveTop(topNavForPath(pathname));
   }, [pathname]);
 
   const sidebarModules =
-    activeTop === "erp" ? ERP_MODULE_ITEMS : activeTop === "analytics" ? ANALYTICS_MODULE_ITEMS : [];
+    activeTop === "erp"
+      ? filteredErpModules
+      : activeTop === "analytics"
+        ? filteredAnalyticsModules
+        : activeTop === "task"
+          ? filteredTaskModules
+        : activeTop === "team"
+          ? filteredTeamModules
+          : [];
 
   const navMatch = sidebarModules.find(
     (module) => pathname === module.href || pathname.startsWith(`${module.href}/`)
@@ -63,14 +144,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/sales/orders": "Kelola sales order tanpa mengubah mekanisme posting stok yang sudah berjalan.",
       "/sales/order-items": "Kelola detail item order untuk aliran stok dan perhitungan yang konsisten.",
       "/sales/customers": "Kelola customer master minimal untuk referensi sales order dan ringkasan order per customer.",
-      "/marketing": "Ruang kerja marketing untuk menyiapkan area analisis performa produk, traffic, iklan, dan live streaming.",
-      "/marketing/product-performance": "Placeholder awal untuk evaluasi performa produk dari sisi sales, margin, dan promosi.",
-      "/marketing/traffic": "Placeholder awal untuk membaca sumber traffic dan kualitas funnel kunjungan.",
-      "/marketing/mp-ads": "Placeholder awal untuk monitoring iklan marketplace, spend, dan efisiensi campaign.",
-      "/marketing/live-streaming": "Placeholder awal untuk recap performa live streaming dan dampaknya ke penjualan.",
-      "/content": "Ruang kerja konten untuk memisahkan evaluasi TikTok dan Instagram dalam satu area yang rapi.",
-      "/content/tiktok": "Placeholder awal untuk evaluasi performa konten TikTok dan ritme posting.",
-      "/content/instagram": "Placeholder awal untuk evaluasi feed, reels, story, dan arah konten Instagram.",
+      "/marketing": "Area Analytic untuk membaca visualisasi performa marketing dari data aktivitas yang sebelumnya dicatat tim di ERP.",
+      "/marketing/product-performance": "Visualisasi performa produk dari data operasional dan aktivitas promosi yang sudah masuk lewat ERP.",
+      "/marketing/traffic": "Visualisasi sumber traffic dan kualitas funnel kunjungan dari data kerja marketing yang sudah dicatat.",
+      "/marketing/mp-ads": "Visualisasi iklan marketplace, spend, dan efisiensi campaign dari data marketing harian.",
+      "/marketing/live-streaming": "Visualisasi performa live streaming dan dampaknya ke penjualan dari aktivitas yang dicatat tim.",
+      "/content": "Area Analytic untuk membaca performa konten dari aktivitas upload harian yang diinput tim di ERP.",
+      "/content/tiktok": "Visualisasi performa konten TikTok dari data upload dan aktivitas harian tim.",
+      "/content/instagram": "Visualisasi performa feed, reels, story, dan arah konten Instagram dari data kerja harian tim.",
+      "/analytics": "Overview ini menjelaskan isi workspace Analytic sebagai tempat visualisasi, pembacaan, dan insight dari data yang sebelumnya dicatat lewat ERP.",
+      "/analytics/financial": "Area financial di Analytic dipakai untuk membaca visualisasi report PNL dan budget meter dari data keuangan ERP.",
+      "/task": "Ruang kerja personal untuk ritme eksekusi harian, daftar tugas, KPI, dan absensi tiap anggota tim.",
+      "/task/tugas-saya": "Kelola daftar kerja pribadi, prioritas, target, dan progres eksekusi harian dalam satu area personal.",
+      "/task/tugas-saya/to-do": "Jaga tugas aktif, prioritas, deadline, dan blocker pribadi tetap terlihat dan mudah ditindaklanjuti.",
+      "/task/tugas-saya/kpi": "Pantau target personal, indikator hasil kerja, dan progres KPI tanpa bercampur dengan area team yang lebih umum.",
+      "/task/absensi": "Kelola kehadiran pribadi, ritme kerja harian, dan kebutuhan administratif dasar seperti izin atau sakit.",
+      "/task/absensi/clock-in-out": "Catat check-in, check-out, dan ringkasan kehadiran personal harian sebagai jejak kerja dasar.",
+      "/task/absensi/izin-sakit": "Ajukan izin atau sakit beserta bukti dan pantau status approval dari area personal yang sama.",
+      "/task/kalender-saya": "Baca deadline, meeting, dan ritme kerja pribadi dalam bentuk kalender yang lebih mudah dipindai cepat.",
+      "/task/reminder": "Jaga follow up penting, approval, dan pekerjaan sensitif terhadap waktu tetap muncul di momen yang tepat.",
+      "/team": "Ruang kerja team untuk koordinasi meeting, notulen, tindak lanjut hasil rapat, dan kontrol akses aplikasi.",
+      "/team/meeting": "Kelola agenda sinkronisasi, notulen, dan tindak lanjut hasil rapat agar kerja tim tetap nyambung.",
+      "/team/meeting/notulen": "Simpan catatan rapat tim dengan format notulen yang mudah dibaca ulang dan di-follow up.",
+      "/team/meeting/to-do": "Turunkan hasil rapat menjadi action item tim yang punya PIC, deadline, dan status progres jelas.",
+      "/team/kalender-tim": "Jaga sinkronisasi jadwal bersama, deadline lintas divisi, dan event operasional dalam satu kalender tim.",
+      "/team/pengumuman": "Sebarkan info internal, perubahan operasional, dan update penting tim dari satu area komunikasi bersama.",
+      "/team/approval": "Kelola alur persetujuan internal dengan jejak status dan approver yang jelas untuk kebutuhan tim.",
+      "/team/struktur-tim": "Lihat susunan tim, divisi, jabatan, dan jalur koordinasi agar tanggung jawab lebih mudah dibaca.",
+      "/team/sop": "Simpan SOP, guideline, dan dokumentasi proses kerja agar standar operasional tim mudah diakses ulang.",
+      "/team/users": "Kelola akun user internal yang boleh masuk ke aplikasi sesuai peran masing-masing.",
+      "/team/roles": "Atur role dan permission agar akses tiap tim tetap rapi, aman, dan sesuai tanggung jawab.",
       "/channel": "Kelola struktur master channel untuk referensi transaksi lintas modul.",
       "/channel/groups": "Kelola pengelompokan channel untuk struktur referensi yang rapi.",
       "/channel/categories": "Kelola kategori channel untuk konsistensi segmentasi channel.",
@@ -80,8 +183,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       "/accounting/journal-entries": "Lihat detail debit/kredit untuk rekonsiliasi cepat.",
       "/accounting/accounts": "Lihat COA dan relasi parent untuk struktur akun.",
       "/accounting/channel-report": "Ringkasan accounting per channel berbasis jurnal: sales, payout, saldo, transfer, outstanding, dan status.",
-      "/dashboard/budget-meters": "Monitor budget dan realisasi beban bulanan sebagai titik awal kontrol biaya di modul analytic.",
-      "/dashboard/report-pnl": "Laporan profit and loss bulanan dengan filter channel untuk membaca sales, margin, dan biaya utama.",
+      "/dashboard/budget-meters": "Visualisasi budget dan realisasi beban bulanan sebagai titik awal kontrol biaya di modul Analytic.",
+      "/dashboard/report-pnl": "Visualisasi profit and loss bulanan dengan filter channel untuk membaca sales, margin, dan biaya utama dari data ERP.",
       "/payout": "Ringkasan payout, adjustment, dan nilai bersih berdasarkan data yang ada.",
       "/payout/records": "Kelola header payout dan cek nilai gross/net.",
       "/payout/adjustments": "Kelola adjustment payout sesuai referensi yang sudah ada.",
@@ -98,7 +201,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       `Ruang kerja ${activeTopItem.label} untuk operasional harian.`
     );
   })();
-  const userName = session?.user?.name?.trim() || "Operator";
+  const userName = resolvedSession?.user?.name?.trim() || "Operator";
   const userInitials = userName
     .split(" ")
     .filter(Boolean)
@@ -157,6 +260,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               modules={sidebarModules}
               moduleTitle={activeTopItem.label}
               userInitials={userInitials}
+              permissions={permissions}
               onToggle={() => setSidebarCollapsed(true)}
             />
           )}
@@ -169,7 +273,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="flex min-h-9 min-w-0 flex-1 items-center gap-3">
                   <nav className="flex w-full items-center gap-2 rounded-xl p-0 text-slate-600">
                     <div className="flex w-full items-center justify-between gap-2">
-                      {TOP_NAV_ITEMS.map((item) => {
+                      {visibleTopNavItems.map((item) => {
                         const active = activeTop === item.id;
 
                         return (
@@ -188,6 +292,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                               if (!item.disabled) {
                                 setActiveTop(item.id);
                                 setSidebarCollapsed(false);
+                                router.push(overviewPathForTopNav(item.id));
                               }
                             }}
                             aria-label={item.label}
@@ -221,6 +326,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </div>
+
+      <button
+        type="button"
+        disabled
+        title="AI Assistant coming soon"
+        className="fixed right-6 bottom-6 z-30 inline-flex items-center gap-3 rounded-full border border-slate-200/90 bg-white/95 px-4 py-3 text-left text-slate-500 shadow-[0_18px_40px_rgba(15,23,42,0.12)] backdrop-blur opacity-80"
+      >
+        <span className="inline-flex size-11 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
+          <Bot className="size-5" />
+        </span>
+        <span className="hidden min-[430px]:block">
+          <span className="block text-sm font-semibold text-slate-800">AI Assistant</span>
+          <span className="block text-xs text-slate-500">Coming soon</span>
+        </span>
+      </button>
     </div>
   );
 }

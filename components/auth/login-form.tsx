@@ -12,12 +12,12 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
 
-  const [email, setEmail] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const isSubmitDisabled = pending || email.trim().length === 0 || password.length === 0;
+  const isSubmitDisabled = pending || login.trim().length === 0 || password.length === 0;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,7 +25,7 @@ export function LoginForm() {
     setError(null);
 
     const result = await signIn("credentials", {
-      email,
+      login,
       password,
       redirect: false,
       callbackUrl,
@@ -44,18 +44,18 @@ export function LoginForm() {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-slate-700">
-          Email
+        <Label htmlFor="login" className="text-slate-700">
+          Username / Email
         </Label>
         <Input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          id="login"
+          name="login"
+          type="text"
+          autoComplete="username"
+          value={login}
+          onChange={(event) => setLogin(event.target.value)}
           required
-          placeholder="admin@company.com"
+          placeholder="owner atau ops-auth@company.internal"
         />
       </div>
 

@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "auth:hash": "node ./scripts/hash-password.mjs",
+    "auth:seed:bootstrap": "node ./scripts/seed-auth-bootstrap.mjs",
     "journal:smoke": "node ./scripts/journal-smoke-test.mjs",
     "opex:barter:smoke": "node ./scripts/opex-barter-smoke-test.mjs",
     "opex:smoke": "node ./scripts/opex-smoke-test.mjs",
