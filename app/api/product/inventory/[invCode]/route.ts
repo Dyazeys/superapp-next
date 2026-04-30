@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { masterInventorySchema } from "@/schemas/product-module";
 
 export async function PATCH(
@@ -9,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ invCode: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_INVENTORY_UPDATE);
+
     const { invCode } = await params;
     const payload = masterInventorySchema.partial().parse(await request.json());
 
@@ -33,6 +37,8 @@ export async function DELETE(
   { params }: { params: Promise<{ invCode: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_INVENTORY_DELETE);
+
     const { invCode } = await params;
 
     await prisma.master_inventory.delete({

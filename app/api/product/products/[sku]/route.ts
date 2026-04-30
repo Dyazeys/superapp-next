@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { masterProductSchema } from "@/schemas/product-module";
 
 export async function PATCH(
@@ -9,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ sku: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_MASTER_UPDATE);
+
     const { sku } = await params;
     const payload = masterProductSchema.partial().parse(await request.json());
 
@@ -66,6 +70,8 @@ export async function DELETE(
   { params }: { params: Promise<{ sku: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_MASTER_DELETE);
+
     const { sku } = await params;
 
     await prisma.master_product.delete({

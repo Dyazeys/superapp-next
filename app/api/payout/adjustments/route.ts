@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { resolvePayoutAdjustmentChannelId } from "@/lib/payout-adjustment-channel";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { syncPayoutAdjustmentJournal } from "@/lib/payout-adjustment-journal";
 import { payoutAdjustmentSchema } from "@/schemas/payout-module";
 
@@ -36,6 +38,8 @@ const payoutChannelSelect = {
 
 export async function GET(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_ADJUSTMENT_VIEW);
+
     const ref = request.nextUrl.searchParams.get("ref");
 
     const adjustments = await prisma.t_adjustments.findMany({
@@ -59,6 +63,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_ADJUSTMENT_CREATE);
+
     const payload = payoutAdjustmentSchema.parse(await request.json());
 
     const adjustment = await prisma.$transaction(async (tx) => {

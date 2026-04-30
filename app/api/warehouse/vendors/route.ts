@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { vendorSchema } from "@/schemas/warehouse-module";
 
 export async function GET() {
+  await requireApiPermission(PERMISSIONS.WAREHOUSE_VENDOR_VIEW);
+
   const vendors = await prisma.master_vendor.findMany({
     orderBy: { vendor_code: "asc" },
     include: {
@@ -19,6 +23,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  await requireApiPermission(PERMISSIONS.WAREHOUSE_VENDOR_CREATE);
+
   const payload = vendorSchema.parse(await request.json());
 
   const vendor = await prisma.master_vendor.create({

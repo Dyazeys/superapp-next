@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { salesCustomerSchema } from "@/schemas/sales-module";
 
 export async function PATCH(
@@ -9,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ customerId: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_CUSTOMER_UPDATE);
+
     const { customerId } = await params;
     const payload = salesCustomerSchema.partial().parse(await request.json());
 
@@ -34,6 +38,8 @@ export async function DELETE(
   { params }: { params: Promise<{ customerId: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_CUSTOMER_DELETE);
+
     const { customerId } = await params;
     const id = Number(customerId);
 

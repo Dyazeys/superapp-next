@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ROLE_CODES, PERMISSIONS, hasPermission } from "@/lib/rbac";
+import { getRoleDisplayName, PERMISSIONS, ROLE_CODES, SUPERADMIN_ROLE_CODE, SUPERADMIN_ROLE_LABEL, hasPermission } from "@/lib/rbac";
 import { useTeamRoles } from "@/features/team/use-team-module";
 import type { RoleInput } from "@/schemas/team-module";
 import type { TeamRoleRecord } from "@/types/team";
@@ -33,7 +33,7 @@ export function TeamRolesWorkspace() {
   const columns = [
     columnHelper.accessor("role_name", {
       header: "Role",
-      cell: (info) => <span className="font-medium text-slate-900">{info.getValue()}</span>,
+      cell: (info) => <span className="font-medium text-slate-900">{getRoleDisplayName(info.getValue())}</span>,
     }),
     columnHelper.display({
       id: "permission_count",
@@ -123,7 +123,7 @@ export function TeamRolesWorkspace() {
           <div className="flex flex-wrap gap-2">
             {ROLE_CODES.map((roleCode) => (
               <Button key={roleCode} type="button" size="sm" variant="outline" onClick={() => hooks.applyTemplate(roleCode)}>
-                {roleCode}
+                {roleCode === SUPERADMIN_ROLE_CODE ? SUPERADMIN_ROLE_LABEL : roleCode}
               </Button>
             ))}
           </div>

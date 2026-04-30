@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { removeInboundItemMovement } from "@/lib/warehouse-stock";
 import { inboundItemPatchSchema } from "@/schemas/warehouse-module";
 
@@ -10,6 +12,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_INBOUND_UPDATE);
+
     const { id, itemId } = await params;
     const payload = inboundItemPatchSchema.parse(await request.json());
 
@@ -81,6 +85,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_INBOUND_UPDATE);
+
     const { id, itemId } = await params;
 
     await prisma.$transaction(async (tx) => {

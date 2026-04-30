@@ -52,6 +52,7 @@ export async function GET(
   try {
     await requireApiPermission(PERMISSIONS.AUTH_USER_VIEW);
     const { id } = await params;
+    invariant(id?.length, "Invalid user ID.", 400);
     const payload = await loadTeamUserProfile(id);
 
     return NextResponse.json(toJsonValue(payload));
@@ -67,6 +68,7 @@ export async function PATCH(
   try {
     await requireApiPermission(PERMISSIONS.AUTH_USER_UPDATE);
     const { id } = await params;
+    invariant(id?.length, "Invalid user ID.", 400);
     const payload = teamUserProfileUpdateSchema.parse(await request.json());
 
     await prisma.$transaction(async (tx) => {

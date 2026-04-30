@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { deleteSalesOrderItemJournal, syncSalesOrderJournals } from "@/lib/sales-journal";
 import { removeSalesOrderItemMovements, syncSalesOrderMovements } from "@/lib/warehouse-stock";
 import { salesOrderPatchSchema } from "@/schemas/sales-module";
@@ -15,6 +17,8 @@ export async function PATCH(
   { params }: { params: Promise<{ orderNo: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_UPDATE);
+
     const { orderNo } = await params;
     const rawPayload = await request.json();
     const payload = salesOrderPatchSchema.parse(rawPayload);
@@ -88,6 +92,8 @@ export async function DELETE(
   { params }: { params: Promise<{ orderNo: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_DELETE);
+
     const { orderNo } = await params;
 
     await prisma.$transaction(async (tx) => {

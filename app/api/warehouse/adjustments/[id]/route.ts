@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { removeAdjustmentMovement } from "@/lib/warehouse-stock";
 import { adjustmentSchema } from "@/schemas/warehouse-module";
 
@@ -14,6 +16,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_UPDATE);
+
     const { id } = await params;
     const payload = adjustmentSchema.partial().parse(await request.json());
 
@@ -59,6 +63,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_UPDATE);
+
     const { id } = await params;
 
     await prisma.$transaction(async (tx) => {

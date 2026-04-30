@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { operationalExpenseSchema } from "@/schemas/accounting-module";
 
 function toDateOnly(value: string) {
@@ -16,6 +18,8 @@ function validateOperationalExpenseBusinessRules(input: {
 
 export async function GET(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_VIEW);
+
     const label = request.nextUrl.searchParams.get("label")?.trim() ?? "";
     const expenseAccountId = request.nextUrl.searchParams.get("expenseAccountId")?.trim() ?? "";
 
@@ -59,6 +63,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_CREATE);
+
     const payload = operationalExpenseSchema.parse(await request.json());
     invariant(!payload.is_product_barter, "Use Opex Barter module for inventory release / barter transactions.");
     validateOperationalExpenseBusinessRules(payload);

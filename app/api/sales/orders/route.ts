@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { salesOrderSchema } from "@/schemas/sales-module";
 
 function asDateTime(value: string) {
@@ -11,6 +13,8 @@ function asDateTime(value: string) {
 
 export async function GET(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_VIEW);
+
     const searchParams = request.nextUrl.searchParams;
     const rawPage = Number(searchParams.get("page") ?? "1");
     const rawPageSize = Number(searchParams.get("page_size") ?? "20");
@@ -261,6 +265,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_CREATE);
+
     const payload = salesOrderSchema.parse(await request.json());
 
     if (payload.channel_id != null) {

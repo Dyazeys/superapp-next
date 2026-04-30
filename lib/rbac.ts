@@ -125,6 +125,9 @@ export const PERMISSIONS = {
   CONTENT_DAILY_REPORT_DELETE: "content.daily_report.delete",
   CONTENT_DAILY_REPORT_APPROVE: "content.daily_report.approve",
 
+  TASK_WORKSPACE_VIEW: "task.workspace.view",
+  TEAM_WORKSPACE_VIEW: "team.workspace.view",
+
   AUTH_USER_VIEW: "auth.user.view",
   AUTH_USER_CREATE: "auth.user.create",
   AUTH_USER_UPDATE: "auth.user.update",
@@ -137,6 +140,8 @@ export const PERMISSIONS = {
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+export const SUPERADMIN_ROLE_CODE = "OWNER";
+export const SUPERADMIN_ROLE_LABEL = "SUPERADMIIN";
 
 const ALL_PERMISSIONS = Object.values(PERMISSIONS);
 
@@ -160,6 +165,8 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW,
     PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
     ...permissionsByPrefix(["sales.", "warehouse.", "marketing.", "content."]),
+    PERMISSIONS.TASK_WORKSPACE_VIEW,
+    PERMISSIONS.TEAM_WORKSPACE_VIEW,
     PERMISSIONS.PAYOUT_RECORD_VIEW,
     PERMISSIONS.PAYOUT_ADJUSTMENT_VIEW,
     PERMISSIONS.PAYOUT_TRANSFER_VIEW,
@@ -178,6 +185,8 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW,
     PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
     ...permissionsByPrefix(["marketing.", "content."]),
+    PERMISSIONS.TASK_WORKSPACE_VIEW,
+    PERMISSIONS.TEAM_WORKSPACE_VIEW,
   ]),
   SALES: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -191,6 +200,8 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.PAYOUT_RECORD_VIEW,
     PERMISSIONS.PAYOUT_ADJUSTMENT_VIEW,
     PERMISSIONS.PAYOUT_RECONCILIATION_VIEW,
+    PERMISSIONS.TASK_WORKSPACE_VIEW,
+    PERMISSIONS.TEAM_WORKSPACE_VIEW,
   ]),
   ACCOUNTING: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -217,6 +228,8 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.PAYOUT_TRANSFER_UPDATE,
     PERMISSIONS.PAYOUT_RECONCILIATION_VIEW,
     PERMISSIONS.CHANNEL_MASTER_VIEW,
+    PERMISSIONS.TASK_WORKSPACE_VIEW,
+    PERMISSIONS.TEAM_WORKSPACE_VIEW,
   ]),
   PURCHASING: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -232,6 +245,8 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_UPDATE,
     PERMISSIONS.WAREHOUSE_INBOUND_VIEW,
     PERMISSIONS.WAREHOUSE_STOCK_VIEW,
+    PERMISSIONS.TASK_WORKSPACE_VIEW,
+    PERMISSIONS.TEAM_WORKSPACE_VIEW,
   ]),
   WAREHOUSE: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -250,6 +265,8 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.WAREHOUSE_STOCK_VIEW,
     PERMISSIONS.PRODUCT_INVENTORY_VIEW,
     PERMISSIONS.PRODUCT_MASTER_VIEW,
+    PERMISSIONS.TASK_WORKSPACE_VIEW,
+    PERMISSIONS.TEAM_WORKSPACE_VIEW,
   ]),
   CONTENT_CREATOR: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -261,6 +278,8 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.CONTENT_DAILY_REPORT_UPDATE,
     PERMISSIONS.MARKETING_WORKSPACE_VIEW,
     PERMISSIONS.MARKETING_PRODUCT_PERFORMANCE_VIEW,
+    PERMISSIONS.TASK_WORKSPACE_VIEW,
+    PERMISSIONS.TEAM_WORKSPACE_VIEW,
   ]),
 };
 
@@ -278,4 +297,16 @@ export function hasAnyPermission(
 ) {
   if (!permissions?.length) return false;
   return requiredPermissions.some((permission) => permissions.includes(permission));
+}
+
+export function isSuperadminRole(roleName: string | null | undefined) {
+  if (!roleName) return false;
+  const normalized = roleName.trim().toUpperCase();
+  return normalized === SUPERADMIN_ROLE_CODE || normalized === SUPERADMIN_ROLE_LABEL;
+}
+
+export function getRoleDisplayName(roleName: string | null | undefined) {
+  if (!roleName) return "UNASSIGNED";
+  if (isSuperadminRole(roleName)) return SUPERADMIN_ROLE_LABEL;
+  return roleName;
 }

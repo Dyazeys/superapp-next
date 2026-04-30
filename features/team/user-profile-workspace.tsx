@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useTeamUserProfile } from "@/features/team/use-team-module";
+import { getRoleDisplayName } from "@/lib/rbac";
 
 type TeamUserProfileWorkspaceProps = {
   userId: string;
@@ -38,7 +39,7 @@ function TeamUserProfileEditor({ userId, compact = false, onSaved }: TeamUserPro
       {!compact ? (
         <div className="grid gap-4 md:grid-cols-4">
           <MetricCard title="Username" value={payload?.user.username ?? "-"} subtitle="Identity login akun ini." icon={<UserRound className="size-4" />} />
-          <MetricCard title="Role" value={payload?.user.role_name ?? "UNASSIGNED"} subtitle="Role utama untuk permission aplikasi." />
+          <MetricCard title="Role" value={getRoleDisplayName(payload?.user.role_name)} subtitle="Role utama untuk permission aplikasi." />
           <MetricCard title="Status" value={payload?.user.is_active ? "Active" : "Inactive"} subtitle="Status akun login saat ini." icon={<BadgeCheck className="size-4" />} />
           <MetricCard title="Joined" value={createdAt} subtitle="Tanggal akun ini dibuat." icon={<Clock3 className="size-4" />} />
         </div>
@@ -50,7 +51,7 @@ function TeamUserProfileEditor({ userId, compact = false, onSaved }: TeamUserPro
           </div>
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Role</p>
-            <p className="mt-1 text-sm font-medium text-slate-900">{payload?.user.role_name ?? "UNASSIGNED"}</p>
+            <p className="mt-1 text-sm font-medium text-slate-900">{getRoleDisplayName(payload?.user.role_name)}</p>
           </div>
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Status</p>

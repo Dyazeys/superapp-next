@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { syncPayoutSettlementJournal } from "@/lib/payout-journal";
 import { normalizePayoutStatus } from "@/lib/payout-status";
 import { payoutSchema } from "@/schemas/payout-module";
@@ -29,6 +31,8 @@ const payoutOrderSelect = {
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_RECORD_VIEW);
+
     const payouts = await prisma.t_payout.findMany({
       orderBy: [{ payout_date: "desc" }, { payout_id: "desc" }],
       include: {
@@ -46,6 +50,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_RECORD_CREATE);
+
     const payload = payoutSchema.parse(await request.json());
 
     const payout = await prisma.$transaction(async (tx) => {

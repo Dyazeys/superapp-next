@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { inboundDeliverySchema } from "@/schemas/warehouse-module";
 
 function asDateOnly(value: string) {
@@ -59,6 +61,8 @@ async function seedInboundItemsFromPurchaseOrder(tx: Tx, inboundId: string, poId
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_INBOUND_VIEW);
+
     const inbound = await prisma.inbound_deliveries.findMany({
       orderBy: [{ receive_date: "desc" }, { created_at: "desc" }],
       include: {
@@ -84,6 +88,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_INBOUND_CREATE);
+
     const payload = inboundDeliverySchema.parse(await request.json());
 
     const inbound = await prisma.$transaction(async (tx) => {

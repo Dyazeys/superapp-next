@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { salesCustomerSchema } from "@/schemas/sales-module";
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_CUSTOMER_VIEW);
+
     const [customers, metrics] = await Promise.all([
       prisma.master_customer.findMany({
         orderBy: [{ customer_name: "asc" }, { customer_id: "asc" }],
@@ -51,6 +55,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_CUSTOMER_CREATE);
+
     const payload = salesCustomerSchema.parse(await request.json());
 
     const customer = await prisma.master_customer.create({

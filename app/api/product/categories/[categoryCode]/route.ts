@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { productCategorySchema } from "@/schemas/product-module";
 
 export async function PATCH(
@@ -9,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ categoryCode: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_CATEGORY_UPDATE);
+
     const { categoryCode } = await params;
     const payload = productCategorySchema.partial().parse(await request.json());
 
@@ -44,6 +48,8 @@ export async function DELETE(
   { params }: { params: Promise<{ categoryCode: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_CATEGORY_DELETE);
+
     const { categoryCode } = await params;
 
     await prisma.category_product.delete({

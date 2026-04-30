@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { masterProductSchema } from "@/schemas/product-module";
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_MASTER_VIEW);
+
     const products = await prisma.master_product.findMany({
       orderBy: { sku: "asc" },
       include: {
@@ -28,6 +32,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_MASTER_CREATE);
+
     const payload = masterProductSchema.parse(await request.json());
 
     if (payload.category_code) {

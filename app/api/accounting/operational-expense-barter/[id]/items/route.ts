@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { recalculateOperationalExpenseBarterTotal } from "@/lib/operational-expense-barter";
 import { operationalExpenseBarterItemSchema } from "@/schemas/accounting-module";
 
@@ -34,6 +36,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_UPDATE);
+
     const { id } = await params;
     const payload = operationalExpenseBarterItemSchema.parse(await request.json());
 

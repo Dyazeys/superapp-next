@@ -1,8 +1,8 @@
 # Auth Local Troubleshooting
 
-Tanggal: `2026-04-13`
+Tanggal update: `2026-04-29`
 
-Panduan cepat jika login lokal gagal (`/login` -> `Email atau password tidak valid`).
+Panduan cepat jika login lokal gagal (`/login` -> kredensial tidak valid).
 
 ## Gejala Umum
 
@@ -15,7 +15,8 @@ Panduan cepat jika login lokal gagal (`/login` -> `Email atau password tidak val
 - `localhost:3000`
 2. Pastikan tidak ada stale `next dev` process.
 3. Pastikan `.env` terbaru sudah terbaca.
-4. Pastikan email/password sesuai `DEMO_ADMIN_EMAIL` dan `DEMO_ADMIN_PASSWORD`.
+4. Pastikan login menggunakan `username` (bukan email), plus password yang sesuai.
+5. Jika sistem masih bootstrap demo (belum ada user aktif di DB), pastikan username/password cocok dengan `DEMO_ADMIN_EMAIL` dan `DEMO_ADMIN_PASSWORD`.
 
 ## Tindakan Perbaikan
 
@@ -28,7 +29,7 @@ Panduan cepat jika login lokal gagal (`/login` -> `Email atau password tidak val
 ## Hardening yang Sudah Ada
 
 Di auth credentials:
-- Email dibandingkan dengan `trim().toLowerCase()`.
+- Identifier login di-trim sebelum verifikasi.
 - Password dibandingkan dengan `trim()`.
 
 ## Catatan Operasional

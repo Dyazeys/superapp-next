@@ -94,7 +94,7 @@ const TASK_DASHBOARD_ITEM: ModuleNavItem = {
   href: "/task",
   icon: LayoutDashboard,
   badge: "Guide",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
 };
 
 const TASK_MY_TASKS_ITEM: ModuleNavItem = {
@@ -102,19 +102,19 @@ const TASK_MY_TASKS_ITEM: ModuleNavItem = {
   href: "/task/tugas-saya",
   icon: ClipboardList,
   badge: "Task",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
   children: [
     {
       label: "To Do",
       href: "/task/tugas-saya/to-do",
       icon: ClipboardList,
-      permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+      permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
     },
     {
       label: "KPI",
       href: "/task/tugas-saya/kpi",
       icon: Gauge,
-      permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+      permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
     },
   ],
 };
@@ -124,19 +124,19 @@ const TASK_ATTENDANCE_ITEM: ModuleNavItem = {
   href: "/task/absensi",
   icon: Clock3,
   badge: "Daily",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
   children: [
     {
       label: "Clock In / Out",
       href: "/task/absensi/clock-in-out",
       icon: Clock3,
-      permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+      permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
     },
     {
       label: "Izin / Sakit",
       href: "/task/absensi/izin-sakit",
       icon: ReceiptText,
-      permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+      permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
     },
   ],
 };
@@ -146,7 +146,7 @@ const TASK_MY_CALENDAR_ITEM: ModuleNavItem = {
   href: "/task/kalender-saya",
   icon: CalendarDays,
   badge: "Plan",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
 };
 
 const TASK_REMINDER_ITEM: ModuleNavItem = {
@@ -154,7 +154,7 @@ const TASK_REMINDER_ITEM: ModuleNavItem = {
   href: "/task/reminder",
   icon: BellRing,
   badge: "Focus",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
 };
 
 const TEAM_DASHBOARD_ITEM: ModuleNavItem = {
@@ -162,7 +162,7 @@ const TEAM_DASHBOARD_ITEM: ModuleNavItem = {
   href: "/team",
   icon: LayoutDashboard,
   badge: "Guide",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
 };
 
 const TEAM_MODULE_ITEM: ModuleNavItem = {
@@ -182,19 +182,19 @@ const TEAM_MEETING_ITEM: ModuleNavItem = {
   href: "/team/meeting",
   icon: Presentation,
   badge: "Sync",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
   children: [
     {
       label: "Notulen",
       href: "/team/meeting/notulen",
       icon: BookOpenText,
-      permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
     },
     {
       label: "To Do",
       href: "/team/meeting/to-do",
       icon: ClipboardList,
-      permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
     },
   ],
 };
@@ -204,7 +204,7 @@ const TEAM_CALENDAR_ITEM: ModuleNavItem = {
   href: "/team/kalender-tim",
   icon: CalendarDays,
   badge: "Plan",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
 };
 
 const TEAM_ANNOUNCEMENTS_ITEM: ModuleNavItem = {
@@ -212,7 +212,7 @@ const TEAM_ANNOUNCEMENTS_ITEM: ModuleNavItem = {
   href: "/team/pengumuman",
   icon: Megaphone,
   badge: "Info",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
 };
 
 const TEAM_APPROVAL_ITEM: ModuleNavItem = {
@@ -220,7 +220,7 @@ const TEAM_APPROVAL_ITEM: ModuleNavItem = {
   href: "/team/approval",
   icon: CheckCheck,
   badge: "Flow",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
 };
 
 const TEAM_STRUCTURE_ITEM: ModuleNavItem = {
@@ -228,7 +228,7 @@ const TEAM_STRUCTURE_ITEM: ModuleNavItem = {
   href: "/team/struktur-tim",
   icon: Route,
   badge: "Org",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
 };
 
 const TEAM_SOP_ITEM: ModuleNavItem = {
@@ -236,7 +236,7 @@ const TEAM_SOP_ITEM: ModuleNavItem = {
   href: "/team/sop",
   icon: FileText,
   badge: "Guide",
-  permissionAny: [PERMISSIONS.AUTH_USER_VIEW, PERMISSIONS.AUTH_ROLE_VIEW],
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
 };
 
 export const TOP_NAV_ITEMS: TopNavItem[] = [

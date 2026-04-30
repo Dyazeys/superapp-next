@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { purchaseOrderSchema } from "@/schemas/warehouse-module";
 
 function asDateOnly(value: string) {
@@ -13,6 +15,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_UPDATE);
+
     const { id } = await params;
     const payload = purchaseOrderSchema.partial().parse(await request.json());
 
@@ -36,6 +40,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_DELETE);
+
     const { id } = await params;
 
     await prisma.purchase_orders.delete({

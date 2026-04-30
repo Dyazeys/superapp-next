@@ -1,21 +1,49 @@
+import { ArrowRight, BarChart3 } from "lucide-react";
+import Link from "next/link";
 import { PageShell } from "@/components/foundation/page-shell";
-import { ModulePlaceholder } from "@/features/shared/module-hub";
+import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 
 export default function MarketingLiveStreamingPage() {
   return (
     <PageShell
       eyebrow="Marketing"
       title="Live Streaming"
-      description="Placeholder awal untuk merangkum jadwal live, performa session, dan dampaknya ke traffic atau penjualan."
+      description="Visualisasi live streaming tersedia di menu Analytic."
     >
-      <ModulePlaceholder
-        intro="Nanti halaman ini bisa dipakai untuk recap host, session, viewers, engagement, dan hasil penjualan dari live."
-        focusItems={[
-          "Jadwal dan recap session live.",
-          "Viewer, engagement, dan product push selama live.",
-          "Kontribusi live terhadap order atau omzet.",
-        ]}
-      />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <WorkspacePanel
+          title="Dialihkan ke Analytic"
+          description="Dashboard live streaming telah dipindahkan."
+        >
+          <div className="rounded-[24px] bg-slate-900 px-5 py-6 text-white">
+            <BarChart3 className="mb-3 size-8 text-slate-300" />
+            <p className="text-xl font-semibold">Visualisasi ada di Analytic</p>
+            <p className="mt-2 text-sm leading-6 text-slate-300">
+              Jadwal live, session recap, viewer engagement, dan kontribusi live ke penjualan 
+              dapat diakses melalui menu Analytic.
+            </p>
+            <Link
+              href="/analytics"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100"
+            >
+              Buka Analytic
+              <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </WorkspacePanel>
+
+        <WorkspacePanel
+          title="Catatan"
+          description="Halaman ini hanya sebagai landing page."
+        >
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              Halaman ini tidak menampilkan data transaksi. Seluruh visualisasi 
+              dan dashboard marketing telah dialihkan ke menu <strong>Analytic</strong>.
+            </p>
+          </div>
+        </WorkspacePanel>
+      </div>
     </PageShell>
   );
 }

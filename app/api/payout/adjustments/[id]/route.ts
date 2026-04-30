@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { resolvePayoutAdjustmentChannelId } from "@/lib/payout-adjustment-channel";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { deletePayoutAdjustmentJournal, syncPayoutAdjustmentJournal } from "@/lib/payout-adjustment-journal";
 import { payoutAdjustmentSchema } from "@/schemas/payout-module";
 
@@ -39,6 +41,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_ADJUSTMENT_UPDATE);
+
     const { id } = await params;
     const payload = payoutAdjustmentSchema.partial().parse(await request.json());
     const adjustmentId = Number(id);
@@ -103,6 +107,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_ADJUSTMENT_DELETE);
+
     const { id } = await params;
     const adjustmentId = Number(id);
 

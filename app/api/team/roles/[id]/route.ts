@@ -13,10 +13,12 @@ export async function PATCH(
   try {
     await requireApiPermission(PERMISSIONS.AUTH_ROLE_UPDATE);
     const { id } = await params;
+    const roleId = Number(id);
+    invariant(!Number.isNaN(roleId), "Invalid role ID.", 400);
     const payload = roleInputSchema.parse(await request.json());
 
     const updated = await prisma.roles.update({
-      where: { id: Number(id) },
+      where: { id: roleId },
       data: {
         role_name: payload.role_name,
         permissions: payload.permissions,
@@ -48,6 +50,7 @@ export async function DELETE(
     await requireApiPermission(PERMISSIONS.AUTH_ROLE_DELETE);
     const { id } = await params;
     const roleId = Number(id);
+    invariant(!Number.isNaN(roleId), "Invalid role ID.", 400);
 
     const userCount = await prisma.users.count({
       where: { role_id: roleId },

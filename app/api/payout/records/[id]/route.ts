@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { deletePayoutSettlementJournal, syncPayoutSettlementJournal } from "@/lib/payout-journal";
 import { normalizePayoutStatus } from "@/lib/payout-status";
 import { payoutPatchSchema } from "@/schemas/payout-module";
@@ -32,6 +34,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_RECORD_UPDATE);
+
     const { id } = await params;
     const rawPayload = await request.json();
     const payload = payoutPatchSchema.parse(rawPayload);
@@ -92,6 +96,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_RECORD_DELETE);
+
     const { id } = await params;
     const payoutId = Number(id);
 

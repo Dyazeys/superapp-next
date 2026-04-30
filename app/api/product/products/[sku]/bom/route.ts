@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { productBomSchema } from "@/schemas/product-module";
 
 function normalizeBomGroup(value: unknown) {
@@ -35,6 +37,8 @@ export async function GET(
   { params }: { params: Promise<{ sku: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_BOM_VIEW);
+
     const { sku } = await params;
 
     const bom = await prisma.product_bom.findMany({
@@ -53,6 +57,8 @@ export async function POST(
   { params }: { params: Promise<{ sku: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_BOM_CREATE);
+
     const { sku } = await params;
     const raw = await request.json();
     const payload = productBomSchema.parse({

@@ -14,6 +14,7 @@ export async function PATCH(
   try {
     const session = await requireApiPermission(PERMISSIONS.AUTH_USER_UPDATE);
     const { id } = await params;
+    invariant(id?.length, "Invalid user ID.", 400);
     const payload = userUpdateSchema.parse(await request.json());
 
     const role = await prisma.roles.findUnique({
@@ -65,6 +66,7 @@ export async function DELETE(
   try {
     const session = await requireApiPermission(PERMISSIONS.AUTH_USER_DELETE);
     const { id } = await params;
+    invariant(id?.length, "Invalid user ID.", 400);
 
     invariant(session.user.id !== id, "You cannot delete your own active session.");
 

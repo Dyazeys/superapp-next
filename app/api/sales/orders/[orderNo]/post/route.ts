@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { syncSalesOrderJournals } from "@/lib/sales-journal";
 import { syncSalesOrderMovements } from "@/lib/warehouse-stock";
 
@@ -10,6 +12,8 @@ export async function POST(
   { params }: { params: Promise<{ orderNo: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_POST);
+
     const { orderNo } = await params;
 
     const order = await prisma.$transaction(async (tx) => {

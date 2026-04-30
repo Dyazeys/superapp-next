@@ -1,7 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "@/db/prisma";
-import { ROLE_PERMISSION_TEMPLATES } from "@/lib/rbac";
+import { isSuperadminRole, ROLE_PERMISSION_TEMPLATES } from "@/lib/rbac";
 import { env } from "@/schemas/env";
 import { verifyPassword } from "@/lib/password";
 
@@ -30,10 +30,9 @@ function normalizePermissions(value: unknown): string[] {
 async function authorizeDatabaseUser(login: string, password: string) {
   const dbUser = await prisma.users.findFirst({
     where: {
-      username: {
-        equals: login,
-        mode: "insensitive",
-      },
+      OR: [
+        { username: { equals: login, mode: "insensitive" } },
+      ],
       is_active: true,
     },
     include: {
@@ -52,7 +51,9 @@ async function authorizeDatabaseUser(login: string, password: string) {
   }
 
   const roleName = dbUser.roles?.role_name ?? "UNASSIGNED";
-  const permissions = normalizePermissions(dbUser.roles?.permissions);
+  const permissions = isSuperadminRole(roleName)
+    ? ROLE_PERMISSION_TEMPLATES.OWNER
+    : normalizePermissions(dbUser.roles?.permissions);
 
   return {
     id: dbUser.id,

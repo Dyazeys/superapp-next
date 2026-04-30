@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { syncAdjustmentMovement } from "@/lib/warehouse-stock";
 
 export async function POST(
@@ -9,6 +11,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_POST);
+
     const { id } = await params;
 
     const adjustment = await prisma.$transaction(async (tx) => {

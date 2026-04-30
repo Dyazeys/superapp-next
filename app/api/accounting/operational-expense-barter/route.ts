@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { operationalExpenseBarterSchema } from "@/schemas/accounting-module";
 
 function toDateOnly(value: string) {
@@ -34,6 +36,8 @@ function barterInclude() {
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_VIEW);
+
     const rows = await prisma.operational_expense_barter.findMany({
       orderBy: [{ barter_date: "desc" }, { created_at: "desc" }],
       include: barterInclude(),
@@ -48,6 +52,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_CREATE);
+
     const payload = operationalExpenseBarterSchema.parse(await request.json());
 
     const created = await prisma.operational_expense_barter.create({

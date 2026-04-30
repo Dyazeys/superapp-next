@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { jsonError } from "@/lib/api-error";
+import { requireApiPermission } from "@/lib/authz";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { channelSchema } from "@/schemas/channel-module";
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.CHANNEL_MASTER_VIEW);
+
     const channels = await prisma.m_channel.findMany({
       orderBy: [{ channel_name: "asc" }, { channel_id: "asc" }],
       include: {
@@ -25,6 +29,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.CHANNEL_MASTER_CREATE);
+
     const payload = channelSchema.parse(await request.json());
 
     const channel = await prisma.m_channel.create({

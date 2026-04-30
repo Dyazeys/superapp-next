@@ -132,6 +132,7 @@ export default async function DashboardReportPnlPage({
       <WorkspacePanel
         title="Filter Report"
         description="Pilih bulan dan channel untuk melihat laporan PNL."
+        className="overflow-visible"
         titleClassName="text-2xl leading-none"
         descriptionClassName="text-xs leading-5"
       >

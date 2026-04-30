@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { getPayoutReconciliationReport } from "@/lib/payout-reconciliation";
+import { PERMISSIONS } from "@/lib/rbac";
 import type { PayoutReconciliationFilter, PayoutReconciliationPeriodPreset } from "@/types/payout";
 
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -39,6 +41,8 @@ function resolveReconciliationFilter(request: NextRequest): PayoutReconciliation
 
 export async function GET(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_RECONCILIATION_VIEW);
+
     const filter = resolveReconciliationFilter(request);
     const report = await getPayoutReconciliationReport(filter);
     return NextResponse.json(report);

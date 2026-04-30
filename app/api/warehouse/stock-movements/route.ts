@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 
 export async function GET() {
+  await requireApiPermission(PERMISSIONS.WAREHOUSE_STOCK_VIEW);
+
   const stockMovements = await prisma.stock_movements.findMany({
     orderBy: [{ movement_date: "desc" }, { created_at: "desc" }, { id: "desc" }],
     include: {

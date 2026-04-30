@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_JOURNAL_VIEW);
+
     const journalId = request.nextUrl.searchParams.get("journalId");
 
     const journalLines = await prisma.journal_lines.findMany({

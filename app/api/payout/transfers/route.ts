@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { isFailedPayoutStatus } from "@/lib/payout-status";
 import { syncPayoutTransferJournal } from "@/lib/payout-transfer-journal";
 import { payoutTransferSchema } from "@/schemas/payout-module";
@@ -117,6 +119,8 @@ async function validatePayoutTransferInput(
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_TRANSFER_VIEW);
+
     const transfers = await prisma.payout_transfers.findMany({
       orderBy: [{ transfer_date: "desc" }, { created_at: "desc" }, { id: "desc" }],
       include: transferInclude,
@@ -130,6 +134,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.PAYOUT_TRANSFER_CREATE);
+
     const payload = payoutTransferSchema.parse(await request.json());
 
     const transfer = await prisma.$transaction(async (tx) => {

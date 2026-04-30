@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { recalculatePurchaseOrderStatus } from "@/lib/warehouse-po-status";
 import { purchaseOrderItemSchema } from "@/schemas/warehouse-module";
 
@@ -10,6 +12,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_VIEW);
+
     const { id } = await params;
 
     const [items, orderedByInv, receivedByInv] = await Promise.all([
@@ -94,6 +98,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_UPDATE);
+
     const { id } = await params;
     const payload = purchaseOrderItemSchema.parse({ ...(await request.json()), po_id: id });
 

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { adjustmentSchema } from "@/schemas/warehouse-module";
 
 function asDateOnly(value: string) {
@@ -10,6 +12,8 @@ function asDateOnly(value: string) {
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_VIEW);
+
     const adjustments = await prisma.adjustments.findMany({
       orderBy: [{ adjustment_date: "desc" }, { created_at: "desc" }],
       include: {
@@ -30,6 +34,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_CREATE);
+
     const payload = adjustmentSchema.parse(await request.json());
 
     const inventory = await prisma.master_inventory.findUnique({

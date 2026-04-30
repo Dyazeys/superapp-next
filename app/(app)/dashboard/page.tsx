@@ -1,168 +1,107 @@
-import { ArrowUpRight, Boxes, Clock3, PackageCheck, ShoppingCart, UsersRound } from "lucide-react";
-import { DashboardRevenueChartClient } from "@/components/charts/dashboard-revenue-chart-client";
-import { StatusBadge } from "@/components/feedback/status-badge";
+import {
+  Calculator,
+  ClipboardList,
+  HandCoins,
+  Megaphone,
+  PenSquare,
+  RadioTower,
+  Warehouse,
+  Boxes,
+} from "lucide-react";
 import { PageShell } from "@/components/foundation/page-shell";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
-import { MetricCard } from "@/components/layout/stats-card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { getDashboardOverview } from "@/lib/dashboard";
+import { ModuleHub } from "@/features/shared/module-hub";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
-function formatCompactIdr(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
-function formatNumber(value: number) {
-  return new Intl.NumberFormat("id-ID").format(value);
-}
-
-export default async function DashboardPage() {
-  const overview = await getDashboardOverview();
-
+export default function DashboardPage() {
   return (
     <PageShell
-      eyebrow="Dashboard"
-      title="ERP Operations Overview"
-      description="Ringkasan performa operasional harian dengan fokus scan cepat: KPI utama, tren revenue, dan aktivitas terbaru lintas modul."
+      eyebrow="ERP"
+      title="ERP overview"
+      description="Overview ini berfungsi seperti README operasional: ERP adalah tempat input, transaksi, dan pemeliharaan data harian yang nanti dibaca kembali oleh workspace Analytic."
     >
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          title="Total Orders"
-          value={formatNumber(overview.metrics.totalOrders)}
-          subtitle={`${formatNumber(overview.metrics.weekOrders)} order tercatat 7 hari terakhir`}
-          icon={<ShoppingCart className="size-4" />}
-        />
-        <MetricCard
-          title="Revenue 30 Hari"
-          value={formatCompactIdr(overview.metrics.totalRevenue)}
-          subtitle="Akumulasi dari sales order pada 30 hari terakhir"
-          icon={<ArrowUpRight className="size-4" />}
-        />
-        <MetricCard
-          title="Active SKU"
-          value={formatNumber(overview.metrics.activeSku)}
-          subtitle="Master produk aktif siap dipakai transaksi"
-          icon={<PackageCheck className="size-4" />}
-        />
-        <MetricCard
-          title="Customer Active"
-          value={formatNumber(overview.metrics.activeCustomers)}
-          subtitle="Customer aktif pada master sales"
-          icon={<UsersRound className="size-4" />}
-        />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
-        <WorkspacePanel title="Revenue Trend" description="Performa pendapatan 7 hari terakhir dari data sales order.">
-          <DashboardRevenueChartClient series={overview.revenueSeries} />
-        </WorkspacePanel>
-
-        <WorkspacePanel
-          title="Operational Summary"
-          description="Progress area kritikal untuk memastikan ritme kerja harian tetap stabil."
-        >
-          <div className="space-y-3">
-            {[
-              {
-                label: "Order Coverage",
-                value: Math.min(100, Math.max(5, Math.round((overview.metrics.weekOrders / Math.max(1, overview.metrics.totalOrders)) * 100))),
-                note: "Proporsi order mingguan terhadap total data order",
-              },
-              {
-                label: "SKU Coverage",
-                value: Math.min(100, Math.max(5, Math.round(overview.metrics.activeSku > 0 ? 85 : 20))),
-                note: "Ketersediaan master SKU aktif",
-              },
-              {
-                label: "Customer Coverage",
-                value: Math.min(100, Math.max(5, Math.round(overview.metrics.activeCustomers > 0 ? 82 : 18))),
-                note: "Kelengkapan master customer aktif",
-              },
-              {
-                label: "Data Freshness",
-                value: 90,
-                note: "Dashboard membaca data real-time langsung dari database",
-              },
-            ].map((item) => (
-              <div key={item.label} className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-slate-800">{item.label}</p>
-                  <span className="text-xs font-semibold text-slate-500">{item.value}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-200">
-                  <div className="h-full rounded-full bg-slate-700" style={{ width: `${item.value}%` }} />
-                </div>
-                <p className="mt-2 text-xs text-slate-500">{item.note}</p>
-              </div>
-            ))}
+      <div className="grid gap-6 md:grid-cols-3">
+        <WorkspacePanel title="Apa isi modul ini?" description="ERP jadi rumah utama untuk transaksi harian, master data, dan pengisian data operasional lintas divisi.">
+          <div className="space-y-3 text-sm leading-6 text-slate-600">
+            <p>Workspace ini dipakai untuk mencatat aktivitas nyata: penjualan, gudang, accounting, payout, produk, channel, sampai kerja harian marketing dan konten.</p>
+            <p>Data yang masuk dari ERP inilah yang nantinya jadi sumber bacaan dan visualisasi di workspace Analytic.</p>
           </div>
         </WorkspacePanel>
-      </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.3fr_1fr]">
-        <WorkspacePanel
-          title="Latest Activities"
-          description="Timeline aktivitas terbaru dari sales dan pergerakan stok."
-        >
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Aktivitas</TableHead>
-                <TableHead>Detail</TableHead>
-                <TableHead>Waktu</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {overview.recentActivities.length === 0 ? (
-                <TableRow>
-                  <TableCell className="font-medium text-slate-500" colSpan={3}>
-                    Belum ada aktivitas untuk ditampilkan.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                overview.recentActivities.map((activity) => (
-                  <TableRow key={activity.id}>
-                    <TableCell className="font-medium text-slate-800">{activity.title}</TableCell>
-                    <TableCell className="max-w-[360px] whitespace-normal text-slate-600">{activity.description}</TableCell>
-                    <TableCell className="text-slate-500">{activity.timestamp}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </WorkspacePanel>
-
-        <WorkspacePanel
-          title="System Readiness"
-          description="Checklist singkat area sistem yang menjadi baseline operasional harian."
-        >
-          <div className="space-y-3">
-            {overview.readiness.map((item) => (
-              <div key={item.label} className="flex items-center justify-between rounded-2xl border border-slate-200/80 bg-slate-50/70 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <Boxes className="size-3.5 text-slate-500" />
-                  <span className="text-sm text-slate-700">{item.label}</span>
-                </div>
-                <StatusBadge
-                  label={item.state === "done" ? "Done" : "Next"}
-                  tone={item.state === "done" ? "success" : "info"}
-                />
-              </div>
-            ))}
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 text-xs text-slate-500">
-              <Clock3 className="size-3.5" />
-              Last updated: {overview.lastUpdatedLabel} WIB
-            </div>
+        <WorkspacePanel title="Cara pakai" description="Urutan pakai yang paling tepat untuk user operasional sehari-hari.">
+          <div className="space-y-3 text-sm leading-6 text-slate-600">
+            <p>Mulai dari overview ini untuk memahami peran tiap area, lalu masuk ke submenu yang paling dekat dengan pekerjaanmu hari itu.</p>
+            <p>Kalau fokusnya input order buka Sales, kalau stok dan penerimaan barang buka Warehouse, kalau angka dan jurnal buka Accounting atau Payout, dan kalau input kerja harian campaign atau konten buka Marketing atau Konten.</p>
           </div>
         </WorkspacePanel>
-      </section>
+
+        <WorkspacePanel title="Hubungan dengan Analytic" description="ERP tidak berdiri sendiri, karena data operasionalnya akan dipakai lagi untuk kebutuhan visualisasi.">
+          <div className="space-y-3 text-sm leading-6 text-slate-600">
+            <p>Contohnya, tim bisa mengisi upload harian konten atau aktivitas campaign di ERP, lalu hasilnya dibaca sebagai insight, tren, atau performa di Analytic.</p>
+            <p>Prinsipnya: ERP untuk membuat dan merapikan data, Analytic untuk membaca dan memvisualisasikan data tersebut.</p>
+          </div>
+        </WorkspacePanel>
+      </div>
+
+      <ModuleHub
+        summaryTitle="Submenu utama"
+        summaryDescription="Delapan area ini adalah tulang punggung workspace ERP saat ini."
+        bullets={[
+          "Sales, Warehouse, Accounting, dan Payout dipakai untuk input dan proses transaksi operasional harian.",
+          "Product dan Channel dipakai untuk menjaga master data yang jadi fondasi modul lain tetap rapi.",
+          "Marketing dan Konten tetap ada di ERP ketika tim perlu mengisi data kerja harian yang nanti divisualisasikan di Analytic.",
+          "Kalau tujuanmu adalah mencatat atau memperbarui data, kemungkinan besar titik masuknya ada di ERP.",
+        ]}
+        items={[
+          {
+            title: "Sales",
+            description: "Area input order penjualan dan customer untuk alur transaksi komersial harian.",
+            href: "/sales",
+            icon: HandCoins,
+          },
+          {
+            title: "Warehouse",
+            description: "Area input vendor, PO, inbound, adjustment, dan saldo stok untuk operasional gudang.",
+            href: "/warehouse",
+            icon: Warehouse,
+          },
+          {
+            title: "Accounting",
+            description: "Area COA, jurnal, dan opex untuk pencatatan finansial yang jadi sumber pembacaan angka.",
+            href: "/accounting",
+            icon: Calculator,
+          },
+          {
+            title: "Payout",
+            description: "Area payout, adjustment, transfer, dan rekonsiliasi nilai channel sebagai data operasional keuangan.",
+            href: "/payout",
+            icon: ClipboardList,
+          },
+          {
+            title: "Product",
+            description: "Area master produk, kategori, inventory, dan BOM sebagai fondasi data barang.",
+            href: "/products",
+            icon: Boxes,
+          },
+          {
+            title: "Channel",
+            description: "Area struktur channel untuk referensi transaksi dan pelacakan penjualan.",
+            href: "/channel",
+            icon: RadioTower,
+          },
+          {
+            title: "Marketing",
+            description: "Area kerja marketing untuk input aktivitas harian campaign yang nanti bisa dibaca performanya di Analytic.",
+            href: "/marketing",
+            icon: Megaphone,
+          },
+          {
+            title: "Konten",
+            description: "Area kerja konten untuk input aktivitas atau upload harian yang nanti divisualisasikan performanya di Analytic.",
+            href: "/content",
+            icon: PenSquare,
+          },
+        ]}
+      />
     </PageShell>
   );
 }

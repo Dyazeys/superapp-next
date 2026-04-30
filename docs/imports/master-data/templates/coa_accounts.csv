@@ -1,0 +1,116 @@
+code,name,normal_balance,is_active,category_name,parent_code,parent_name
+10000,Aset,Debit,true,Aset,,
+11000,Kas & Bank,Debit,true,Aset,10000,Aset
+11101,Kas Kecil (Petty Cash),Debit,true,Aset,11000,Kas & Bank
+11102,Bank BCA (Rekening Utama),Debit,true,Aset,11000,Kas & Bank
+11103,Saldo Marketplace (Belum Ditarik),Debit,true,Aset,11000,Kas & Bank
+11104,Saldo E-Wallet (Gopay/Ovo/Dana),Debit,true,Aset,11000,Kas & Bank
+11111,Saldo MP - Shopee,Debit,true,Aset,11000,Kas & Bank
+11112,Saldo MP - Tokopedia & Tiktok,Debit,true,Aset,11000,Kas & Bank
+11113,Saldo MP - Akulaku,Debit,true,Aset,11000,Kas & Bank
+11114,Saldo MP - Lazada,Debit,true,Aset,11000,Kas & Bank
+11115,Saldo Penampungan - Web,Debit,true,Aset,11000,Kas & Bank
+11116,Piutang/Saldo - RDK (Dropship/Konsinyasi),Debit,true,Aset,11000,Kas & Bank
+11117,Piutang/Saldo - Event,Debit,true,Aset,11000,Kas & Bank
+12000,Piutang,Debit,true,Aset,10000,Aset
+12101,Piutang Usaha,Debit,true,Aset,12000,Piutang
+12111,Piutang Shopee,Debit,true,Aset,12101,Piutang Usaha
+12112,Piutang Tokopedia,Debit,true,Aset,12101,Piutang Usaha
+12113,Piutang Tiktok,Debit,true,Aset,12101,Piutang Usaha
+12114,Piutang Lazada,Debit,true,Aset,12101,Piutang Usaha
+12115,Piutang Akulaku,Debit,true,Aset,12101,Piutang Usaha
+12116,Piutang Web RIMC,Debit,true,Aset,12101,Piutang Usaha
+12117,Piutang 90 Helmet,Debit,true,Aset,12101,Piutang Usaha
+12118,Piutang Boshelm,Debit,true,Aset,12101,Piutang Usaha
+12119,Piutang Jual Helm,Debit,true,Aset,12101,Piutang Usaha
+12120,Piutang Mr Helm,Debit,true,Aset,12101,Piutang Usaha
+12121,Piutang Shindu Asri Helmet,Debit,true,Aset,12101,Piutang Usaha
+12122,Piutang Boshelm Dropship,Debit,true,Aset,12101,Piutang Usaha
+12123,Piutang Mr Helm Dropship,Debit,true,Aset,12101,Piutang Usaha
+12124,Piutang Pickers Bandung,Debit,true,Aset,12101,Piutang Usaha
+12125,Piutang Bulls Syndicate,Debit,true,Aset,12101,Piutang Usaha
+12126,Piutang Earthspace,Debit,true,Aset,12101,Piutang Usaha
+12127,Piutang Central Project,Debit,true,Aset,12101,Piutang Usaha
+12128,Piutang Pickers Jakarta,Debit,true,Aset,12101,Piutang Usaha
+12129,Piutang Manual,Debit,true,Aset,12101,Piutang Usaha
+13000,Persediaan,Debit,true,Aset,10000,Aset
+13101,Persediaan Barang Dagang,Debit,true,Aset,13000,Persediaan
+13102,Barang dalam Perjalanan,Debit,true,Aset,13000,Persediaan
+13103,Persediaan Bahan Baku,Debit,true,Aset,13000,Persediaan
+14000,Aset Lancar Lainnya,Debit,true,Aset,10000,Aset
+14101,Perlengkapan Packing,Debit,true,Aset,14000,Aset Lancar Lainnya
+14102,Branding Asset,Debit,true,Aset,14000,Aset Lancar Lainnya
+14103,Perlengkapan / Peralatan Vendor,Debit,true,Aset,14000,Aset Lancar Lainnya
+15000,Aset Tetap,Debit,true,Aset,10000,Aset
+15101,Peralatan Kantor (Laptop/Printer),Debit,true,Aset,15000,Aset Tetap
+15102,Akumulasi Penyusutan Peralatan,Credit,true,Aset,15000,Aset Tetap
+15103,Investasi Aset,Debit,true,Aset,15000,Aset Tetap
+20000,Utang / Kewajiban,Credit,true,Kewajiban,,
+21000,Utang Lancar,Credit,true,Kewajiban,20000,Utang / Kewajiban
+21101,Utang Supplier/Vendor,Credit,true,Kewajiban,21000,Utang Lancar
+21102,Utang Gaji Karyawan,Credit,true,Kewajiban,21000,Utang Lancar
+21103,Utang Pajak,Credit,true,Kewajiban,21000,Utang Lancar
+22000,Kewajiban Jangka Panjang,Credit,true,Kewajiban,20000,Utang / Kewajiban
+22101,Pinjaman Bank/Modal,Credit,true,Kewajiban,22000,Kewajiban Jangka Panjang
+30000,Ekuitas/Modal,Credit,true,Ekuitas,,
+31101,Modal Pemilik,Credit,true,Ekuitas,30000,Ekuitas/Modal
+31102,Prive (Pengambilan Pribadi),Debit,true,Ekuitas,30000,Ekuitas/Modal
+31103,Laba Ditahan,Credit,true,Ekuitas,30000,Ekuitas/Modal
+40000,Pendapatan,Credit,true,Pendapatan,,
+41000,Pendapatan Penjualan,Credit,true,Pendapatan,40000,Pendapatan
+41101,Penjualan Shopee,Credit,true,Pendapatan,41000,Pendapatan Penjualan
+41102,Penjualan Tokopedia-Tiktokshop,Credit,true,Pendapatan,41000,Pendapatan Penjualan
+41103,Penjualan Akulaku,Credit,true,Pendapatan,41000,Pendapatan Penjualan
+41104,Penjualan Lazada,Credit,true,Pendapatan,41000,Pendapatan Penjualan
+41105,Penjualan Web,Credit,true,Pendapatan,41000,Pendapatan Penjualan
+41106,Penjualan Manual & Toko,Credit,true,Pendapatan,41000,Pendapatan Penjualan
+41107,Penjualan RDK,Credit,true,Pendapatan,41000,Pendapatan Penjualan
+41108,Penjualan Event,Credit,true,Pendapatan,41000,Pendapatan Penjualan
+42000,Potongan & Pengembalian,Debit,true,Pendapatan,40000,Pendapatan
+42101,Retur Penjualan,Debit,true,Pendapatan,42000,Potongan & Pengembalian
+42102,Diskon Penjualan / Voucher,Debit,true,Pendapatan,42000,Potongan & Pengembalian
+42103,Adjustment Marketplace,Debit,true,Pendapatan,42000,Potongan & Pengembalian
+42104,Diskon Penjualan Shopee,Debit,true,Pendapatan,42000,Potongan & Pengembalian
+42105,Diskon Penjualan Tokopedia-Tiktokshop,Debit,true,Pendapatan,42000,Potongan & Pengembalian
+50000,Harga Pokok Penjualan,Debit,true,HPP,,
+51101,Harga Pokok Penjualan (HPP),Debit,true,HPP,50000,Harga Pokok Penjualan
+51102,Biaya Angkut Pembelian,Debit,true,HPP,50000,Harga Pokok Penjualan
+60000,Beban Marketing & Operasional,Debit,true,Beban Operasional,,
+61000,Beban Marketing,Debit,true,Beban Operasional,60000,Beban Marketing & Operasional
+61101,Iklan MP,Debit,true,Beban Operasional,61000,Beban Marketing
+61102,KOL Tukar Produk,Debit,true,Beban Operasional,61000,Beban Marketing
+61103,Sponsorship,Debit,true,Beban Operasional,61000,Beban Marketing
+61104,Event,Debit,true,Beban Operasional,61000,Beban Marketing
+61105,Reserved Marketing 01,Debit,false,Beban Operasional,61000,Beban Marketing
+61106,Reserved Marketing 02,Debit,false,Beban Operasional,61000,Beban Marketing
+61107,Reserved Marketing 03,Debit,false,Beban Operasional,61000,Beban Marketing
+61108,Reserved Marketing 04,Debit,false,Beban Operasional,61000,Beban Marketing
+61109,Reserved Marketing 05,Debit,false,Beban Operasional,61000,Beban Marketing
+61110,Reserved Marketing 06,Debit,false,Beban Operasional,61000,Beban Marketing
+61111,Reserved Marketing 07,Debit,false,Beban Operasional,61000,Beban Marketing
+61112,Reserved Marketing 08,Debit,false,Beban Operasional,61000,Beban Marketing
+61113,Reserved Marketing 09,Debit,false,Beban Operasional,61000,Beban Marketing
+61114,Admin Fee Marketplace,Debit,true,Beban Operasional,61000,Beban Marketing
+61115,Service Fee Marketplace,Debit,true,Beban Operasional,61000,Beban Marketing
+61116,Order Process Fee Marketplace,Debit,true,Beban Operasional,61000,Beban Marketing
+61117,Program Fee Marketplace,Debit,true,Beban Operasional,61000,Beban Marketing
+61118,Affiliate Commission Marketplace,Debit,true,Beban Operasional,61000,Beban Marketing
+61119,Shipping Cost Shopee,Debit,true,Beban Operasional,61000,Beban Marketing
+61120,Shipping Cost Tokopedia-Tiktokshop,Debit,true,Beban Operasional,61000,Beban Marketing
+62000,Beban Operasional,Debit,true,Beban Operasional,60000,Beban Marketing & Operasional
+62101,Gaji & Insentif,Debit,true,Beban Operasional,62000,Beban Operasional
+62102,Listrik & Internet,Debit,true,Beban Operasional,62000,Beban Operasional
+62103,Operasional CC,Debit,true,Beban Operasional,62000,Beban Operasional
+62104,Kendaraan,Debit,true,Beban Operasional,62000,Beban Operasional
+62105,Konsumsi & ATK,Debit,true,Beban Operasional,62000,Beban Operasional
+62106,Entertain,Debit,true,Beban Operasional,62000,Beban Operasional
+62107,Pengembangan SDM,Debit,true,Beban Operasional,62000,Beban Operasional
+62108,Ongkir,Debit,true,Beban Operasional,62000,Beban Operasional
+62109,R&D,Debit,true,Beban Operasional,62000,Beban Operasional
+62110,Gedung,Debit,true,Beban Operasional,62000,Beban Operasional
+62111,Maintenance Inventaris Kantor,Debit,true,Beban Operasional,62000,Beban Operasional
+62112,Reserved Operasional 01,Debit,false,Beban Operasional,62000,Beban Operasional
+62113,Reserved Operasional 02,Debit,false,Beban Operasional,62000,Beban Operasional
+62114,Reserved Operasional 03,Debit,false,Beban Operasional,62000,Beban Operasional
+62115,Reserved Operasional 04,Debit,false,Beban Operasional,62000,Beban Operasional
+62116,Reserved Operasional 05,Debit,false,Beban Operasional,62000,Beban Operasional

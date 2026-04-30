@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { masterInventorySchema } from "@/schemas/product-module";
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_INVENTORY_VIEW);
+
     const inventory = await prisma.master_inventory.findMany({
       orderBy: { inv_code: "asc" },
     });
@@ -18,6 +22,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_INVENTORY_CREATE);
+
     const payload = masterInventorySchema.parse(await request.json());
 
     const inventory = await prisma.master_inventory.create({

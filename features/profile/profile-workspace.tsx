@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useProfileModule } from "@/features/profile/use-profile-module";
+import { getRoleDisplayName } from "@/lib/rbac";
 
 type ProfileEditorContentProps = {
   compact?: boolean;
@@ -32,7 +33,7 @@ function ProfileEditorContent({ compact = false, onSaved }: ProfileEditorContent
       {!compact ? (
         <div className="grid gap-4 md:grid-cols-4">
           <MetricCard title="Username" value={payload?.user.username ?? "-"} subtitle="Identity login yang aktif sekarang." />
-          <MetricCard title="Role" value={payload?.user.role_name ?? "UNASSIGNED"} subtitle="Role utama yang mengatur permission aplikasi." />
+          <MetricCard title="Role" value={getRoleDisplayName(payload?.user.role_name)} subtitle="Role utama yang mengatur permission aplikasi." />
           <MetricCard title="Status" value={payload?.user.is_active ? "Active" : "Inactive"} subtitle="Status akun login di auth.users." />
           <MetricCard title="Joined" value={createdAt} subtitle="Tanggal akun ini dibuat." />
         </div>
@@ -47,7 +48,7 @@ function ProfileEditorContent({ compact = false, onSaved }: ProfileEditorContent
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Role</p>
-              <p className="mt-1 text-sm font-medium text-slate-900">{payload?.user.role_name ?? "UNASSIGNED"}</p>
+              <p className="mt-1 text-sm font-medium text-slate-900">{getRoleDisplayName(payload?.user.role_name)}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Joined</p>

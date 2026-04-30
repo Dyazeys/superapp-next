@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { channelSchema } from "@/schemas/channel-module";
 
 export async function PATCH(
@@ -9,6 +11,8 @@ export async function PATCH(
   { params }: { params: Promise<{ channelId: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.CHANNEL_MASTER_UPDATE);
+
     const { channelId } = await params;
     const payload = channelSchema.partial().parse(await request.json());
 
@@ -36,6 +40,8 @@ export async function DELETE(
   { params }: { params: Promise<{ channelId: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.CHANNEL_MASTER_DELETE);
+
     const { channelId } = await params;
     await prisma.m_channel.delete({
       where: { channel_id: Number(channelId) },

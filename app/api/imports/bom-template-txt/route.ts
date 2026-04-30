@@ -1,9 +1,13 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { importBomTemplateText } from "@/lib/bom-template-import";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
+import { PERMISSIONS } from "@/lib/rbac";
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_BOM_CREATE);
+
     const formData = await request.formData();
     const file = formData.get("file");
     const mode = formData.get("mode");

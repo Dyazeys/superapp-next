@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { purchaseOrderSchema } from "@/schemas/warehouse-module";
 
 function asDateOnly(value: string) {
@@ -10,6 +12,8 @@ function asDateOnly(value: string) {
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_VIEW);
+
     const purchaseOrders = await prisma.purchase_orders.findMany({
       orderBy: [{ order_date: "desc" }, { po_number: "asc" }],
       include: {
@@ -30,6 +34,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_CREATE);
+
     const payload = purchaseOrderSchema.parse(await request.json());
 
     const vendor = await prisma.master_vendor.findUnique({

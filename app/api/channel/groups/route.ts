@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { channelGroupSchema } from "@/schemas/channel-module";
 
 export async function GET() {
   try {
+    await requireApiPermission(PERMISSIONS.CHANNEL_GROUP_VIEW);
+
     const groups = await prisma.m_channel_group.findMany({
       orderBy: [{ group_name: "asc" }, { group_id: "asc" }],
       include: {
@@ -25,6 +29,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    await requireApiPermission(PERMISSIONS.CHANNEL_GROUP_CREATE);
+
     const payload = channelGroupSchema.parse(await request.json());
     const group = await prisma.m_channel_group.create({
       data: {

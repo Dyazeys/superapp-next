@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TeamUserProfileModalContent } from "@/features/team/user-profile-workspace";
 import { useTeamUsers } from "@/features/team/use-team-module";
-import { PERMISSIONS, hasPermission } from "@/lib/rbac";
+import { getRoleDisplayName, isSuperadminRole, PERMISSIONS, hasPermission } from "@/lib/rbac";
 import type { TeamUserRecord } from "@/types/team";
 
 const columnHelper = createColumnHelper<TeamUserRecord>();
@@ -30,7 +30,7 @@ export function TeamUsersWorkspace() {
   const users = payload?.users ?? [];
   const roles = payload?.roles ?? [];
   const activeUsers = users.filter((user) => user.is_active).length;
-  const ownerUsers = users.filter((user) => user.roles?.role_name === "OWNER").length;
+  const ownerUsers = users.filter((user) => isSuperadminRole(user.roles?.role_name)).length;
 
   const columns = [
     columnHelper.accessor("username", {
@@ -44,7 +44,7 @@ export function TeamUsersWorkspace() {
     columnHelper.display({
       id: "role",
       header: "Role",
-      cell: ({ row }) => row.original.roles?.role_name ?? "UNASSIGNED",
+      cell: ({ row }) => getRoleDisplayName(row.original.roles?.role_name),
     }),
     columnHelper.accessor("is_active", {
       header: "Status",
@@ -153,7 +153,7 @@ export function TeamUsersWorkspace() {
               <option value="">Select role</option>
               {roles.map((role) => (
                 <option key={role.id} value={role.id}>
-                  {role.role_name}
+                  {getRoleDisplayName(role.role_name)}
                 </option>
               ))}
             </select>

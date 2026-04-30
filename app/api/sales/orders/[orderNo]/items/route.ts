@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { syncSalesOrderItemJournal } from "@/lib/sales-journal";
 import { syncSalesOrderItemMovements } from "@/lib/warehouse-stock";
 import { salesOrderItemSchema } from "@/schemas/sales-module";
@@ -43,6 +45,8 @@ export async function GET(
   { params }: { params: Promise<{ orderNo: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_VIEW);
+
     const { orderNo } = await params;
 
     const items = await prisma.t_order_item.findMany({
@@ -69,6 +73,8 @@ export async function POST(
   { params }: { params: Promise<{ orderNo: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_CREATE);
+
     const { orderNo } = await params;
     const payload = salesOrderItemSchema.parse({ ...(await request.json()), order_no: orderNo });
 

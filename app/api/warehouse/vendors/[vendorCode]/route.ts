@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { vendorSchema } from "@/schemas/warehouse-module";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ vendorCode: string }> }
 ) {
+  await requireApiPermission(PERMISSIONS.WAREHOUSE_VENDOR_UPDATE);
+
   const { vendorCode } = await params;
   const payload = vendorSchema.partial().parse(await request.json());
 
@@ -28,6 +32,8 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ vendorCode: string }> }
 ) {
+  await requireApiPermission(PERMISSIONS.WAREHOUSE_VENDOR_DELETE);
+
   const { vendorCode } = await params;
 
   await prisma.master_vendor.delete({

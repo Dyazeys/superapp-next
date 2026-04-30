@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { deleteSalesOrderItemJournal, syncSalesOrderItemJournal } from "@/lib/sales-journal";
 import { removeSalesOrderItemMovements, syncSalesOrderItemMovements } from "@/lib/warehouse-stock";
 import { salesOrderItemPatchSchema } from "@/schemas/sales-module";
@@ -43,6 +45,8 @@ export async function PATCH(
   { params }: { params: Promise<{ orderNo: string; id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_UPDATE);
+
     const { orderNo, id } = await params;
     const rawPayload = await request.json();
     const payload = salesOrderItemPatchSchema.parse(rawPayload);
@@ -102,6 +106,8 @@ export async function DELETE(
   { params }: { params: Promise<{ orderNo: string; id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.SALES_ORDER_DELETE);
+
     const { orderNo, id } = await params;
     const itemId = Number(id);
     invariant(Number.isInteger(itemId) && itemId > 0, "Sales order item id is invalid.");

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { operationalExpenseBarterPatchSchema } from "@/schemas/accounting-module";
 
 function toDateOnly(value: string) {
@@ -37,6 +39,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_VIEW);
+
     const { id } = await params;
 
     const row = await prisma.operational_expense_barter.findUniqueOrThrow({
@@ -55,6 +59,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_UPDATE);
+
     const { id } = await params;
     const payload = operationalExpenseBarterPatchSchema.parse(await request.json());
 
@@ -100,6 +106,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_DELETE);
+
     const { id } = await params;
 
     await prisma.$transaction(async (tx) => {

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
+import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { PERMISSIONS } from "@/lib/rbac";
 import { productBomSchema } from "@/schemas/product-module";
 
 function normalizeBomGroup(value: unknown) {
@@ -35,6 +37,8 @@ export async function PATCH(
   { params }: { params: Promise<{ sku: string; id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_BOM_UPDATE);
+
     const { sku, id } = await params;
     const raw = (await request.json()) as Record<string, unknown>;
 
@@ -102,6 +106,8 @@ export async function DELETE(
   { params }: { params: Promise<{ sku: string; id: string }> }
 ) {
   try {
+    await requireApiPermission(PERMISSIONS.PRODUCT_BOM_DELETE);
+
     const { sku, id } = await params;
 
     await prisma.product_bom.delete({

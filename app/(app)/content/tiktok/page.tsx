@@ -1,20 +1,16 @@
 import { PageShell } from "@/components/foundation/page-shell";
-import { ModulePlaceholder } from "@/features/shared/module-hub";
+import { ContentDailyWorkspace } from "@/features/content/content-daily-workspace";
 
 export default function ContentTiktokPage() {
   return (
     <PageShell
       eyebrow="Konten"
-      title="Tiktok"
-      description="Placeholder awal untuk evaluasi performa konten TikTok dan ritme produksi kontennya."
+      title="TikTok"
+      description="Input dan rekap konten harian TikTok — target produksi, actual posting, dan catatan per jenis konten."
     >
-      <ModulePlaceholder
-        intro="Halaman ini cocok untuk performa video, engagement, cadence posting, dan ide konten yang lagi efektif."
-        focusItems={[
-          "Performa video dan trend view per periode.",
-          "Engagement rate, save, share, dan klik keluar.",
-          "Daftar konten yang perlu diulang atau dikembangkan lagi.",
-        ]}
+      <ContentDailyWorkspace
+        platform="TIKTOK"
+        platformLabel="TikTok"
       />
     </PageShell>
   );
