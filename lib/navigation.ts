@@ -15,6 +15,9 @@ import {
   FolderTree,
   Gauge,
   Globe,
+  Music,
+  Store,
+  Upload,
   HandCoins,
   Handshake,
   Landmark,
@@ -70,7 +73,8 @@ const MARKETING_MODULE_ITEM: ModuleNavItem = {
   badge: "Workspace",
   permission: PERMISSIONS.MARKETING_WORKSPACE_VIEW,
   children: [
-    { label: "Performa Produk", href: "/marketing/product-performance", icon: ScanSearch, permission: PERMISSIONS.MARKETING_PRODUCT_PERFORMANCE_VIEW },
+    { label: "Data Shopee", href: "/marketing/data-shopee", icon: Store, permission: PERMISSIONS.MARKETING_WORKSPACE_VIEW },
+    { label: "Data TikTok", href: "/marketing/data-tiktok", icon: Music, permission: PERMISSIONS.MARKETING_WORKSPACE_VIEW },
     { label: "Traffic", href: "/marketing/traffic", icon: Globe, permission: PERMISSIONS.MARKETING_TRAFFIC_VIEW },
     { label: "Iklan MP", href: "/marketing/mp-ads", icon: ChartBar, permission: PERMISSIONS.MARKETING_MP_ADS_VIEW },
     { label: "Live Streaming", href: "/marketing/live-streaming", icon: MonitorPlay, permission: PERMISSIONS.MARKETING_LIVE_STREAMING_VIEW },
@@ -84,8 +88,7 @@ const CONTENT_MODULE_ITEM: ModuleNavItem = {
   badge: "Workspace",
   permission: PERMISSIONS.CONTENT_WORKSPACE_VIEW,
   children: [
-    { label: "Tiktok", href: "/content/tiktok", icon: Tv, permission: PERMISSIONS.CONTENT_TIKTOK_VIEW },
-    { label: "Instagram", href: "/content/instagram", icon: Camera, permission: PERMISSIONS.CONTENT_INSTAGRAM_VIEW },
+    { label: "Daily Upload", href: "/content", icon: Upload, permission: PERMISSIONS.CONTENT_WORKSPACE_VIEW },
   ],
 };
 

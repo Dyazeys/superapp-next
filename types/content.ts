@@ -1,32 +1,20 @@
 /**
- * Tipe lokal untuk Content Daily Draft.
- * Belum ada DB — data disimpan di client state (mock).
+ * Tipe untuk Content Module.
+ * Sinkron dengan DB: marketing.daily_uploads
+ * Gunakan tipe dari Zod schema untuk konsistensi validasi.
  */
-export type ContentDailyDraft = {
-  id: string;
-  report_date: string; // YYYY-MM-DD
-  platform: "TIKTOK" | "INSTAGRAM";
-  account_name: string;
-  content_type: string;
-  target: number;
-  actual_posted: number;
-  notes: string;
-};
 
-export const CONTENT_TYPE_OPTIONS = [
-  "Video",
-  "Reels",
-  "Story",
-  "Feed",
-  "Carousel",
-  "Live",
-] as const;
+// Re-export tipe utama dari Zod schema
+export type {
+  DailyUpload,
+  DailyUploadCreate,
+  DailyUploadUpdate,
+} from "@/schemas/content-module";
 
-export type ContentType = (typeof CONTENT_TYPE_OPTIONS)[number];
-
-export const PLATFORM_OPTIONS = ["TIKTOK", "INSTAGRAM"] as const;
-
-export type DraftAction =
-  | { type: "upsert"; payload: ContentDailyDraft }
-  | { type: "remove"; id: string }
-  | { type: "set"; payload: ContentDailyDraft[] };
+// Re-export konstanta enum
+export {
+  dailyUploadPlatform as PLATFORM_OPTIONS,
+  dailyUploadJenisKonten as CONTENT_TYPE_OPTIONS,
+  dailyUploadTipeAktivitas as ACTIVITY_TYPE_OPTIONS,
+  dailyUploadStatus as STATUS_OPTIONS,
+} from "@/schemas/content-module";

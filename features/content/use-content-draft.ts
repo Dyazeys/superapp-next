@@ -1,29 +1,51 @@
 "use client";
 
-import { useCallback, useReducer } from "react";
-import type { ContentDailyDraft } from "@/types/content";
+import { useCallback, useEffect, useReducer, useState } from "react";
+import type { DailyUpload, DailyUploadCreate, DailyUploadUpdate } from "@/types/content";
 
-/* ─── API stubs (mock-ready, no fetch to DB) ─── */
+/* ─── API helpers ─── */
 
-export function apiFetchDrafts(): Promise<ContentDailyDraft[]> {
-  return Promise.resolve([]);
+const API_BASE = "/api/content/daily-upload";
+
+async function apiFetchAll(): Promise<DailyUpload[]> {
+  const res = await fetch(API_BASE);
+  if (!res.ok) throw new Error("Gagal memuat data daily upload");
+  return res.json();
 }
 
-export function apiSaveDraft(
-  _draft: Omit<ContentDailyDraft, "id">
-): Promise<ContentDailyDraft> {
-  const id = crypto.randomUUID();
-  return Promise.resolve({ id, ..._draft });
+async function apiCreate(data: DailyUploadCreate): Promise<DailyUpload> {
+  const res = await fetch(API_BASE, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Gagal menyimpan daily upload");
+  return res.json();
+}
+
+async function apiUpdate(id: string, data: DailyUploadUpdate): Promise<DailyUpload> {
+  const res = await fetch(`${API_BASE}/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Gagal mengupdate daily upload");
+  return res.json();
+}
+
+async function apiDelete(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Gagal menghapus daily upload");
 }
 
 /* ─── Reducer ─── */
 
 type Action =
-  | { type: "upsert"; payload: ContentDailyDraft }
+  | { type: "upsert"; payload: DailyUpload }
   | { type: "remove"; id: string }
-  | { type: "set"; payload: ContentDailyDraft[] };
+  | { type: "set"; payload: DailyUpload[] };
 
-function draftReducer(state: ContentDailyDraft[], action: Action): ContentDailyDraft[] {
+function draftReducer(state: DailyUpload[], action: Action): DailyUpload[] {
   switch (action.type) {
     case "set":
       return action.payload;
@@ -45,31 +67,52 @@ function draftReducer(state: ContentDailyDraft[], action: Action): ContentDailyD
 
 /* ─── Hook ─── */
 
-export function useContentDraft(initial: ContentDailyDraft[] = []) {
-  const [drafts, dispatch] = useReducer(draftReducer, initial);
+export function useContentDraft() {
+  const [items, dispatch] = useReducer(draftReducer, []);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const upsert = useCallback((d: ContentDailyDraft) => {
-    dispatch({ type: "upsert", payload: d });
+  // Load data dari API saat mount
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    apiFetchAll()
+      .then((data) => {
+        if (!cancelled) {
+          dispatch({ type: "set", payload: data });
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Gagal load");
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
   }, []);
 
-  const remove = useCallback((id: string) => {
+  const upsert = useCallback(async (data: DailyUploadCreate | (DailyUploadUpdate & { id: string })) => {
+    if ("id" in data && data.id) {
+      const { id, ...rest } = data as DailyUploadUpdate & { id: string };
+      const updated = await apiUpdate(id, rest);
+      dispatch({ type: "upsert", payload: updated });
+      return updated;
+    }
+    const created = await apiCreate(data as DailyUploadCreate);
+    dispatch({ type: "upsert", payload: created });
+    return created;
+  }, []);
+
+  const remove = useCallback(async (id: string) => {
+    await apiDelete(id);
     dispatch({ type: "remove", id });
   }, []);
 
-  const setDrafts = useCallback((d: ContentDailyDraft[]) => {
-    dispatch({ type: "set", payload: d });
+  const refresh = useCallback(async () => {
+    const data = await apiFetchAll();
+    dispatch({ type: "set", payload: data });
   }, []);
 
-  const filtered = useCallback(
-    (platform?: string, dateFrom?: string, dateTo?: string) =>
-      drafts.filter((d) => {
-        if (platform && d.platform !== platform) return false;
-        if (dateFrom && d.report_date < dateFrom) return false;
-        if (dateTo && d.report_date > dateTo) return false;
-        return true;
-      }),
-    [drafts]
-  );
-
-  return { drafts, upsert, remove, setDrafts, filtered };
+  return { items, loading, error, upsert, remove, refresh };
 }

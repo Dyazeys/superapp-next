@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["accounting", "auth", "channel", "payout", "product", "sales", "warehouse"]
+  schemas  = ["accounting", "auth", "channel", "marketing", "payout", "product", "public", "sales", "warehouse"]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -636,6 +636,24 @@ model stock_balances {
   master_inventory master_inventory @relation(fields: [inv_code], references: [inv_code], map: "fk_stock_balances_inv_code")
 
   @@schema("warehouse")
+}
+
+/// Daily content upload records (IG / TikTok / YouTube) with enriched fields
+model daily_uploads {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tanggal_aktivitas DateTime @db.Date
+  akun              String   @db.VarChar(50)
+  platform          String   @db.VarChar(20)
+  jenis_konten      String   @db.VarChar(50)
+  tipe_aktivitas    String   @db.VarChar(50)
+  produk            String   @db.VarChar(255)
+  link_konten       String   @db.VarChar(500)
+  pic               String   @db.VarChar(100)
+  status            String   @default("Draft") @db.VarChar(20)
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime? @db.Timestamptz(6)
+
+  @@schema("marketing")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.

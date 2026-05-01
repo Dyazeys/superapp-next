@@ -33,7 +33,32 @@ Ringkasan task yang sudah selesai dipindahkan dari `to-do.md`.
 - **Scope:** UI sidebar only — route halaman (`/marketing/data-shopee`, `/marketing/data-tiktok`, `/content/daily-upload`) belum dibuat
 - **Regression check:** Tidak mengubah top-nav lain, tidak mengubah `module-sidebar.tsx` (sudah generic), tidak mengubah RBAC/permissions
 
-## [Ringkasan task lain yang sudah selesai bisa ditambahkan di sini]
+## P0 — ERP Marketing/Konten: tambah placeholder halaman Data Shopee & Data TikTok
+
+- **Status:** ✅ Selesai
+- **Files changed:**
+  - `app/(app)/marketing/data-shopee/page.tsx` — halaman baru (placeholder)
+  - `app/(app)/marketing/data-tiktok/page.tsx` — halaman baru (placeholder)
+- **Changes made:**
+  - Kedua halaman menggunakan `PageShell` + `WorkspacePanel` dengan deskripsi placeholder
+  - Halaman sudah teregister di navigasi sidebar (`lib/navigation.ts`, route sudah ada sebelumnya)
+  - Routing langsung bisa diakses via `/marketing/data-shopee` dan `/marketing/data-tiktok`
+- **Scope:** Placeholder UI only — tidak ada data/API integration
+- **Regression check:** Tidak mengubah halaman marketing existing, tidak mengubah permission/RBAC, tidak mengubah navigasi
+
+## P0 — ERP -> Konten -> Daily Upload: progress awal sudah dibuat, tapi belum final
+
+- **Status:** ⏸ Belum dipindahkan ke Done final
+- **Yang sudah ada:**
+  - route `/content`
+  - workspace awal `ContentDailyWorkspace`
+  - API dasar `app/api/content/daily-upload/**`
+  - schema/type awal untuk `daily_upload`
+- **Kenapa belum final:**
+  - schema tabel masih belum sinkron penuh dengan spesifikasi final
+  - target schema DB masih perlu dipastikan ke `marketing` (bukan `public`)
+  - enum validasi masih perlu dirapikan sesuai final spec
+- **Catatan:** item ini sengaja tidak dianggap selesai penuh dan tetap dilanjutkan dari `to-do.md`.
 
 ---
-_Last updated: 2026-05-01_
+_Last updated: 2026-05-01 — Rapikan done agar hanya claim task yang benar-benar selesai; Daily Upload ditandai masih progress._

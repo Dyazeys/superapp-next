@@ -40,42 +40,29 @@ Pekerjaan yang sudah selesai dipindahkan ke `docs/ceklis/done.md`.
     - Scripts + data imports (BOM templates, migrations, CSV data)
   - `blokir`: menunggu instruksi commit/push dari user.
 
-- [x] P0 — ERP Marketing/Konten: rapikan struktur menu workspace (UI only)
-  - File diubah: `lib/navigation.ts`
-  - Ringkasan: hanya ubah sidebar menu (UI), route halaman belum dibuat.
-  - Selesai: `2026-05-01`
+- [ ] P0 — ERP -> Konten -> Daily Upload: selesaikan implementasi yang masih mismatch
+  - `status_sekarang`: route `/content` dan API dasar sudah ada, tapi implementasi belum sesuai spesifikasi final.
+  - `wajib_dibenahi`:
+    - `prisma/schema.prisma` masih menaruh `daily_uploads` di schema `public`, harus pindah ke `marketing`.
+    - `prisma/migrations/20260501_add_daily_uploads/migration.sql` masih create table/index di `public.daily_uploads`, harus ke `marketing.daily_uploads`.
+    - `datasource db.schemas` belum memuat schema `marketing`.
+    - `schemas/content-module.ts` masih punya enum yang tidak sesuai final spec (`Live`, `Carousel`, `Published`, `Archived`, dll).
+    - `types/content.ts` masih mengikuti schema lama dan perlu disinkronkan ulang setelah enum dibetulkan.
+    - `app/api/content/daily-upload/**` perlu divalidasi ulang agar pakai schema final yang benar.
+  - `spesifikasi_final`:
+    - `akun`: `Official | Marketing`
+    - `platform`: `Instagram | TikTok | YouTube`
+    - `jenis_konten`: `Feed | Story | Reel | Video TikTok | Video | Shorts`
+    - `tipe_aktivitas`: `Upload | Collab | Paid | Mirror`
+    - `status`: `Draft | Uploaded`
+  - `guardrail`: jangan sentuh Sales/Payout/Warehouse saat membereskan task ini.
 
-- [ ] P0 — Konten: refactor ke 1 sumber data `daily_upload`
-  - `tujuan`: seluruh aktivitas konten (IG/TikTok/YouTube) masuk ke satu tabel dan satu workspace `Daily Upload`.
-  - `nama_tabel`: `daily_upload`
-  - `kolom_wajib`:
-    - `tanggal_aktivitas` (`DATE`)
-    - `akun` (`ENUM`: `Official`, `Marketing`)
-    - `platform` (`ENUM`: `Instagram`, `TikTok`, `YouTube`)
-    - `jenis_konten` (`ENUM` by platform):
-      - IG: `Feed`, `Story`, `Reel`
-      - TikTok: `Video TikTok`
-      - YT: `Video`, `Shorts`
-    - `tipe_aktivitas` (`ENUM`: `Upload`, `Collab`, `Paid`, `Mirror`)
-    - `produk` (`VARCHAR`, input text biasa; copy dari master produk; tanpa FK/join)
-    - `link_konten` (`VARCHAR`, wajib validasi URL)
-    - `pic` (`ENUM`, source dari users existing)
-    - `status` (`ENUM`: `Draft`, `Uploaded`, default `Draft`)
-    - `created_at`, `updated_at` (timestamps)
-  - `lokasi_cek_utama`:
-    - `prisma/schema.prisma` (model + enum)
-    - `prisma/migrations/*daily_upload*` (migration baru khusus tabel ini)
-    - `schemas/*content*` atau `schemas/*marketing*` (zod URL + enum guard)
-    - `types/content.ts` (sinkron type FE dengan schema)
-    - `features/content/*` (workspace tunggal Daily Upload)
-    - `app/(app)/content/**` (routing ke satu halaman saja)
-  - `guardrail_implementasi`:
-    - Jangan buat relasi DB ke master produk (produk tetap text field).
-    - Jangan pecah tabel per platform.
-    - Jangan ubah modul sales/payout/warehouse saat kerjain task ini.
+- [ ] P1 — Rapikan laporan checklist agar hanya claim yang benar-benar selesai
+  - `docs/ceklis/done.md`: jangan claim `daily_upload` sudah selesai penuh sebelum schema `marketing` + enum final benar.
+  - `docs/ceklis/to-do.md`: simpan item menu/sidebar yang memang sudah selesai, dan sisakan implementation gap `daily_upload` sebagai task aktif.
 
 - Task yang selesai sudah dicatat di `docs/ceklis/done.md`.
 - Task yang terblokir sudah dipindahkan ke `docs/ceklis/hold.md`.
 
 ---
-_Last updated: 2026-05-01 — Tambah To-Do detail ERP Marketing/Konten + spesifikasi tabel daily_upload beserta guardrail file/menu._
+_Last updated: 2026-05-01 — Kembalikan Daily Upload ke To-Do aktif karena schema/enum masih mismatch; pertahankan item yang benar-benar selesai di done._
