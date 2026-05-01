@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { Session } from "next-auth";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ModuleSidebar } from "@/components/shell/module-sidebar";
 import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS, ANALYTICS_MODULE_ITEMS, TASK_MODULE_ITEMS, TEAM_MODULE_ITEMS, type ModuleNavItem } from "@/lib/navigation";
@@ -12,7 +13,24 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
-function topNavForPath(pathname: string) {
+/**
+ * Recursively checks if pathname matches any item or its children.
+ * This is needed because items like /dashboard/report-pnl are nested
+ * under "Financial" child array in ANALYTICS_MODULE_ITEMS, while being
+ * matched by /dashboard/* in ERP_MODULE_ITEMS at top level.
+ */
+function isPathInModuleItems(pathname: string, items: ModuleNavItem[]): boolean {
+  return items.some((item) => {
+    if (pathname === item.href || pathname.startsWith(`${item.href}/`)) return true;
+    if (item.children?.length) return isPathInModuleItems(pathname, item.children);
+    return false;
+  });
+}
+
+function topNavForPath(
+  pathname: string,
+  preferredTop?: (typeof TOP_NAV_ITEMS)[number]["id"]
+) {
   if (
     TASK_MODULE_ITEMS.some(
       (module) => pathname === module.href || pathname.startsWith(`${module.href}/`)
@@ -29,13 +47,18 @@ function topNavForPath(pathname: string) {
     return "team" as const;
   }
 
-  if (
-    ANALYTICS_MODULE_ITEMS.some(
-      (module) => pathname === module.href || pathname.startsWith(`${module.href}/`)
-    )
-  ) {
-    return "analytics" as const;
+  const inErp = isPathInModuleItems(pathname, ERP_MODULE_ITEMS);
+  const inAnalytics = isPathInModuleItems(pathname, ANALYTICS_MODULE_ITEMS);
+
+  // Ambiguous: path matches both ERP and Analytics (e.g. /marketing/*, /content/*, /dashboard/report-pnl)
+  // → use the preferred top-nav context (last manual selection) instead of jumping
+  if (inErp && inAnalytics) {
+    if (preferredTop === "analytics") return "analytics" as const;
+    return "erp" as const;
   }
+
+  if (inErp) return "erp" as const;
+  if (inAnalytics) return "analytics" as const;
 
   return "erp" as const;
 }
@@ -83,7 +106,8 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [activeTop, setActiveTop] = useState<(typeof TOP_NAV_ITEMS)[number]["id"]>(topNavForPath(pathname));
+  const [activeTop, setActiveTop] = useState<(typeof TOP_NAV_ITEMS)[number]["id"]>("erp");
+  const lastManualTop = useRef<(typeof TOP_NAV_ITEMS)[number]["id"]>("erp");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { data: session, status } = useSession();
   const resolvedSession = status === "loading" ? (session ?? initialSession) : session;
@@ -103,8 +127,13 @@ export function AppShell({
   const activeTopItem = visibleTopNavItems.find((item) => item.id === activeTop) ?? visibleTopNavItems[0] ?? TOP_NAV_ITEMS[0];
 
   useEffect(() => {
-    setActiveTop(topNavForPath(pathname));
+    setActiveTop((prev) => topNavForPath(pathname, prev));
   }, [pathname]);
+
+  // Keeps lastManualTop in sync with activeTop after pathname-driven updates settle
+  useEffect(() => {
+    lastManualTop.current = activeTop;
+  }, [activeTop]);
 
   const sidebarModules =
     activeTop === "erp"
@@ -290,6 +319,8 @@ export function AppShell({
                             )}
                             onClick={() => {
                               if (!item.disabled) {
+                                // Update last manual selection before setting activeTop
+                                lastManualTop.current = item.id;
                                 setActiveTop(item.id);
                                 setSidebarCollapsed(false);
                                 router.push(overviewPathForTopNav(item.id));
