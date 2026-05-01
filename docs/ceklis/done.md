@@ -46,19 +46,63 @@ Ringkasan task yang sudah selesai dipindahkan dari `to-do.md`.
 - **Scope:** Placeholder UI only — tidak ada data/API integration
 - **Regression check:** Tidak mengubah halaman marketing existing, tidak mengubah permission/RBAC, tidak mengubah navigasi
 
-## P0 — ERP -> Konten -> Daily Upload: progress awal sudah dibuat, tapi belum final
+## P0 — ERP -> Konten -> Daily Upload: finalize schema, API, dan form guard
 
-- **Status:** ⏸ Belum dipindahkan ke Done final
-- **Yang sudah ada:**
-  - route `/content`
-  - workspace awal `ContentDailyWorkspace`
-  - API dasar `app/api/content/daily-upload/**`
-  - schema/type awal untuk `daily_upload`
-- **Kenapa belum final:**
-  - schema tabel masih belum sinkron penuh dengan spesifikasi final
-  - target schema DB masih perlu dipastikan ke `marketing` (bukan `public`)
-  - enum validasi masih perlu dirapikan sesuai final spec
-- **Catatan:** item ini sengaja tidak dianggap selesai penuh dan tetap dilanjutkan dari `to-do.md`.
+- **Status:** ✅ Selesai
+- **Files changed:**
+  - `schemas/content-module.ts`
+  - `types/content.ts`
+  - `features/content/content-daily-workspace.tsx`
+  - `app/api/content/daily-upload/route.ts`
+  - `app/api/content/daily-upload/[id]/route.ts`
+  - `app/api/content/daily-upload/pic-options/route.ts`
+  - `prisma/migrations/20260501_add_daily_uploads/migration.sql`
+- **Changes made:**
+  - `akun` dibatasi ke `Official | Marketing`
+  - `jenis_konten` disinkronkan ke final spec: `Feed`, `Story`, `Reel`, `Video TikTok`, `Video`, `Shorts`
+  - tambah guard platform → jenis konten di Zod, jadi pilihan konten harus cocok dengan platform
+  - `tipe_aktivitas` disinkronkan ke `Upload`, `Collab`, `Paid`, `Mirror`
+  - `status` disinkronkan ke `Draft | Uploaded`
+  - form `Daily Upload` sekarang pakai dropdown `akun`, dropdown `PIC`, dan opsi `jenis_konten` yang otomatis mengikuti `platform`
+  - tambah endpoint opsi `PIC` dari user aktif existing
+  - API create/update validasi `PIC` agar hanya menerima user aktif yang tersedia
+  - migration SQL ditambah check constraints untuk `akun`, `platform`, `jenis_konten`, `tipe_aktivitas`, `status`, dan kecocokan `platform + jenis_konten`
+- **Validation:**
+  - Prisma schema ✅ — tabel `daily_uploads` ada di schema `marketing`
+  - Migration SQL ✅ — target `marketing.daily_uploads`
+  - Datasource schemas ✅ — include `"marketing"`
+  - Types (`types/content.ts`) ✅ — re-export sinkron dari schema
+  - Workspace FE ✅ — default value + dropdown sekarang konsisten dengan final spec
+  - API routes ✅ — pakai schema final + validasi `PIC` dari user aktif
+- **Final summary:** `Daily Upload` sekarang sudah final di level schema validation, API guard, form behavior, dan migration constraint untuk kebutuhan enum-like fields. `PIC` juga tidak lagi text bebas karena sudah diikat ke user aktif existing.
+
+## P2 — ERP -> Konten -> Daily Upload: form add jadi pop-up dialog
+
+- **Status:** ✅ Selesai
+- **Files changed:** `features/content/content-daily-workspace.tsx`
+- **Dialog implementation:**
+  - Import `Dialog`, `DialogContent`, `DialogDescription`, `DialogFooter`, `DialogHeader`, `DialogTitle`, `DialogTrigger` dari `@/components/ui/dialog`
+  - State `showForm` (boolean) diganti dengan `open` (boolean) untuk kontrol dialog
+  - Tombol "Input Baru" diubah dari toggle menjadi `DialogTrigger`
+  - Form inline yang sebelumnya di-*render* di dalam `WorkspacePanel` (dengan conditional `showForm ? ... : null`) dipindahkan ke dalam `<DialogContent>`
+  - Setelah submit sukses (`handleSubmit`), dialog otomatis tertutup via `setOpen(false)`
+  - Tombol "Batal" dan klik backdrop → dialog tertutup tanpa menyimpan (via `onOpenChange={setOpen}`)
+  - Form di-reset saat dialog dibuka ulang karena state `open` mengontrol mount/dismount dialog
+- **Regression check:**
+  - Tidak mengubah schema DB / migration
+  - Tidak mengubah endpoint write (`POST/PATCH/DELETE`)
+  - Tidak mengubah `types/content.ts`, `schemas/content-module.ts`, atau `use-content-draft.ts`
+  - Filter, tabel, delete, refresh tidak tersentuh — semua logic tetap sama
+  - Pre-existing TS errors di `app/(app)/payout/records/page.tsx` (4 errors) tidak terkait
+- **Final summary:** Form "Input Baru" pada halaman Daily Upload kini menggunakan pop-up modal dialog. UX lebih rapi karena form tidak menggeser layout tabel. Dialog mendukung submit, batal, klik backdrop untuk tutup, dan reset form otomatis.
+
+## P2 — Fix runtime error Dialog.Trigger nesting
+
+- **Status:** ✅ Selesai
+- **File:** `features/content/content-daily-workspace.tsx`
+- **Root cause:** `<DialogTrigger>` ditempatkan di luar wrapping `<Dialog>` (error Base UI: *must be used within Dialog.Root*). JSX diubah: opening tag `<Dialog>` dipindahkan ke atas filter bar sehingga membungkus baik `<WorkspacePanel>` (yang berisi `<DialogTrigger>`) maupun `<DialogContent>`.
+- **Fix:** Struktur nesting diubah dari `<WorkspacePanel>...DialogTrigger...</WorkspacePanel><Dialog>...DialogContent...</Dialog>` menjadi `<Dialog>...<WorkspacePanel>...DialogTrigger...</WorkspacePanel>...DialogContent...</Dialog>`.
+- **Regression check:** Tidak ada perubahan logic, state, filter, atau tabel. Pre-existing TS errors di `payout/records/page.tsx` (2 errors, unrelated).
 
 ---
-_Last updated: 2026-05-01 — Rapikan done agar hanya claim task yang benar-benar selesai; Daily Upload ditandai masih progress._
+_Last updated: 2026-05-01 — P2 runtime fix Dialog nesting, P2 form add pop-up dialog selesai._

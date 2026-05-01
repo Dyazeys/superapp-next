@@ -1,7 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash2, RefreshCw } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -16,8 +25,9 @@ import { FormField } from "@/components/forms/form-field";
 import { FieldError } from "@/components/forms/field-error";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import {
+  AKUN_OPTIONS,
   PLATFORM_OPTIONS,
-  CONTENT_TYPE_OPTIONS,
+  CONTENT_TYPE_OPTIONS_BY_PLATFORM,
   ACTIVITY_TYPE_OPTIONS,
   STATUS_OPTIONS,
   type DailyUpload,
@@ -26,9 +36,9 @@ import { useContentDraft } from "./use-content-draft";
 
 const emptyForm: Omit<DailyUpload, "id" | "created_at" | "updated_at"> = {
   tanggal_aktivitas: new Date().toISOString().slice(0, 10),
-  akun: "",
+  akun: "Official",
   platform: "TikTok",
-  jenis_konten: "Video",
+  jenis_konten: "Video TikTok",
   tipe_aktivitas: "Upload",
   produk: "",
   link_konten: "",
@@ -38,17 +48,18 @@ const emptyForm: Omit<DailyUpload, "id" | "created_at" | "updated_at"> = {
 
 type FormKeys = keyof typeof emptyForm;
 type FormErrors = Partial<Record<FormKeys, string>>;
+type PicOption = { value: string; label: string };
 
 function validateForm(
   d: typeof emptyForm
 ): FormErrors {
   const errors: FormErrors = {};
   if (!d.tanggal_aktivitas) errors.tanggal_aktivitas = "Tanggal wajib diisi.";
-  if (!d.akun?.trim()) errors.akun = "Nama akun wajib diisi.";
+  if (!d.akun) errors.akun = "Akun wajib dipilih.";
   if (!d.platform) errors.platform = "Platform wajib dipilih.";
   if (!d.jenis_konten) errors.jenis_konten = "Jenis konten wajib dipilih.";
   if (!d.tipe_aktivitas) errors.tipe_aktivitas = "Tipe aktivitas wajib dipilih.";
-  if (!d.pic?.trim()) errors.pic = "PIC wajib diisi.";
+  if (!d.pic) errors.pic = "PIC wajib dipilih.";
   return errors;
 }
 
@@ -59,7 +70,43 @@ export function ContentDailyWorkspace() {
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("");
-  const [showForm, setShowForm] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [picOptions, setPicOptions] = useState<PicOption[]>([]);
+  const [picLoading, setPicLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPicOptions() {
+      setPicLoading(true);
+
+      try {
+        const response = await fetch("/api/content/daily-upload/pic-options");
+        if (!response.ok) {
+          throw new Error("Gagal memuat opsi PIC");
+        }
+
+        const payload = (await response.json()) as PicOption[];
+        if (!cancelled) {
+          setPicOptions(payload);
+        }
+      } catch {
+        if (!cancelled) {
+          setPicOptions([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setPicLoading(false);
+        }
+      }
+    }
+
+    void loadPicOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const visible = items.filter((d) => {
     if (filterDateFrom && d.tanggal_aktivitas < filterDateFrom) return false;
@@ -67,12 +114,26 @@ export function ContentDailyWorkspace() {
     if (filterPlatform && d.platform !== filterPlatform) return false;
     return true;
   });
+  const contentTypeOptions = CONTENT_TYPE_OPTIONS_BY_PLATFORM[form.platform];
 
   function handleFormChange<K extends FormKeys>(
     key: K,
     value: string
   ) {
-    setForm((prev) => ({ ...prev, [key]: value as (typeof form)[K] }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value as (typeof prev)[K] };
+
+      if (key === "platform") {
+        const nextPlatform = value as DailyUpload["platform"];
+        const nextJenisKontenOptions = CONTENT_TYPE_OPTIONS_BY_PLATFORM[nextPlatform];
+
+        if (!nextJenisKontenOptions.includes(next.jenis_konten as never)) {
+          next.jenis_konten = nextJenisKontenOptions[0];
+        }
+      }
+
+      return next;
+    });
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
@@ -86,7 +147,7 @@ export function ContentDailyWorkspace() {
     await upsert(form);
     setForm({ ...emptyForm });
     setErrors({});
-    setShowForm(false);
+    setOpen(false);
   }
 
   function resetFilters() {
@@ -97,8 +158,9 @@ export function ContentDailyWorkspace() {
 
   return (
     <div className="space-y-6">
-      {/* ── Filter bar ── */}
-      <WorkspacePanel
+      <Dialog open={open} onOpenChange={setOpen}>
+        {/* ── Filter bar ── */}
+        <WorkspacePanel
         title="Filter Daily Upload"
         description="Filter laporan konten harian berdasarkan rentang tanggal dan platform."
       >
@@ -145,21 +207,23 @@ export function ContentDailyWorkspace() {
             >
               <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
-            <Button size="sm" className="ml-2" onClick={() => setShowForm((v) => !v)}>
-              <Plus className="mr-1 size-4" />
-              Input Baru
-            </Button>
+            <DialogTrigger>
+              <Button size="sm" className="ml-2">
+                <Plus className="mr-1 size-4" />
+                Input Baru
+              </Button>
+            </DialogTrigger>
           </div>
         </div>
       </WorkspacePanel>
 
-      {/* ── Input form (collapsible) ── */}
-      {showForm ? (
-        <WorkspacePanel
-          title="Input Konten Harian"
-          description="Isi data konten harian untuk dicatat."
-        >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* ── Input form (dialog) ── */}
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Input Konten Harian</DialogTitle>
+            <DialogDescription>Isi data konten harian untuk dicatat.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Tanggal" htmlFor="draft_date" error={errors.tanggal_aktivitas}>
               <Input
                 id="draft_date"
@@ -168,13 +232,17 @@ export function ContentDailyWorkspace() {
                 onChange={(e) => handleFormChange("tanggal_aktivitas", e.target.value)}
               />
             </FormField>
-            <FormField label="Nama Akun" htmlFor="draft_akun" error={errors.akun}>
-              <Input
+            <FormField label="Akun" htmlFor="draft_akun" error={errors.akun}>
+              <select
                 id="draft_akun"
-                placeholder="cth: tiktok_utama"
                 value={form.akun}
                 onChange={(e) => handleFormChange("akun", e.target.value)}
-              />
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {AKUN_OPTIONS.map((akun) => (
+                  <option key={akun} value={akun}>{akun}</option>
+                ))}
+              </select>
             </FormField>
             <FormField label="Platform" htmlFor="draft_platform" error={errors.platform}>
               <select
@@ -195,7 +263,7 @@ export function ContentDailyWorkspace() {
                 value={form.jenis_konten}
                 onChange={(e) => handleFormChange("jenis_konten", e.target.value)}
               >
-                {CONTENT_TYPE_OPTIONS.map((t) => (
+                {contentTypeOptions.map((t) => (
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
@@ -229,12 +297,18 @@ export function ContentDailyWorkspace() {
               />
             </FormField>
             <FormField label="PIC" htmlFor="draft_pic" error={errors.pic}>
-              <Input
+              <select
                 id="draft_pic"
-                placeholder="Nama PIC"
                 value={form.pic}
                 onChange={(e) => handleFormChange("pic", e.target.value)}
-              />
+                disabled={picLoading}
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">{picLoading ? "Memuat PIC..." : "Pilih PIC"}</option>
+                {picOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
             </FormField>
             <FormField label="Status" htmlFor="draft_status">
               <select
@@ -250,14 +324,14 @@ export function ContentDailyWorkspace() {
             </FormField>
           </div>
           <FieldError message={errors.jenis_konten || errors.tipe_aktivitas ? "Periksa kembali field yang wajib diisi." : undefined} />
-          <div className="mt-4 flex gap-2">
-            <Button onClick={handleSubmit}>Simpan</Button>
-            <Button variant="outline" onClick={() => { setShowForm(false); setErrors({}); }}>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setOpen(false); setErrors({}); }}>
               Batal
             </Button>
-          </div>
-        </WorkspacePanel>
-      ) : null}
+            <Button onClick={handleSubmit}>Simpan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Loading state ── */}
       {loading && items.length === 0 ? (

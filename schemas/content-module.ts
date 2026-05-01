@@ -3,29 +3,50 @@ import { z } from "zod";
 // ─── Daily Upload ───────────────────────────────────────────────────────────
 // Sinkron dengan skema DB: marketing.daily_uploads
 
+export const dailyUploadAkun = ["Official", "Marketing"] as const;
 export const dailyUploadPlatform = ["Instagram", "TikTok", "YouTube"] as const;
+export const dailyUploadJenisKontenByPlatform = {
+  Instagram: ["Feed", "Story", "Reel"],
+  TikTok: ["Video TikTok"],
+  YouTube: ["Video", "Shorts"],
+} as const;
 export const dailyUploadJenisKonten = [
-  "Feed",
-  "Story",
-  "Reels",
-  "Live",
-  "Shorts",
-  "Video",
-  "Carousel",
+  ...dailyUploadJenisKontenByPlatform.Instagram,
+  ...dailyUploadJenisKontenByPlatform.TikTok,
+  ...dailyUploadJenisKontenByPlatform.YouTube,
 ] as const;
 export const dailyUploadTipeAktivitas = [
   "Upload",
-  "Live Streaming",
-  "Paid Promote",
+  "Collab",
+  "Paid",
+  "Mirror",
 ] as const;
-export const dailyUploadStatus = ["Draft", "Published", "Archived"] as const;
+export const dailyUploadStatus = ["Draft", "Uploaded"] as const;
 
-export const DailyUploadSchema = z.object({
+function addJenisKontenIssue(
+  platform: (typeof dailyUploadPlatform)[number],
+  jenisKonten: string,
+  ctx: z.RefinementCtx
+) {
+  const allowedJenisKonten = dailyUploadJenisKontenByPlatform[platform];
+
+  if (!allowedJenisKonten.includes(jenisKonten as never)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["jenis_konten"],
+      message: `Jenis konten ${jenisKonten} tidak valid untuk platform ${platform}.`,
+    });
+  }
+}
+
+const dailyUploadBaseSchema = z.object({
   id: z.string().uuid().optional(),
   tanggal_aktivitas: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD"),
-  akun: z.string().min(1, "Akun wajib diisi").max(50),
+  akun: z.enum(dailyUploadAkun, {
+    message: "Akun harus Official / Marketing",
+  }),
   platform: z.enum(dailyUploadPlatform, {
     message: "Platform harus Instagram / TikTok / YouTube",
   }),
@@ -43,13 +64,30 @@ export const DailyUploadSchema = z.object({
   updated_at: z.string().datetime().optional().nullable(),
 });
 
-export const DailyUploadCreateSchema = DailyUploadSchema.omit({
+export const DailyUploadSchema = dailyUploadBaseSchema.superRefine((value, ctx) => {
+  addJenisKontenIssue(value.platform, value.jenis_konten, ctx);
+});
+
+export const DailyUploadCreateSchema = dailyUploadBaseSchema.omit({
   id: true,
   created_at: true,
   updated_at: true,
+}).superRefine((value, ctx) => {
+  addJenisKontenIssue(value.platform, value.jenis_konten, ctx);
 });
 
-export const DailyUploadUpdateSchema = DailyUploadCreateSchema.partial();
+export const DailyUploadUpdateSchema = dailyUploadBaseSchema
+  .omit({
+    id: true,
+    created_at: true,
+    updated_at: true,
+  })
+  .partial()
+  .superRefine((value, ctx) => {
+    if (value.platform && value.jenis_konten) {
+      addJenisKontenIssue(value.platform, value.jenis_konten, ctx);
+    }
+  });
 
 // Tipe hasil infer
 export type DailyUpload = z.infer<typeof DailyUploadSchema>;

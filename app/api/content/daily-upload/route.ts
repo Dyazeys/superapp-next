@@ -6,6 +6,18 @@ import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
 import { DailyUploadCreateSchema } from "@/schemas/content-module";
 
+async function ensureActivePicExists(pic: string) {
+  const user = await prisma.users.findFirst({
+    where: {
+      username: pic,
+      is_active: true,
+    },
+    select: { username: true },
+  });
+
+  return Boolean(user);
+}
+
 export async function GET() {
   try {
     await requireApiPermission(PERMISSIONS.CONTENT_DAILY_REPORT_VIEW);
@@ -30,6 +42,13 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Validasi gagal", details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    if (!(await ensureActivePicExists(parsed.data.pic))) {
+      return NextResponse.json(
+        { error: "PIC harus dipilih dari user aktif yang tersedia." },
         { status: 400 },
       );
     }

@@ -13,7 +13,9 @@ export type {
 
 // Re-export konstanta enum
 export {
+  dailyUploadAkun as AKUN_OPTIONS,
   dailyUploadPlatform as PLATFORM_OPTIONS,
+  dailyUploadJenisKontenByPlatform as CONTENT_TYPE_OPTIONS_BY_PLATFORM,
   dailyUploadJenisKonten as CONTENT_TYPE_OPTIONS,
   dailyUploadTipeAktivitas as ACTIVITY_TYPE_OPTIONS,
   dailyUploadStatus as STATUS_OPTIONS,

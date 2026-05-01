@@ -6,6 +6,18 @@ import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
 import { DailyUploadUpdateSchema } from "@/schemas/content-module";
 
+async function ensureActivePicExists(pic: string) {
+  const user = await prisma.users.findFirst({
+    where: {
+      username: pic,
+      is_active: true,
+    },
+    select: { username: true },
+  });
+
+  return Boolean(user);
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -20,6 +32,13 @@ export async function PATCH(
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Validasi gagal", details: parsed.error.flatten() },
+        { status: 400 },
+      );
+    }
+
+    if (parsed.data.pic && !(await ensureActivePicExists(parsed.data.pic))) {
+      return NextResponse.json(
+        { error: "PIC harus dipilih dari user aktif yang tersedia." },
         { status: 400 },
       );
     }
