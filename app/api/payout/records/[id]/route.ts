@@ -4,9 +4,10 @@ import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
-import { deletePayoutSettlementJournal, syncPayoutSettlementJournal } from "@/lib/payout-journal";
+import { deletePayoutSettlementJournal } from "@/lib/payout-journal";
 import { normalizePayoutStatus } from "@/lib/payout-status";
 import { payoutPatchSchema } from "@/schemas/payout-module";
+import { syncSalesStatusFromPayout } from "@/lib/sales-payout-sync";
 
 function asDateOnly(value: string) {
   return new Date(`${value}T00:00:00.000Z`);
@@ -43,6 +44,13 @@ export async function PATCH(
     const payoutId = Number(id);
 
     const payout = await prisma.$transaction(async (tx) => {
+      const current = await tx.t_payout.findUnique({
+        where: { payout_id: payoutId },
+        select: { post_status: true },
+      });
+      invariant(current, "Payout was not found.");
+      invariant(current.post_status === "DRAFT", "Payout hanya bisa diubah saat status DRAFT.");
+
       if (payload.ref) {
         const order = await tx.t_order.findFirst({
           where: { ref_no: payload.ref },
@@ -73,7 +81,13 @@ export async function PATCH(
         },
       });
 
-      await syncPayoutSettlementJournal(tx, payoutId);
+      const updated = await tx.t_payout.findUniqueOrThrow({
+        where: { payout_id: payoutId },
+        select: { ref: true, payout_status: true },
+      });
+
+      // ── Mapping payout → sales (pakai nilai final dari DB, bukan payload partial) ──
+      await syncSalesStatusFromPayout(tx, updated.ref, updated.payout_status);
 
       return tx.t_payout.findUniqueOrThrow({
         where: { payout_id: payoutId },
@@ -102,6 +116,13 @@ export async function DELETE(
     const payoutId = Number(id);
 
     await prisma.$transaction(async (tx) => {
+      const current = await tx.t_payout.findUnique({
+        where: { payout_id: payoutId },
+        select: { post_status: true },
+      });
+      invariant(current, "Payout was not found.");
+      invariant(current.post_status === "DRAFT", "Payout hanya bisa dihapus saat status DRAFT.");
+
       await deletePayoutSettlementJournal(tx, payoutId);
 
       await tx.t_payout.delete({

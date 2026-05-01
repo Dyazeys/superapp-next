@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Check, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { Check, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -39,6 +39,8 @@ export default function SalesOrdersPage() {
   const [selectedOrderNos, setSelectedOrderNos] = useState<string[]>([]);
   const [postingSelected, setPostingSelected] = useState(false);
   const [postingFilter, setPostingFilter] = useState<"ALL" | "UNPOSTED" | "POSTED" | "NO_POSTING">("ALL");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const channelsQuery = useSalesChannels();
@@ -47,12 +49,13 @@ export default function SalesOrdersPage() {
 
   const { orderForm, orderModal, editingOrder } = hooks;
   const ordersListQuery = useQuery({
-    queryKey: ["sales-orders", "paged", { page, pageSize, postingFilter }],
+    queryKey: ["sales-orders", "paged", { page, pageSize, postingFilter, debouncedSearch }],
     queryFn: () =>
       salesApi.orders.listPaged({
         page,
         page_size: pageSize,
         posting_filter: postingFilter,
+        search: debouncedSearch,
       }),
   });
   const allOrderRows = useMemo(() => ordersListQuery.data?.data ?? [], [ordersListQuery.data?.data]);
@@ -80,6 +83,15 @@ export default function SalesOrdersPage() {
   useEffect(() => {
     setPage(1);
   }, [postingFilter]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchKeyword), 300);
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
 
   useEffect(() => {
     if (page > totalPages) {
@@ -413,7 +425,7 @@ export default function SalesOrdersPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-muted-foreground">Filter</span>
               <SelectNative
@@ -435,7 +447,26 @@ export default function SalesOrdersPage() {
                 </span>
               ) : null}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="relative order-3 w-full md:order-2 md:ml-auto md:w-[360px]">
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Cari nomor order / ref..."
+                value={searchKeyword}
+                onChange={(event) => setSearchKeyword(event.target.value)}
+                className="h-9 pl-9 pr-9"
+              />
+              {searchKeyword ? (
+                <button
+                  type="button"
+                  aria-label="Clear search"
+                  onClick={() => setSearchKeyword("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="size-4" />
+                </button>
+              ) : null}
+            </div>
+            <div className="order-2 ml-auto flex flex-wrap items-center gap-2 md:order-3">
               <Button
                 size="sm"
                 variant="secondary"
@@ -459,13 +490,20 @@ export default function SalesOrdersPage() {
               </Button>
             </div>
           </div>
-          <DataTable
-            columns={orderColumns}
-            data={orderRows}
-            emptyMessage="No sales orders found."
-            stickyHeader
-            maxBodyHeight={520}
-          />
+          {debouncedSearch.trim() && orderRows.length === 0 ? (
+            <EmptyState
+              title="Order tidak ditemukan"
+              description={`Tidak ada order yang cocok dengan "${debouncedSearch}".`}
+            />
+          ) : (
+            <DataTable
+              columns={orderColumns}
+              data={orderRows}
+              emptyMessage="No sales orders found."
+              stickyHeader
+              maxBodyHeight={520}
+            />
+          )}
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2">
             <p className="text-xs text-slate-500">
               {totalRows === 0

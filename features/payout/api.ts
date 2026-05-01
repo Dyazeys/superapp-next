@@ -41,6 +41,11 @@ export const payoutApi = {
       requestJson<{ ok: true }>(`/api/payout/records/${id}`, {
         method: "DELETE",
       }),
+    lifecycle: (id: number, action: "POST" | "LOCK" | "VOID") =>
+      requestJson<PayoutRecord>(`/api/payout/records/${id}/lifecycle`, {
+        method: "POST",
+        body: JSON.stringify({ action }),
+      }),
   },
   adjustments: {
     list: (ref?: string) =>

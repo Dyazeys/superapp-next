@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SALES_STATUS_OPTIONS = ["PAID", "PICKUP", "OPEN", "CANCELLED"] as const;
+export const SALES_STATUS_OPTIONS = ["PICKUP", "RETUR", "SUKSES"] as const;
 
 const decimalInput = z
   .union([z.string(), z.number()])

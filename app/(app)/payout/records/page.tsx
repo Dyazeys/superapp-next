@@ -1,17 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Trash2, X } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
-import { EmptyState } from "@/components/feedback/empty-state";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select-native";
 import { formatMoney, formatShortDate } from "@/lib/format";
@@ -20,22 +20,35 @@ import {
   PAYOUT_STATUS_OPTIONS,
   payoutStatusTone,
   sumPayoutDeductions,
-  sumPayoutFees,
-  usePayoutAdjustments,
   usePayoutOrders,
-  usePayoutSelection,
   usePayouts,
 } from "@/features/payout/use-payout-module";
 import type { PayoutInput } from "@/schemas/payout-module";
-import type { PayoutAdjustmentRecord, PayoutRecord } from "@/types/payout";
+import type { PayoutRecord } from "@/types/payout";
+import { toast } from "sonner";
+import { useModalState } from "@/hooks/use-modal-state";
 
 const payoutColumnHelper = createColumnHelper<PayoutRecord>();
-const adjustmentColumnHelper = createColumnHelper<PayoutAdjustmentRecord>();
 
 type RecordPageFilter = {
   ref: string | null;
   channelId: number | null;
   payoutId: number | null;
+};
+
+type CsvReviewResponse = {
+  ok: boolean;
+  reviewOnly: boolean;
+  summary: {
+    totalRows: number;
+    validRows: number;
+    insertedEstimate?: number;
+    updatedEstimate?: number;
+    inserted?: number;
+    updated?: number;
+    errorCount: number;
+  };
+  errors?: Array<{ row: number; ref?: string; reason: string }>;
 };
 
 function getRecordPageFilter(): RecordPageFilter {
@@ -63,12 +76,29 @@ function formatCalculatedValue(value: number) {
   return value.toFixed(2);
 }
 
+function formatMoneyNoDecimals(value: number) {
+  const amount = Number.isFinite(value) ? value : 0;
+  return `Rp${new Intl.NumberFormat("id-ID", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount))}`;
+}
+
 export default function PayoutRecordsPage() {
   const hooks = usePayouts();
   const orderLookupQuery = usePayoutOrders();
   const [pageFilter] = useState<RecordPageFilter>(() => getRecordPageFilter());
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "SETTLED" | "FAILED">("ALL");
+  const [dateFromFilter, setDateFromFilter] = useState("");
+  const [dateToFilter, setDateToFilter] = useState("");
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [isUploadingCsv, setIsUploadingCsv] = useState(false);
+  const [isReviewingCsv, setIsReviewingCsv] = useState(false);
+  const [csvReview, setCsvReview] = useState<CsvReviewResponse | null>(null);
+  const [selectedPayoutIds, setSelectedPayoutIds] = useState<number[]>([]);
+  const uploadCsvModal = useModalState();
 
-  const payoutRows = useMemo(
+  const baseRows = useMemo(
     () =>
       (hooks.payoutsQuery.data ?? []).filter((payout) => {
         if (pageFilter.ref && payout.ref !== pageFilter.ref) {
@@ -87,53 +117,115 @@ export default function PayoutRecordsPage() {
       }),
     [hooks.payoutsQuery.data, pageFilter.channelId, pageFilter.payoutId, pageFilter.ref]
   );
-  const { selectedPayoutId, currentPayoutId, setSelectedPayoutId } = usePayoutSelection(payoutRows);
+  const payoutRows = useMemo(
+    () =>
+      baseRows.filter((row) => {
+        const normalizedStatus = normalizePayoutStatus(row.payout_status) ?? "";
+        if (statusFilter !== "ALL" && normalizedStatus !== statusFilter) {
+          return false;
+        }
+
+        const payoutDate = String(row.payout_date ?? "").slice(0, 10);
+        if (dateFromFilter && payoutDate < dateFromFilter) {
+          return false;
+        }
+        if (dateToFilter && payoutDate > dateToFilter) {
+          return false;
+        }
+        return true;
+      }),
+    [baseRows, dateFromFilter, dateToFilter, statusFilter]
+  );
   const totalPayouts = payoutRows.length;
   const settledCount = payoutRows.filter((row) => normalizePayoutStatus(row.payout_status) === "SETTLED").length;
+  const failedCount = payoutRows.filter((row) => normalizePayoutStatus(row.payout_status) === "FAILED").length;
   const totalGross = payoutRows.reduce((sum, row) => sum + Number(row.total_price), 0);
   const totalNet = payoutRows.reduce((sum, row) => sum + Number(row.omset), 0);
 
-  const selectedPayout =
-    payoutRows.find((payout) => payout.payout_id === currentPayoutId) ?? null;
-
-  useEffect(() => {
-    if (pageFilter.payoutId && payoutRows.some((payout) => payout.payout_id === pageFilter.payoutId)) {
-      setSelectedPayoutId(pageFilter.payoutId);
-      return;
-    }
-
-    if (pageFilter.ref) {
-      const matchedPayout = payoutRows.find((payout) => payout.ref === pageFilter.ref);
-      if (matchedPayout) {
-        setSelectedPayoutId(matchedPayout.payout_id);
-      }
-    }
-  }, [pageFilter.payoutId, pageFilter.ref, payoutRows, setSelectedPayoutId]);
-
-  const detailAdjustments = usePayoutAdjustments(selectedPayout?.ref ?? undefined);
-
-  const relatedAdjustmentTotal = (detailAdjustments.adjustmentsQuery.data ?? []).reduce(
-    (sum, adjustment) => sum + Number(adjustment.amount),
-    0
-  );
   const grossAmount = toNumericInputValue(hooks.payoutForm.watch("total_price"));
   const sellerDiscount = toNumericInputValue(hooks.payoutForm.watch("seller_discount"));
   const amountAfterDiscount = Math.max(0, grossAmount - sellerDiscount);
   const netPayout = toNumericInputValue(hooks.payoutForm.watch("omset"));
   const hppAmount = toNumericInputValue(hooks.payoutForm.watch("hpp"));
   const marginAmount = netPayout - hppAmount;
+  const selectableRows = payoutRows.filter((row) => (row.post_status ?? "DRAFT") === "DRAFT");
+  const selectableIdSet = new Set(selectableRows.map((row) => row.payout_id));
+  const selectedDeletableIds = selectedPayoutIds.filter((id) => selectableIdSet.has(id));
+  const allSelectableChecked = selectableRows.length > 0 && selectedDeletableIds.length === selectableRows.length;
+  const someSelectableChecked = selectedDeletableIds.length > 0 && !allSelectableChecked;
 
   const payoutColumns = [
+    payoutColumnHelper.display({
+      id: "select",
+      header: () => (
+        <input
+          type="checkbox"
+          className="size-4 accent-primary"
+          checked={allSelectableChecked}
+          ref={(el) => {
+            if (el) el.indeterminate = someSelectableChecked;
+          }}
+          onChange={(event) => {
+            if (event.target.checked) {
+              setSelectedPayoutIds(selectableRows.map((row) => row.payout_id));
+            } else {
+              setSelectedPayoutIds([]);
+            }
+          }}
+          aria-label="Pilih semua payout draft"
+        />
+      ),
+      cell: ({ row }) => {
+        const isDraft = (row.original.post_status ?? "DRAFT") === "DRAFT";
+        return (
+          <input
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={selectedPayoutIds.includes(row.original.payout_id)}
+            disabled={!isDraft}
+            onChange={(event) => {
+              setSelectedPayoutIds((current) => {
+                if (event.target.checked) {
+                  return Array.from(new Set([...current, row.original.payout_id]));
+                }
+                return current.filter((id) => id !== row.original.payout_id);
+              });
+            }}
+            aria-label={`Pilih payout ${row.original.ref ?? row.original.payout_id}`}
+          />
+        );
+      },
+    }),
     payoutColumnHelper.accessor("ref", {
       header: "Referensi",
-      cell: ({ row, getValue }) => (
-        <div>
-          <p className="font-medium">{getValue() ?? "-"}</p>
-          <p className="text-xs text-muted-foreground">
-            {row.original.t_order?.order_no ?? "Tanpa order"} / {row.original.t_order?.m_channel?.channel_name ?? "Tanpa channel"}
-          </p>
-        </div>
-      ),
+      cell: ({ row, getValue }) => {
+        const isDraft = (row.original.post_status ?? "DRAFT") === "DRAFT";
+        return (
+          <div>
+            <button
+              type="button"
+              className="block font-medium text-left text-primary underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => hooks.openPayoutModal(row.original)}
+              disabled={!isDraft}
+            >
+              {getValue() ?? "-"}
+            </button>
+          {row.original.t_order?.order_no ? (
+            <button
+              type="button"
+              className="mt-0.5 block text-left text-xs text-primary underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => hooks.openPayoutModal(row.original)}
+              disabled={!isDraft}
+            >
+              {row.original.t_order.order_no}
+            </button>
+          ) : (
+            <p className="text-xs text-muted-foreground">Tanpa order</p>
+          )}
+          <p className="text-xs text-muted-foreground">{row.original.t_order?.m_channel?.channel_name ?? "Tanpa channel"}</p>
+          </div>
+        );
+      },
     }),
     payoutColumnHelper.accessor("payout_date", {
       header: "Tanggal payout",
@@ -161,40 +253,141 @@ export default function PayoutRecordsPage() {
         />
       ),
     }),
+    payoutColumnHelper.accessor("post_status", {
+      header: "Post",
+      cell: (info) => {
+        const status = String(info.getValue() ?? "DRAFT").toUpperCase();
+        return (
+          <StatusBadge
+            label={status}
+            tone={
+              status === "LOCKED"
+                ? "warning"
+                : status === "VOID"
+                  ? "danger"
+                  : status === "POSTED"
+                    ? "success"
+                    : "neutral"
+            }
+          />
+        );
+      },
+    }),
     payoutColumnHelper.display({
       id: "actions",
       header: "",
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.openPayoutModal(row.original)}>
-            <Pencil className="size-3.5" />
-          </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.deletePayout(row.original.payout_id)}>
-            <Trash2 className="size-3.5" />
-          </Button>
+          {(row.original.post_status ?? "DRAFT") === "DRAFT" ? (
+            <Button size="sm" variant="outline" onClick={() => void hooks.changeLifecycle(row.original.payout_id, "POST")}>
+              Post
+            </Button>
+          ) : null}
+          {(row.original.post_status ?? "DRAFT") === "POSTED" ? (
+            <>
+              <Button size="sm" variant="outline" onClick={() => void hooks.changeLifecycle(row.original.payout_id, "LOCK")}>
+                Lock
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => void hooks.changeLifecycle(row.original.payout_id, "VOID")}>
+                Void
+              </Button>
+            </>
+          ) : null}
+          {(row.original.post_status ?? "DRAFT") === "LOCKED" ? (
+            <Button size="sm" variant="outline" onClick={() => void hooks.changeLifecycle(row.original.payout_id, "VOID")}>
+              Void
+            </Button>
+          ) : null}
         </div>
       ),
     }),
   ];
 
-  const relatedAdjustmentColumns = [
-    adjustmentColumnHelper.accessor("adjustment_date", {
-      header: "Tanggal adjustment",
-      cell: (info) => (info.getValue() ? formatShortDate(info.getValue() as string) : "-"),
-    }),
-    adjustmentColumnHelper.accessor("adjustment_type", {
-      header: "Tipe",
-      cell: (info) => info.getValue() ?? "-",
-    }),
-    adjustmentColumnHelper.accessor("reason", {
-      header: "Alasan",
-      cell: (info) => info.getValue() ?? "-",
-    }),
-    adjustmentColumnHelper.accessor("amount", {
-      header: "Nominal",
-      cell: (info) => formatMoney(Number(info.getValue())),
-    }),
-  ];
+  async function handleReviewCsv() {
+    if (!csvFile) {
+      toast.error("Pilih file CSV dulu.");
+      return;
+    }
+
+    try {
+      setIsReviewingCsv(true);
+      const formData = new FormData();
+      formData.append("file", csvFile);
+
+      const response = await fetch("/api/payout/records/import-csv?review=1", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorPayload = (await response.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(errorPayload?.error ?? "Upload CSV gagal.");
+      }
+
+      const result = (await response.json()) as CsvReviewResponse;
+      setCsvReview(result);
+      if (result.ok) {
+        toast.success("Review file valid. Kamu bisa lanjut upload.");
+      } else {
+        toast.error(`Review menemukan ${result.summary.errorCount} error.`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Review CSV gagal.");
+    } finally {
+      setIsReviewingCsv(false);
+    }
+  }
+
+  async function handleDeleteSelected() {
+    if (selectedDeletableIds.length === 0) {
+      toast.error("Pilih data DRAFT yang mau dihapus dulu.");
+      return;
+    }
+
+    try {
+      await Promise.all(selectedDeletableIds.map((id) => hooks.deletePayout(id)));
+      setSelectedPayoutIds([]);
+      toast.success(`${selectedDeletableIds.length} payout berhasil dihapus.`);
+      await hooks.payoutsQuery.refetch();
+    } catch {
+      // toast sudah ditangani di hook
+    }
+  }
+
+  async function handleUploadCsv() {
+    if (!csvFile) {
+      toast.error("Pilih file CSV dulu.");
+      return;
+    }
+    if (!csvReview?.ok) {
+      toast.error("Review dulu file CSV sampai valid sebelum upload.");
+      return;
+    }
+
+    try {
+      setIsUploadingCsv(true);
+      const formData = new FormData();
+      formData.append("file", csvFile);
+      const response = await fetch("/api/payout/records/import-csv", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as { error?: string; summary?: { errorCount?: number } } | null;
+        throw new Error(payload?.error ?? "Upload CSV gagal.");
+      }
+      const result = (await response.json()) as CsvReviewResponse;
+      toast.success(`Import selesai. Insert ${result.summary.inserted ?? 0}, update ${result.summary.updated ?? 0}.`);
+      setCsvFile(null);
+      setCsvReview(null);
+      uploadCsvModal.closeModal();
+      await Promise.all([hooks.payoutsQuery.refetch(), orderLookupQuery.refetch()]);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Upload CSV gagal.");
+    } finally {
+      setIsUploadingCsv(false);
+    }
+  }
 
   return (
     <PageShell
@@ -233,97 +426,179 @@ export default function PayoutRecordsPage() {
         ) : null}
         <div className="grid gap-4 md:grid-cols-4">
           <MetricCard title="Total payout" value={String(totalPayouts)} subtitle="Jumlah payout yang terlihat." />
-          <MetricCard title="Sudah settled" value={String(settledCount)} subtitle="Jumlah payout berstatus SETTLED." />
-          <MetricCard title="Total bruto" value={formatMoney(totalGross)} subtitle="Akumulasi bruto dari data yang terlihat." />
-          <MetricCard title="Total bersih" value={formatMoney(totalNet)} subtitle="Akumulasi payout bersih dari data yang terlihat." />
+          <MetricCard
+            title="Status payout"
+            value={`${settledCount} / ${failedCount}`}
+            subtitle="SETTLED / FAILED"
+            valueClassName="text-[clamp(1.25rem,1.6vw,1.75rem)]"
+          />
+          <MetricCard
+            title="Total bruto"
+            value={formatMoneyNoDecimals(totalGross)}
+            subtitle="Akumulasi bruto dari data yang terlihat."
+            valueClassName="text-[clamp(1.8rem,2vw,2.3rem)]"
+          />
+          <MetricCard
+            title="Total bersih"
+            value={formatMoneyNoDecimals(totalNet)}
+            subtitle="Akumulasi payout bersih dari data yang terlihat."
+            valueClassName="text-[clamp(1.8rem,2vw,2.3rem)]"
+          />
         </div>
 
-        <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div className="w-full space-y-1.5 md:max-w-[620px]">
-            <label htmlFor="payout-record-selection" className="text-xs font-medium tracking-[0.02em] text-foreground/80">
-              Payout terpilih
-            </label>
-            <SelectNative
-              id="payout-record-selection"
-              className="w-full"
-              value={selectedPayoutId ?? currentPayoutId ?? ""}
-              onChange={(event) => setSelectedPayoutId(event.target.value ? Number(event.target.value) : null)}
-            >
-              {payoutRows.map((payout) => (
-                <option key={payout.payout_id} value={payout.payout_id}>
-                  {formatShortDate(payout.payout_date)} / {payout.ref ?? "Tanpa ref"} / {normalizePayoutStatus(payout.payout_status) ?? "Tidak diketahui"}
-                </option>
-              ))}
-            </SelectNative>
-            <p className="text-xs leading-5 text-muted-foreground">
-              {selectedPayout
-                ? `${selectedPayout.t_order?.order_no ?? "Tanpa order"} / bruto ${formatMoney(Number(selectedPayout.total_price))} / bersih ${formatMoney(Number(selectedPayout.omset))}`
-                : "Pilih payout untuk melihat relasi order dan adjustment terkait."}
-            </p>
+        <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-end md:justify-between">
+          <div className="grid w-full gap-3 md:max-w-[860px] md:grid-cols-3">
+            <FormField label="Status">
+              <SelectNative
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as "ALL" | "SETTLED" | "FAILED")}
+              >
+                <option value="ALL">Semua status</option>
+                <option value="SETTLED">SETTLED</option>
+                <option value="FAILED">FAILED</option>
+              </SelectNative>
+            </FormField>
+            <FormField label="Tanggal dari">
+              <div className="relative">
+                <CalendarDays className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="date"
+                  value={dateFromFilter}
+                  className="h-10 rounded-xl pr-10 pl-9"
+                  onChange={(event) => setDateFromFilter(event.target.value)}
+                />
+                {dateFromFilter ? (
+                  <button
+                    type="button"
+                    className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    onClick={() => setDateFromFilter("")}
+                    aria-label="Hapus tanggal dari"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : null}
+              </div>
+            </FormField>
+            <FormField label="Tanggal sampai">
+              <div className="relative">
+                <CalendarDays className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="date"
+                  value={dateToFilter}
+                  className="h-10 rounded-xl pr-10 pl-9"
+                  onChange={(event) => setDateToFilter(event.target.value)}
+                />
+                {dateToFilter ? (
+                  <button
+                    type="button"
+                    className="absolute top-1/2 right-2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    onClick={() => setDateToFilter("")}
+                    aria-label="Hapus tanggal sampai"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                ) : null}
+              </div>
+            </FormField>
           </div>
-          <Button size="sm" onClick={() => hooks.openPayoutModal()}>
-            <Plus className="size-4" />
-            Tambah payout
+          <div className="flex items-center gap-2">
+            <Button size="sm" onClick={uploadCsvModal.openModal}>
+              Upload CSV
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setStatusFilter("ALL");
+                setDateFromFilter("");
+                setDateToFilter("");
+              }}
+            >
+              Reset filter
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between rounded-[20px] border border-border/70 bg-card/80 px-4 py-3">
+          <p className="text-sm text-muted-foreground">
+            Terpilih: {selectedDeletableIds.length} payout draft
+          </p>
+          <Button variant="outline" disabled={selectedDeletableIds.length === 0} onClick={() => void handleDeleteSelected()}>
+            <Trash2 className="size-4" />
+            Hapus terpilih
           </Button>
         </div>
 
-        {selectedPayout ? (
-          <div className="grid gap-4 xl:grid-cols-4">
-            <div className="rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Relasi order</p>
-              <p className="mt-3 text-lg font-semibold">{selectedPayout.ref ?? "-"}</p>
-              <p className="text-sm text-muted-foreground">
-                {selectedPayout.t_order?.order_no ?? "Tanpa order"} / {selectedPayout.t_order?.m_channel?.channel_name ?? "Tanpa channel"}
-              </p>
-            </div>
-            <div className="rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Bruto / bersih</p>
-              <p className="mt-3 text-lg font-semibold">{formatMoney(Number(selectedPayout.total_price))}</p>
-              <p className="text-sm text-muted-foreground">Payout bersih {formatMoney(Number(selectedPayout.omset))}</p>
-            </div>
-            <div className="rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Potongan / biaya</p>
-              <p className="mt-3 text-lg font-semibold">{formatMoney(sumPayoutDeductions(selectedPayout))}</p>
-              <p className="text-sm text-muted-foreground">
-                Biaya {formatMoney(sumPayoutFees(selectedPayout))} / ongkir {formatMoney(Number(selectedPayout.shipping_cost))}
-              </p>
-            </div>
-            <div className="rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Status / tanggal</p>
-              <div className="mt-3 flex items-center gap-2">
-                <StatusBadge
-                  label={normalizePayoutStatus(selectedPayout.payout_status) ?? "Tidak diketahui"}
-                  tone={payoutStatusTone(selectedPayout.payout_status)}
-                />
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">{formatShortDate(selectedPayout.payout_date)}</p>
-            </div>
-          </div>
-        ) : (
-          <EmptyState
-            title="Belum ada payout terpilih"
-            description="Pilih atau buat payout untuk melihat detail payout yang terhubung."
-          />
-        )}
+        <DataTable
+          columns={payoutColumns}
+          data={payoutRows}
+          emptyMessage="Belum ada data payout."
+          pagination={{ enabled: true, pageSize: 15, pageSizeOptions: [10, 15, 25, 50] }}
+        />
 
-        <DataTable columns={payoutColumns} data={payoutRows} emptyMessage="Belum ada data payout." />
-
-        {selectedPayout?.ref ? (
-          <div className="space-y-4 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm">
-            <div className="space-y-1">
-              <h2 className="text-lg font-semibold">Adjustment terkait</h2>
-              <p className="text-sm text-muted-foreground">
-                {selectedPayout.ref} / {detailAdjustments.adjustmentsQuery.data?.length ?? 0} baris / total {formatMoney(relatedAdjustmentTotal)}
-              </p>
-            </div>
-            <DataTable
-              columns={relatedAdjustmentColumns}
-              data={detailAdjustments.adjustmentsQuery.data ?? []}
-              emptyMessage="Belum ada adjustment payout untuk referensi ini."
-            />
-          </div>
-        ) : null}
       </div>
+
+      <Dialog
+        open={uploadCsvModal.open}
+        onOpenChange={(open) => {
+          uploadCsvModal.setOpen(open);
+          if (!open) {
+            setCsvFile(null);
+            setCsvReview(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[620px]">
+          <DialogHeader>
+            <DialogTitle>Upload CSV payout</DialogTitle>
+            <DialogDescription>
+              Import data payout harian dari CSV admin. Data akan di-upsert berdasarkan `ref`.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <FormField helperText="Header wajib: ref, payout_date, qty_produk, hpp, total_price, seller_discount, fee_admin, fee_service, fee_order_process, fee_program, fee_affiliate, shipping_cost, omset, payout_status.">
+              <Input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={(event) => {
+                  setCsvFile(event.target.files?.[0] ?? null);
+                  setCsvReview(null);
+                }}
+              />
+            </FormField>
+            {csvReview ? (
+              <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-sm">
+                <p className="font-medium">
+                  Review: {csvReview.summary.validRows}/{csvReview.summary.totalRows} baris valid
+                </p>
+                <p className="text-muted-foreground">
+                  Estimasi insert {csvReview.summary.insertedEstimate ?? 0}, update {csvReview.summary.updatedEstimate ?? 0}, error {csvReview.summary.errorCount}.
+                </p>
+                {csvReview.errors && csvReview.errors.length > 0 ? (
+                  <div className="mt-2 max-h-44 overflow-auto rounded-md border border-border/60 bg-background p-2 text-xs">
+                    {csvReview.errors.map((err, idx) => (
+                      <p key={`${err.row}-${idx}`}>
+                        Baris {err.row}{err.ref ? ` (${err.ref})` : ""}: {err.reason}
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={uploadCsvModal.closeModal} disabled={isUploadingCsv}>
+                Batal
+              </Button>
+              <Button variant="outline" disabled={!csvFile || isReviewingCsv || isUploadingCsv} onClick={handleReviewCsv}>
+                {isReviewingCsv ? "Reviewing..." : "Review file"}
+              </Button>
+              <Button disabled={!csvFile || !csvReview?.ok || isUploadingCsv || isReviewingCsv} onClick={handleUploadCsv}>
+                {isUploadingCsv ? "Uploading..." : "Upload CSV"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <ModalFormShell
         open={hooks.payoutModal.open}
@@ -454,6 +729,7 @@ export default function PayoutRecordsPage() {
           </FormField>
         </div>
       </ModalFormShell>
+
     </PageShell>
   );
 }

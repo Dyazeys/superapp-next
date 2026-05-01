@@ -88,10 +88,10 @@ function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) 
 }
 
 function toSalesStatus(value: string | null | undefined) {
-  if (!value) return "PAID" as const;
+  if (!value) return "PICKUP" as const;
   return SALES_STATUS_OPTIONS.includes(value as (typeof SALES_STATUS_OPTIONS)[number])
     ? (value as (typeof SALES_STATUS_OPTIONS)[number])
-    : "PAID";
+    : "PICKUP";
 }
 
 export function parseSalesBooleanInput(value: string) {
@@ -172,7 +172,7 @@ export function useSalesOrdersInternal(options?: { disableListQuery?: boolean })
       channel_id: null,
       customer_id: null,
       total_amount: "0",
-      status: "PAID",
+      status: "PICKUP",
       is_historical: false,
     },
   });

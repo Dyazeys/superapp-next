@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     const rawPage = Number(searchParams.get("page") ?? "1");
     const rawPageSize = Number(searchParams.get("page_size") ?? "20");
     const postingFilter = (searchParams.get("posting_filter") ?? "ALL").toUpperCase();
+    const search = (searchParams.get("search") ?? "").trim();
 
     const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
     const pageSize =
@@ -45,6 +46,10 @@ export async function GET(request: NextRequest) {
           : postingFilter === "NO_POSTING"
             ? Prisma.sql`o.is_historical = true`
             : Prisma.sql`TRUE`;
+
+    const searchWhereCondition: Prisma.Sql = search
+      ? Prisma.sql`(o.order_no ILIKE ${`%${search}%`} OR COALESCE(o.ref_no, '') ILIKE ${`%${search}%`})`
+      : Prisma.sql`TRUE`;
 
     const baseCte = Prisma.sql`
       WITH item_metrics AS (
@@ -108,6 +113,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN posting_by_order p ON p.order_no = o.order_no
         LEFT JOIN item_count_by_order ic ON ic.order_no = o.order_no
         WHERE ${postingWhereCondition}
+          AND ${searchWhereCondition}
       )
     `;
 

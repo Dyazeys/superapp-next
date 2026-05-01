@@ -38,6 +38,10 @@ export type PayoutRecord = {
   shipping_cost: string;
   omset: string;
   payout_status: string | null;
+  post_status: string;
+  posted_at: string | null;
+  locked_at: string | null;
+  voided_at: string | null;
   created_at: string;
   t_order?: PayoutOrderLookupRecord | null;
 };

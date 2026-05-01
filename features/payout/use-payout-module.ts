@@ -40,6 +40,7 @@ type PayoutsHook = {
   openPayoutModal: (payout?: PayoutRecord) => void;
   savePayout: (values: PayoutInput) => Promise<PayoutRecord>;
   deletePayout: (id: number) => Promise<void>;
+  changeLifecycle: (id: number, action: "POST" | "LOCK" | "VOID") => Promise<PayoutRecord>;
 };
 
 type PayoutAdjustmentsHook = {
@@ -207,6 +208,18 @@ export function usePayouts(): PayoutsHook {
     }
   };
 
+  const changeLifecycle = async (id: number, action: "POST" | "LOCK" | "VOID") => {
+    try {
+      const payout = await payoutApi.records.lifecycle(id, action);
+      toast.success(`Payout ${action} berhasil`);
+      await invalidate();
+      return payout;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `Failed to ${action} payout`);
+      throw error;
+    }
+  };
+
   const openPayoutModal = (payout?: PayoutRecord) => {
     setEditingPayout(payout ?? null);
     payoutForm.reset({
@@ -236,6 +249,7 @@ export function usePayouts(): PayoutsHook {
     openPayoutModal,
     savePayout,
     deletePayout,
+    changeLifecycle,
   };
 }
 

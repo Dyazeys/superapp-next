@@ -57,7 +57,7 @@ export function MetricCard({
           </p>
           <p
             className={cn(
-              "mt-2 overflow-hidden text-[clamp(1.9rem,2.2vw,2.5rem)] leading-none font-bold tracking-tight text-foreground",
+              "mt-2 whitespace-nowrap text-[clamp(1.45rem,1.8vw,2rem)] leading-tight font-bold tracking-tight text-foreground",
               valueClassName
             )}
           >

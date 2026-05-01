@@ -19,26 +19,26 @@ model account_categories {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model accounts {
-  id                                                                     String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  category_id                                                            Int?
-  parent_id                                                              String?                @db.Uuid
-  code                                                                   String                 @unique @db.VarChar(50)
-  name                                                                   String                 @db.VarChar(255)
-  normal_balance                                                         String                 @db.VarChar(20)
-  is_active                                                              Boolean                @default(true)
-  created_at                                                             DateTime               @default(now()) @db.Timestamptz(6)
-  updated_at                                                             DateTime?              @db.Timestamptz(6)
-  account_categories                                                     account_categories?    @relation(fields: [category_id], references: [id], onDelete: Restrict, map: "fk_accounts_category_id")
-  accounts                                                               accounts?              @relation("accountsToaccounts", fields: [parent_id], references: [id], onDelete: Restrict, map: "fk_accounts_parent_id")
-  other_accounts                                                         accounts[]             @relation("accountsToaccounts")
-  journal_lines                                                          journal_lines[]
-  m_channel_m_channel_piutang_account                                    m_channel[]           @relation("m_channel_piutang_account")
-  m_channel_m_channel_revenue_account                                    m_channel[]           @relation("m_channel_revenue_account")
-  m_channel_m_channel_saldo_account                                      m_channel[]           @relation("m_channel_saldo_account")
+  id                                                                                 String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  category_id                                                                        Int?
+  parent_id                                                                          String?                      @db.Uuid
+  code                                                                               String                       @unique @db.VarChar(50)
+  name                                                                               String                       @db.VarChar(255)
+  normal_balance                                                                     String                       @db.VarChar(20)
+  is_active                                                                          Boolean                      @default(true)
+  created_at                                                                         DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                                                         DateTime?                    @db.Timestamptz(6)
+  account_categories                                                                 account_categories?          @relation(fields: [category_id], references: [id], onDelete: Restrict, map: "fk_accounts_category_id")
+  accounts                                                                           accounts?                    @relation("accountsToaccounts", fields: [parent_id], references: [id], onDelete: Restrict, map: "fk_accounts_parent_id")
+  other_accounts                                                                     accounts[]                   @relation("accountsToaccounts")
+  journal_lines                                                                      journal_lines[]
+  m_channel_m_channel_piutang_account                                                m_channel[]                  @relation("m_channel_piutang_account")
+  m_channel_m_channel_revenue_account                                                m_channel[]                  @relation("m_channel_revenue_account")
+  m_channel_m_channel_saldo_account                                                  m_channel[]                  @relation("m_channel_saldo_account")
   operational_expense_barter_operational_expense_barter_expense_account_idToaccounts operational_expense_barter[] @relation("operational_expense_barter_expense_account_idToaccounts")
-  operational_expenses_operational_expenses_expense_account_idToaccounts operational_expenses[] @relation("operational_expenses_expense_account_idToaccounts")
-  operational_expenses_operational_expenses_payment_account_idToaccounts operational_expenses[] @relation("operational_expenses_payment_account_idToaccounts")
-  payout_transfers_payout_transfers_bank_account_idToaccounts            payout_transfers[]    @relation("payout_transfers_bank_account_id")
+  operational_expenses_operational_expenses_expense_account_idToaccounts             operational_expenses[]       @relation("operational_expenses_expense_account_idToaccounts")
+  operational_expenses_operational_expenses_payment_account_idToaccounts             operational_expenses[]       @relation("operational_expenses_payment_account_idToaccounts")
+  payout_transfers_payout_transfers_bank_account_idToaccounts                        payout_transfers[]           @relation("payout_transfers_bank_account_id")
 
   @@index([category_id], map: "idx_accounting_accounts_category_id")
   @@index([parent_id], map: "idx_accounting_accounts_parent_id")
@@ -107,21 +107,21 @@ model operational_expenses {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model operational_expense_barter {
-  id                                                                         String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  barter_date                                                                DateTime                          @db.Date
-  expense_account_id                                                         String                            @db.Uuid
-  expense_label                                                              String?                           @db.VarChar(100)
-  description                                                                String
-  status                                                                     String                            @default("DRAFT") @db.VarChar(20)
-  total_amount                                                               Decimal                           @default(0.00) @db.Decimal(18, 2)
-  reference_no                                                               String?                           @db.VarChar(100)
-  notes_internal                                                             String?
-  created_at                                                                 DateTime                          @default(now()) @db.Timestamptz(6)
-  updated_at                                                                 DateTime?                         @db.Timestamptz(6)
-  posted_at                                                                  DateTime?                         @db.Timestamptz(6)
-  voided_at                                                                  DateTime?                         @db.Timestamptz(6)
-  accounts_operational_expense_barter_expense_account_idToaccounts          accounts                          @relation("operational_expense_barter_expense_account_idToaccounts", fields: [expense_account_id], references: [id], map: "fk_operational_expense_barter_expense_account_id")
-  operational_expense_barter_items                                           operational_expense_barter_items[]
+  id                                                               String                             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  barter_date                                                      DateTime                           @db.Date
+  expense_account_id                                               String                             @db.Uuid
+  expense_label                                                    String?                            @db.VarChar(100)
+  description                                                      String
+  status                                                           String                             @default("DRAFT") @db.VarChar(20)
+  total_amount                                                     Decimal                            @default(0.00) @db.Decimal(18, 2)
+  reference_no                                                     String?                            @db.VarChar(100)
+  notes_internal                                                   String?
+  created_at                                                       DateTime                           @default(now()) @db.Timestamptz(6)
+  updated_at                                                       DateTime?                          @db.Timestamptz(6)
+  posted_at                                                        DateTime?                          @db.Timestamptz(6)
+  voided_at                                                        DateTime?                          @db.Timestamptz(6)
+  accounts_operational_expense_barter_expense_account_idToaccounts accounts                           @relation("operational_expense_barter_expense_account_idToaccounts", fields: [expense_account_id], references: [id], map: "fk_operational_expense_barter_expense_account_id")
+  operational_expense_barter_items                                 operational_expense_barter_items[]
 
   @@index([barter_date], map: "idx_accounting_operational_expense_barter_date")
   @@index([expense_account_id], map: "idx_accounting_operational_expense_barter_expense_account_id")
@@ -131,17 +131,17 @@ model operational_expense_barter {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model operational_expense_barter_items {
-  id                                   String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  barter_id                            String                     @db.Uuid
-  inv_code                             String                     @db.VarChar(100)
-  qty                                  Int
-  unit_amount                          Decimal                    @default(0.00) @db.Decimal(18, 2)
-  line_amount                          Decimal                    @default(0.00) @db.Decimal(18, 2)
-  notes                                String?
-  created_at                           DateTime                   @default(now()) @db.Timestamptz(6)
-  updated_at                           DateTime?                  @db.Timestamptz(6)
-  operational_expense_barter           operational_expense_barter @relation(fields: [barter_id], references: [id], onDelete: Cascade, map: "fk_operational_expense_barter_items_barter_id")
-  master_inventory                     master_inventory           @relation(fields: [inv_code], references: [inv_code], onDelete: Restrict, map: "fk_operational_expense_barter_items_inv_code")
+  id                         String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  barter_id                  String                     @db.Uuid
+  inv_code                   String                     @db.VarChar(100)
+  qty                        Int
+  unit_amount                Decimal                    @default(0.00) @db.Decimal(18, 2)
+  line_amount                Decimal                    @default(0.00) @db.Decimal(18, 2)
+  notes                      String?
+  created_at                 DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?                  @db.Timestamptz(6)
+  operational_expense_barter operational_expense_barter @relation(fields: [barter_id], references: [id], onDelete: Cascade, map: "fk_operational_expense_barter_items_barter_id")
+  master_inventory           master_inventory           @relation(fields: [inv_code], references: [inv_code], onDelete: Restrict, map: "fk_operational_expense_barter_items_inv_code")
 
   @@index([barter_id], map: "idx_accounting_operational_expense_barter_items_barter_id")
   @@index([inv_code], map: "idx_accounting_operational_expense_barter_items_inv_code")
@@ -159,15 +159,15 @@ model roles {
 }
 
 model users {
-  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   role_id       Int?
-  username      String    @unique @db.VarChar(100)
-  full_name     String?   @db.VarChar(150)
+  username      String         @unique @db.VarChar(100)
+  full_name     String?        @db.VarChar(150)
   password_hash String
-  created_at    DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime? @db.Timestamptz(6)
-  is_active     Boolean   @default(true)
-  roles         roles?    @relation(fields: [role_id], references: [id], onDelete: Restrict)
+  created_at    DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime?      @db.Timestamptz(6)
+  is_active     Boolean        @default(true)
+  roles         roles?         @relation(fields: [role_id], references: [id], onDelete: Restrict)
   profile       user_profiles?
 
   @@index([role_id], map: "idx_auth_users_role_id")
@@ -175,18 +175,18 @@ model users {
 }
 
 model user_profiles {
-  user_id       String    @id @db.Uuid
-  display_name  String?   @db.VarChar(150)
-  phone         String?   @db.VarChar(50)
-  avatar_url    String?   @db.VarChar(500)
-  job_title     String?   @db.VarChar(100)
-  department    String?   @db.VarChar(100)
-  timezone      String?   @db.VarChar(100)
-  locale        String?   @db.VarChar(20)
-  bio           String?
-  created_at    DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at    DateTime? @db.Timestamptz(6)
-  user          users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id      String    @id @db.Uuid
+  display_name String?   @db.VarChar(150)
+  phone        String?   @db.VarChar(50)
+  avatar_url   String?   @db.VarChar(500)
+  job_title    String?   @db.VarChar(100)
+  department   String?   @db.VarChar(100)
+  timezone     String?   @db.VarChar(100)
+  locale       String?   @db.VarChar(20)
+  bio          String?
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @db.Timestamptz(6)
+  user         users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@schema("auth")
 }
@@ -256,25 +256,30 @@ model t_adjustments {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model t_payout {
-  payout_id         Int      @id @default(autoincrement())
-  ref               String?  @unique @db.VarChar(100)
-  payout_date       DateTime @db.Date
-  qty_produk        Int      @default(0)
-  hpp               Decimal  @default(0.00) @db.Decimal(18, 2)
-  total_price       Decimal  @default(0.00) @db.Decimal(18, 2)
-  seller_discount   Decimal  @default(0.00) @db.Decimal(18, 2)
-  fee_admin         Decimal  @default(0.00) @db.Decimal(18, 2)
-  fee_service       Decimal  @default(0.00) @db.Decimal(18, 2)
-  fee_order_process Decimal  @default(0.00) @db.Decimal(18, 2)
-  fee_program       Decimal  @default(0.00) @db.Decimal(18, 2)
-  fee_affiliate     Decimal  @default(0.00) @db.Decimal(18, 2)
-  shipping_cost     Decimal  @default(0.00) @db.Decimal(18, 2)
-  omset             Decimal  @default(0.00) @db.Decimal(18, 2)
-  payout_status     String?  @db.VarChar(20)
-  created_at        DateTime @default(now()) @db.Timestamptz(6)
-  t_order           t_order? @relation(fields: [ref], references: [ref_no], onDelete: Restrict, map: "fk_t_payout_ref")
+  payout_id         Int                @id @default(autoincrement())
+  ref               String?            @unique @db.VarChar(100)
+  payout_date       DateTime           @db.Date
+  qty_produk        Int                @default(0)
+  hpp               Decimal            @default(0.00) @db.Decimal(18, 2)
+  total_price       Decimal            @default(0.00) @db.Decimal(18, 2)
+  seller_discount   Decimal            @default(0.00) @db.Decimal(18, 2)
+  fee_admin         Decimal            @default(0.00) @db.Decimal(18, 2)
+  fee_service       Decimal            @default(0.00) @db.Decimal(18, 2)
+  fee_order_process Decimal            @default(0.00) @db.Decimal(18, 2)
+  fee_program       Decimal            @default(0.00) @db.Decimal(18, 2)
+  fee_affiliate     Decimal            @default(0.00) @db.Decimal(18, 2)
+  shipping_cost     Decimal            @default(0.00) @db.Decimal(18, 2)
+  omset             Decimal            @default(0.00) @db.Decimal(18, 2)
+  payout_status     String?            @db.VarChar(20)
+  post_status       String             @default("DRAFT") @db.VarChar(20)
+  posted_at         DateTime?          @db.Timestamptz(6)
+  locked_at         DateTime?          @db.Timestamptz(6)
+  voided_at         DateTime?          @db.Timestamptz(6)
+  created_at        DateTime           @default(now()) @db.Timestamptz(6)
+  t_order           t_order?           @relation(fields: [ref], references: [ref_no], onDelete: Restrict, map: "fk_t_payout_ref")
   payout_transfers  payout_transfers[]
 
+  @@index([post_status], map: "idx_payout_t_payout_post_status")
   @@schema("payout")
 }
 
@@ -326,17 +331,17 @@ model hpp_history {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model master_inventory {
-  inv_code                                                 String                 @id @db.VarChar(100)
-  inv_name                                                 String                 @db.VarChar(255)
+  inv_code                                                 String                             @id @db.VarChar(100)
+  inv_name                                                 String                             @db.VarChar(255)
   description                                              String?
-  unit_price                                               Decimal                @default(0.00) @db.Decimal(18, 2) @map("unit_cost")
-  created_at                                               DateTime               @default(now()) @db.Timestamptz(6)
-  updated_at                                               DateTime?              @db.Timestamptz(6)
-  is_active                                                Boolean                @default(true)
+  unit_price                                               Decimal                            @default(0.00) @map("unit_cost") @db.Decimal(18, 2)
+  created_at                                               DateTime                           @default(now()) @db.Timestamptz(6)
+  updated_at                                               DateTime?                          @db.Timestamptz(6)
+  is_active                                                Boolean                            @default(true)
   operational_expense_barter_items                         operational_expense_barter_items[]
   operational_expenses                                     operational_expenses[]
-  master_product_master_product_inv_accTomaster_inventory  master_product[]       @relation("master_product_inv_accTomaster_inventory")
-  master_product_master_product_inv_mainTomaster_inventory master_product[]       @relation("master_product_inv_mainTomaster_inventory")
+  master_product_master_product_inv_accTomaster_inventory  master_product[]                   @relation("master_product_inv_accTomaster_inventory")
+  master_product_master_product_inv_mainTomaster_inventory master_product[]                   @relation("master_product_inv_mainTomaster_inventory")
   product_bom                                              product_bom[]
   adjustments                                              adjustments[]
   inbound_items                                            inbound_items[]
@@ -344,34 +349,36 @@ model master_inventory {
   returns                                                  returns[]
   stock_balances                                           stock_balances?
   stock_movements                                          stock_movements[]
+  warehouseReturnItems                                     warehouse_return_items[]
 
   @@schema("product")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model master_product {
-  sku                                                        String            @id @db.VarChar(100)
-  category_code                                              String?           @db.VarChar(50)
-  sku_name                                                   String            @db.VarChar(255)
-  product_name                                               String            @db.VarChar(255)
-  color                                                      String?           @db.VarChar(100)
-  color_code                                                 String?           @db.VarChar(50)
-  size                                                       String?           @db.VarChar(50)
-  variations                                                 String?           @db.VarChar(150)
-  busa_code                                                  String?           @db.VarChar(50)
-  inv_main                                                   String?           @db.VarChar(100)
-  inv_acc                                                    String?           @db.VarChar(100)
-  is_bundling                                                Boolean           @default(false)
-  is_active                                                  Boolean           @default(true)
-  total_hpp                                                  Decimal           @default(0.00) @db.Decimal(18, 2)
-  created_at                                                 DateTime          @default(now()) @db.Timestamptz(6)
-  updated_at                                                 DateTime?         @db.Timestamptz(6)
+  sku                                                        String                   @id @db.VarChar(100)
+  category_code                                              String?                  @db.VarChar(50)
+  sku_name                                                   String                   @db.VarChar(255)
+  product_name                                               String                   @db.VarChar(255)
+  color                                                      String?                  @db.VarChar(100)
+  color_code                                                 String?                  @db.VarChar(50)
+  size                                                       String?                  @db.VarChar(50)
+  variations                                                 String?                  @db.VarChar(150)
+  busa_code                                                  String?                  @db.VarChar(50)
+  inv_main                                                   String?                  @db.VarChar(100)
+  inv_acc                                                    String?                  @db.VarChar(100)
+  is_bundling                                                Boolean                  @default(false)
+  is_active                                                  Boolean                  @default(true)
+  total_hpp                                                  Decimal                  @default(0.00) @db.Decimal(18, 2)
+  created_at                                                 DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                                                 DateTime?                @db.Timestamptz(6)
   hpp_history                                                hpp_history[]
-  category_product                                           category_product? @relation(fields: [category_code], references: [category_code], onDelete: Restrict, map: "fk_master_product_category")
-  master_inventory_master_product_inv_accTomaster_inventory  master_inventory? @relation("master_product_inv_accTomaster_inventory", fields: [inv_acc], references: [inv_code], onDelete: Restrict, map: "fk_master_product_inv_acc")
-  master_inventory_master_product_inv_mainTomaster_inventory master_inventory? @relation("master_product_inv_mainTomaster_inventory", fields: [inv_main], references: [inv_code], onDelete: Restrict, map: "fk_master_product_inv_main")
+  category_product                                           category_product?        @relation(fields: [category_code], references: [category_code], onDelete: Restrict, map: "fk_master_product_category")
+  master_inventory_master_product_inv_accTomaster_inventory  master_inventory?        @relation("master_product_inv_accTomaster_inventory", fields: [inv_acc], references: [inv_code], onDelete: Restrict, map: "fk_master_product_inv_acc")
+  master_inventory_master_product_inv_mainTomaster_inventory master_inventory?        @relation("master_product_inv_mainTomaster_inventory", fields: [inv_main], references: [inv_code], onDelete: Restrict, map: "fk_master_product_inv_main")
   product_bom                                                product_bom[]
   t_order_item                                               t_order_item[]
+  warehouseReturnItems                                       warehouse_return_items[]
 
   @@index([category_code], map: "idx_product_master_product_category_code")
   @@index([inv_acc], map: "idx_product_master_product_inv_acc")
@@ -406,24 +413,25 @@ model product_bom {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model t_order {
-  order_no        String          @id @db.VarChar(50)
-  order_date      DateTime        @default(now()) @db.Timestamptz(6)
-  ref_no          String?         @unique @db.VarChar(100)
-  parent_order_no String?         @db.VarChar(50)
-  channel_id      Int?
-  customer_id     Int?
-  total_amount    Decimal         @default(0.00) @db.Decimal(18, 2)
-  status          String          @default("PICKUP") @db.VarChar(50)
-  is_historical   Boolean         @default(false)
-  created_at      DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
-  t_adjustments   t_adjustments[]
-  t_payout        t_payout?
-  m_channel       m_channel?      @relation(fields: [channel_id], references: [channel_id], onDelete: Restrict, map: "fk_t_order_channel_id")
-  master_customer master_customer? @relation(fields: [customer_id], references: [customer_id], onDelete: Restrict, map: "fk_t_order_customer_id")
-  t_order         t_order?        @relation("t_orderTot_order", fields: [parent_order_no], references: [order_no], onDelete: Restrict, map: "fk_t_order_parent_order_no")
-  other_t_order   t_order[]       @relation("t_orderTot_order")
-  t_order_item    t_order_item[]
+  order_no         String             @id @db.VarChar(50)
+  order_date       DateTime           @default(now()) @db.Timestamptz(6)
+  ref_no           String?            @unique @db.VarChar(100)
+  parent_order_no  String?            @db.VarChar(50)
+  channel_id       Int?
+  customer_id      Int?
+  total_amount     Decimal            @default(0.00) @db.Decimal(18, 2)
+  status           String             @default("PICKUP") @db.VarChar(50)
+  is_historical    Boolean            @default(false)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  t_adjustments    t_adjustments[]
+  t_payout         t_payout?
+  m_channel        m_channel?         @relation(fields: [channel_id], references: [channel_id], onDelete: Restrict, map: "fk_t_order_channel_id")
+  master_customer  master_customer?   @relation(fields: [customer_id], references: [customer_id], onDelete: Restrict, map: "fk_t_order_customer_id")
+  t_order          t_order?           @relation("t_orderTot_order", fields: [parent_order_no], references: [order_no], onDelete: Restrict, map: "fk_t_order_parent_order_no")
+  other_t_order    t_order[]          @relation("t_orderTot_order")
+  t_order_item     t_order_item[]
+  warehouseReturns warehouse_returns?
 
   @@index([channel_id], map: "idx_sales_t_order_channel_id")
   @@index([customer_id], map: "idx_sales_t_order_customer_id")
@@ -532,29 +540,29 @@ model master_vendor {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model purchase_orders {
-  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  po_number          String               @unique @db.VarChar(50)
-  vendor_code        String               @db.VarChar(100)
-  order_date         DateTime             @db.Date
-  status             String               @default("OPEN") @db.VarChar(20)
-  created_at         DateTime             @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime?            @db.Timestamptz(6)
-  inbound_deliveries inbound_deliveries[]
+  id                   String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  po_number            String                 @unique @db.VarChar(50)
+  vendor_code          String                 @db.VarChar(100)
+  order_date           DateTime               @db.Date
+  status               String                 @default("OPEN") @db.VarChar(20)
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime?              @db.Timestamptz(6)
+  inbound_deliveries   inbound_deliveries[]
   purchase_order_items purchase_order_items[]
-  master_vendor      master_vendor        @relation(fields: [vendor_code], references: [vendor_code], map: "fk_purchase_orders_vendor_code")
+  master_vendor        master_vendor          @relation(fields: [vendor_code], references: [vendor_code], map: "fk_purchase_orders_vendor_code")
 
   @@index([vendor_code], map: "idx_warehouse_purchase_orders_vendor_code")
   @@schema("warehouse")
 }
 
 model purchase_order_items {
-  id              String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  po_id           String           @db.Uuid
-  inv_code        String           @db.VarChar(100)
-  qty_ordered     Int
-  unit_cost       Decimal?         @db.Decimal(18, 2)
-  created_at      DateTime         @default(now()) @db.Timestamptz(6)
-  purchase_orders purchase_orders  @relation(fields: [po_id], references: [id], onDelete: Cascade, map: "fk_purchase_order_items_po_id")
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  po_id            String           @db.Uuid
+  inv_code         String           @db.VarChar(100)
+  qty_ordered      Int
+  unit_cost        Decimal?         @db.Decimal(18, 2)
+  created_at       DateTime         @default(now()) @db.Timestamptz(6)
+  purchase_orders  purchase_orders  @relation(fields: [po_id], references: [id], onDelete: Cascade, map: "fk_purchase_order_items_po_id")
   master_inventory master_inventory @relation(fields: [inv_code], references: [inv_code], onDelete: Restrict, map: "fk_purchase_order_items_inv_code")
 
   @@index([po_id], map: "idx_warehouse_purchase_order_items_po_id")
@@ -577,6 +585,47 @@ model returns {
   master_inventory   master_inventory   @relation(fields: [inv_code], references: [inv_code], map: "fk_returns_inv_code")
 
   @@index([inv_code], map: "idx_warehouse_returns_inv_code")
+  @@schema("warehouse")
+}
+
+/// Warehouse return for sales RETUR (non-historical only)
+model warehouse_returns {
+  id           String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ref_no       String                   @unique @db.VarChar(100)
+  return_date  DateTime                 @db.Date
+  status       String                   @default("PENDING") @db.VarChar(20)
+  verified_by  String                   @db.VarChar(100)
+  verified_at  DateTime?                @db.Timestamptz(6)
+  notes        String?
+  created_at   DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime?                @db.Timestamptz(6)
+  t_order      t_order                  @relation(fields: [ref_no], references: [ref_no], onDelete: Restrict, map: "fk_warehouse_returns_ref_no")
+  return_items warehouse_return_items[]
+
+  @@index([ref_no], map: "idx_warehouse_returns_ref_no")
+  @@index([status], map: "idx_warehouse_returns_status")
+  @@schema("warehouse")
+}
+
+/// Items for warehouse return
+model warehouse_return_items {
+  id               String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  return_id        String            @db.Uuid
+  sku              String            @db.VarChar(100)
+  inv_code         String            @db.VarChar(100)
+  qty_returned     Int
+  qty_good         Int?
+  qty_damaged      Int?
+  unit_cost        Decimal?          @db.Decimal(18, 2)
+  notes            String?
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  warehouse_return warehouse_returns @relation(fields: [return_id], references: [id], onDelete: Cascade, map: "fk_warehouse_return_items_return_id")
+  master_product   master_product    @relation(fields: [sku], references: [sku], onDelete: Restrict, map: "fk_warehouse_return_items_sku")
+  master_inventory master_inventory  @relation(fields: [inv_code], references: [inv_code], onDelete: Restrict, map: "fk_warehouse_return_items_inv_code")
+
+  @@unique([return_id, sku], map: "uq_warehouse_return_items_return_sku")
+  @@index([return_id], map: "idx_warehouse_return_items_return_id")
+  @@index([inv_code], map: "idx_warehouse_return_items_inv_code")
   @@schema("warehouse")
 }
 

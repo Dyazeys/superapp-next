@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createColumnHelper } from "@tanstack/react-table";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -43,11 +43,12 @@ function toDateTimeInput(value: string | null | undefined) {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-function toSalesStatus(value: string | null | undefined) {
-  if (!value) return "PAID" as const;
-  return SALES_STATUS_OPTIONS.includes(value as (typeof SALES_STATUS_OPTIONS)[number])
-    ? (value as (typeof SALES_STATUS_OPTIONS)[number])
-    : "PAID";
+function toSalesStatus(value: string | null | undefined): "PICKUP" | "RETUR" | "SUKSES" {
+  if (!value) return "PICKUP";
+  const valid = value === "PAID" ? "PICKUP" : value;
+  return SALES_STATUS_OPTIONS.includes(valid as (typeof SALES_STATUS_OPTIONS)[number])
+    ? (valid as "PICKUP" | "RETUR" | "SUKSES")
+    : "PICKUP";
 }
 
 function emptyItemDraft(orderNo: string): SalesOrderItemInput {
@@ -68,6 +69,13 @@ export function SalesWorkspace() {
   const [selectedOrderNo, setSelectedOrderNo] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [itemDraft, setItemDraft] = useState<SalesOrderItemInput | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchKeyword), 300);
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
 
   const ordersQuery = useQuery({ queryKey: ["sales-orders"], queryFn: salesApi.orders.list });
   const channelsQuery = useQuery({ queryKey: ["sales-channels"], queryFn: salesApi.channels.list });
@@ -101,7 +109,7 @@ export function SalesWorkspace() {
       channel_id: null,
       customer_id: null,
       total_amount: "0",
-      status: "PAID",
+      status: "PICKUP",
       is_historical: false,
     },
   });
@@ -181,9 +189,20 @@ export function SalesWorkspace() {
     orderModal.openModal();
   }, [orderForm, orderModal]);
 
+  const filteredOrders = useMemo(() => {
+    const all = ordersQuery.data ?? [];
+    if (!debouncedSearch.trim()) return all;
+    const keyword = debouncedSearch.toLowerCase();
+    return all.filter(
+      (order) =>
+        order.order_no.toLowerCase().includes(keyword) ||
+        (order.ref_no ?? "").toLowerCase().includes(keyword)
+    );
+  }, [ordersQuery.data, debouncedSearch]);
+
   const selectedOrder = useMemo(
-    () => (ordersQuery.data ?? []).find((order) => order.order_no === selectedOrderNo) ?? null,
-    [ordersQuery.data, selectedOrderNo]
+    () => filteredOrders.find((order) => order.order_no === selectedOrderNo) ?? null,
+    [filteredOrders, selectedOrderNo]
   );
 
   const orderColumns = useMemo(
@@ -308,14 +327,42 @@ export function SalesWorkspace() {
       <datalist id="sales-channel-ids">{(channelsQuery.data ?? []).map((channel: ChannelLookupRecord) => <option key={channel.channel_id} value={channel.channel_id}>{channel.channel_name}</option>)}</datalist>
       <datalist id="sales-product-skus">{(productsQuery.data ?? []).map((product) => <option key={product.sku} value={product.sku}>{product.product_name}</option>)}</datalist>
       <datalist id="sales-boolean-values"><option value="true" /><option value="false" /></datalist>
-      <datalist id="sales-status-values"><option value="PAID" /><option value="PICKUP" /><option value="OPEN" /><option value="CANCELLED" /></datalist>
+      <datalist id="sales-status-values"><option value="PICKUP" /><option value="RETUR" /><option value="SUKSES" /></datalist>
       <datalist id="sales-order-nos">{(ordersQuery.data ?? []).map((order) => <option key={order.order_no} value={order.order_no} />)}</datalist>
 
       <section className="grid gap-6 xl:grid-cols-[1.15fr_1.1fr]">
         <WorkspacePanel title="Sales Orders" description="Normal orders post stock through warehouse movements. Historical orders stay ledger-neutral.">
           <div className="space-y-4">
-            <div className="flex justify-end"><Button size="sm" onClick={() => openOrderModal()}><Plus className="size-4" />Add sales order</Button></div>
-            <DataTable columns={orderColumns} data={ordersQuery.data ?? []} emptyMessage="No sales orders found." />
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search order number or reference..."
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  className="pl-9"
+                />
+                {searchKeyword && (
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    className="absolute right-1 top-1/2 -translate-y-1/2"
+                    onClick={() => setSearchKeyword("")}
+                  >
+                    <X className="size-3.5" />
+                  </Button>
+                )}
+              </div>
+              <Button size="sm" onClick={() => openOrderModal()}><Plus className="size-4" />Add</Button>
+            </div>
+            {debouncedSearch.trim() && filteredOrders.length === 0 ? (
+              <EmptyState
+                title="No matching orders"
+                description={`No orders found for "${debouncedSearch}". Try a different keyword or clear the search.`}
+              />
+            ) : (
+              <DataTable columns={orderColumns} data={filteredOrders} emptyMessage="No sales orders found." />
+            )}
           </div>
         </WorkspacePanel>
 

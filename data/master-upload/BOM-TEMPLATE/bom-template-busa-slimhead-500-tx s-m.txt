@@ -1,0 +1,51 @@
+# BOM template simple text (multiline)
+# Edit nilai di kanan ':'
+# when support: always | inv_main:not_null | inv_acc:not_null | inv_acc:eq:<INV_CODE>
+# inv_acc tersedia untuk product ini:
+# (tidak ada inv_acc)
+
+product_name: Busa Slimhead 500-Tx S-M
+deduplicate_key: sku,component_group,component_type,inv_code,sequence_no
+
+row_begin
+when: inv_main:not_null
+sequence_no: 1
+component_group: MAIN
+component_type: INVENTORY
+inv_code: {{INV_MAIN}}
+component_name: Main - {{INV_MAIN}}
+qty: 1
+unit_cost: 12000
+is_stock_tracked: true
+is_active: true
+notes: Auto from inv_main
+row_end
+
+row_begin
+when: always
+sequence_no: 2
+component_group: PACKING
+component_type: NON_INVENTORY
+inv_code: 
+component_name: PACKING
+qty: 1
+unit_cost: 4000
+is_stock_tracked: FALSE
+is_active: true
+notes: BUBBLEPACK, LAKBAN
+row_end
+
+row_begin
+when: always
+sequence_no: 3
+component_group: BRANDING
+component_type: NON_INVENTORY
+inv_code: 
+component_name: STICKER
+qty: 1
+unit_cost: 2000
+is_stock_tracked: FALSE
+is_active: true
+notes: 
+row_end
+

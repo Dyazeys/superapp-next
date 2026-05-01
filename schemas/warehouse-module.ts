@@ -140,4 +140,34 @@ export type PurchaseOrderItemInput = z.infer<typeof purchaseOrderItemSchema>;
 export type PurchaseOrderItemPatchInput = z.infer<typeof purchaseOrderItemPatchSchema>;
 export type InboundItemInput = z.infer<typeof inboundItemSchema>;
 export type InboundItemPatchInput = z.infer<typeof inboundItemPatchSchema>;
+export const WAREHOUSE_RETURN_STATUS_OPTIONS = ["PENDING", "RECEIVED_GOOD", "RECEIVED_DAMAGED"] as const;
+
+export const createWarehouseReturnSchema = z.object({
+  ref_no: z.string().min(1, "Sales order reference is required").max(100),
+  return_date: dateInput,
+  verified_by: z.string().min(1, "Verified by is required").max(100),
+  notes: z.string().optional().nullable(),
+  items: z.array(z.object({
+    sku: z.string().min(1, "SKU is required").max(100),
+    inv_code: z.string().min(1, "Inventory code is required").max(100),
+    qty_returned: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+  })).min(1, "At least one item is required"),
+});
+
+export const verifyWarehouseReturnSchema = z.object({
+  status: z.enum(["RECEIVED_GOOD", "RECEIVED_DAMAGED"]),
+  verified_at: z.string().optional().nullable(),
+  items: z.array(z.object({
+    id: z.string().min(1, "Item ID is required"),
+    qty_good: z.coerce.number().int().min(0).optional().nullable(),
+    qty_damaged: z.coerce.number().int().min(0).optional().nullable(),
+    unit_cost: z.union([decimalInput, z.literal(""), z.null(), z.undefined()]).transform((value) => {
+      if (value === null || value === undefined || value === "") return null;
+      return String(value);
+    }).optional().nullable(),
+  })).optional(),
+});
+
 export type AdjustmentInput = z.infer<typeof adjustmentSchema>;
+export type CreateWarehouseReturnInput = z.infer<typeof createWarehouseReturnSchema>;
+export type VerifyWarehouseReturnInput = z.infer<typeof verifyWarehouseReturnSchema>;

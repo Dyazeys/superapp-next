@@ -37,12 +37,16 @@ export const salesApi = {
       page: number;
       page_size: number;
       posting_filter: SalesOrderPostingFilter;
+      search?: string;
     }) => {
       const query = new URLSearchParams({
         page: String(params.page),
         page_size: String(params.page_size),
         posting_filter: params.posting_filter,
       });
+      if (params.search?.trim()) {
+        query.set("search", params.search.trim());
+      }
       return requestJson<SalesOrderListResponse>(`/api/sales/orders?${query.toString()}`);
     },
     create: (payload: SalesOrderInput) =>
