@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
 import { CalendarDays, Trash2, X } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
@@ -84,9 +84,35 @@ function formatMoneyNoDecimals(value: number) {
   }).format(Math.round(amount))}`;
 }
 
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center gap-3">
+        <div className="size-8 animate-spin rounded-full border-4 border-border border-t-primary" />
+        <p className="text-sm text-muted-foreground">Memuat data payout...</p>
+      </div>
+    </div>
+  );
+}
+
+function ErrorBanner({ error }: { error: Error }) {
+  return (
+    <div className="rounded-[28px] border border-red-200 bg-red-50 p-6 text-center">
+      <p className="font-semibold text-red-800">Gagal memuat data payout</p>
+      <p className="mt-1 text-sm text-red-600">{error.message}</p>
+    </div>
+  );
+}
+
 export default function PayoutRecordsPage() {
   const hooks = usePayouts();
   const orderLookupQuery = usePayoutOrders();
+  const [isClientReady, setIsClientReady] = useState(false);
+
+  useEffect(() => {
+    setIsClientReady(true);
+  }, []);
+
   const [pageFilter] = useState<RecordPageFilter>(() => getRecordPageFilter());
   const [statusFilter, setStatusFilter] = useState<"ALL" | "SETTLED" | "FAILED">("ALL");
   const [dateFromFilter, setDateFromFilter] = useState("");
@@ -389,6 +415,10 @@ export default function PayoutRecordsPage() {
     }
   }
 
+  const isLoading = isClientReady && hooks.payoutsQuery.isLoading;
+  const isError = hooks.payoutsQuery.isError;
+  const error = hooks.payoutsQuery.error;
+
   return (
     <PageShell
       eyebrow="Payout"
@@ -448,8 +478,9 @@ export default function PayoutRecordsPage() {
 
         <div className="flex flex-col gap-3 rounded-[28px] border border-border/70 bg-card/80 p-5 shadow-sm md:flex-row md:items-end md:justify-between">
           <div className="grid w-full gap-3 md:max-w-[860px] md:grid-cols-3">
-            <FormField label="Status">
+            <FormField label="Status" htmlFor="filter-status">
               <SelectNative
+                id="filter-status"
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value as "ALL" | "SETTLED" | "FAILED")}
               >
@@ -458,10 +489,11 @@ export default function PayoutRecordsPage() {
                 <option value="FAILED">FAILED</option>
               </SelectNative>
             </FormField>
-            <FormField label="Tanggal dari">
+            <FormField label="Tanggal dari" htmlFor="filter-date-from">
               <div className="relative">
                 <CalendarDays className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
+                  id="filter-date-from"
                   type="date"
                   value={dateFromFilter}
                   className="h-10 rounded-xl pr-10 pl-9"
@@ -479,10 +511,11 @@ export default function PayoutRecordsPage() {
                 ) : null}
               </div>
             </FormField>
-            <FormField label="Tanggal sampai">
+            <FormField label="Tanggal sampai" htmlFor="filter-date-to">
               <div className="relative">
                 <CalendarDays className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
+                  id="filter-date-to"
                   type="date"
                   value={dateToFilter}
                   className="h-10 rounded-xl pr-10 pl-9"
@@ -529,13 +562,18 @@ export default function PayoutRecordsPage() {
           </Button>
         </div>
 
-        <DataTable
-          columns={payoutColumns}
-          data={payoutRows}
-          emptyMessage="Belum ada data payout."
-          pagination={{ enabled: true, pageSize: 15, pageSizeOptions: [10, 15, 25, 50] }}
-        />
-
+        {isLoading ? (
+          <LoadingSpinner />
+        ) : isError ? (
+          <ErrorBanner error={error instanceof Error ? error : new Error(error ? String(error) : "Unknown error")} />
+        ) : (
+          <DataTable
+            columns={payoutColumns}
+            data={payoutRows}
+            emptyMessage="Belum ada data payout."
+            pagination={{ enabled: true, pageSize: 15, pageSizeOptions: [10, 15, 25, 50] }}
+          />
+        )}
       </div>
 
       <Dialog
@@ -556,8 +594,13 @@ export default function PayoutRecordsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <FormField helperText="Header wajib: ref, payout_date, qty_produk, hpp, total_price, seller_discount, fee_admin, fee_service, fee_order_process, fee_program, fee_affiliate, shipping_cost, omset, payout_status.">
+            <FormField
+              label="File CSV"
+              htmlFor="csv-file-upload"
+              helperText="Header wajib: ref, payout_date, qty_produk, hpp, total_price, seller_discount, fee_admin, fee_service, fee_order_process, fee_program, fee_affiliate, shipping_cost, omset, payout_status."
+            >
               <Input
+                id="csv-file-upload"
                 type="file"
                 accept=".csv,text/csv"
                 onChange={(event) => {
@@ -644,7 +687,11 @@ export default function PayoutRecordsPage() {
           >
             <Input id="seller_discount" {...hooks.payoutForm.register("seller_discount")} />
           </FormField>
-          <FormField label="Harga setelah diskon" htmlFor="harga_setelah_diskon" helperText="Kalkulasi dari harga jual - diskon.">
+          <FormField
+            label="Harga setelah diskon"
+            htmlFor="harga_setelah_diskon"
+            helperText="Kalkulasi dari harga jual - diskon."
+          >
             <Input
               id="harga_setelah_diskon"
               value={formatCalculatedValue(amountAfterDiscount)}
@@ -729,7 +776,6 @@ export default function PayoutRecordsPage() {
           </FormField>
         </div>
       </ModalFormShell>
-
     </PageShell>
   );
 }

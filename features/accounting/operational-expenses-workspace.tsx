@@ -43,7 +43,7 @@ const MANUAL_OPEX_ACCOUNT_CODES = [
 ] as const;
 
 const OPEX_LABELS_BY_ACCOUNT_CODE: Record<string, string[]> = {
-  "61101": ["Iklan MP"],
+  "61101": ["Iklan MP", "Shopee", "Tiktok", "Google", "Meta", "Akulaku"],
   "61102": ["KOL Tukar Produk"],
   "61103": ["Sponsorship"],
   "61104": ["Event"],

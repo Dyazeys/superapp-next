@@ -656,6 +656,131 @@ model daily_uploads {
   @@schema("marketing")
 }
 
+/// MP Ads Shopee — data iklan marketplace Shopee harian
+model mp_ads_shopee {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date          DateTime @db.Date
+  produk        String   @db.VarChar(255)
+  impression    Int      @default(0)
+  click         Int      @default(0)
+  ctr           Decimal  @default(0.0000) @db.Decimal(10, 4)
+  qty_buyer     Int      @default(0)
+  qty_produk    Int      @default(0)
+  omset         Decimal  @default(0.00) @db.Decimal(18, 2)
+  spent         Decimal  @default(0.00) @db.Decimal(18, 2)
+  roas          Decimal  @default(0.00) @db.Decimal(10, 2)
+  cancel_qty    Int      @default(0)
+  cancel_omset  Decimal  @default(0.00) @db.Decimal(18, 2)
+  roas_fix      Decimal  @default(0.00) @db.Decimal(10, 2)
+  target_roas   Decimal  @default(0.00) @db.Decimal(10, 2)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+
+  @@schema("marketing")
+}
+
+/// MP Ads TikTok — data iklan marketplace TikTok harian
+model mp_ads_tiktok {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date          DateTime @db.Date
+  produk        String   @db.VarChar(255)
+  impression    Int      @default(0)
+  click         Int      @default(0)
+  ctr           Decimal  @default(0.0000) @db.Decimal(10, 4)
+  qty_buyer     Int      @default(0)
+  qty_produk    Int      @default(0)
+  omset         Decimal  @default(0.00) @db.Decimal(18, 2)
+  spent         Decimal  @default(0.00) @db.Decimal(18, 2)
+  roas          Decimal  @default(0.00) @db.Decimal(10, 2)
+  cancel_qty    Int      @default(0)
+  cancel_omset  Decimal  @default(0.00) @db.Decimal(18, 2)
+  roas_fix      Decimal  @default(0.00) @db.Decimal(10, 2)
+  target_roas   Decimal  @default(0.00) @db.Decimal(10, 2)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+
+  @@schema("marketing")
+}
+
+/// Shopee Traffic — data traffic toko Shopee harian
+model shopee_traffic {
+  id                          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date                        DateTime @db.Date
+  region                      String   @db.VarChar(50)
+  gross_sales_usd             Decimal  @default(0.00) @db.Decimal(18, 2)
+  gross_sales_local           Decimal  @default(0.00) @db.Decimal(18, 2)
+  gross_sales_rebate_usd      Decimal  @default(0.00) @db.Decimal(18, 2)
+  gross_sales_rebate_local    Decimal  @default(0.00) @db.Decimal(18, 2)
+  gross_orders                Int      @default(0)
+  gross_units_sold            Int      @default(0)
+  gross_avg_basket_usd        Decimal  @default(0.00) @db.Decimal(18, 2)
+  gross_avg_basket_local      Decimal  @default(0.00) @db.Decimal(18, 2)
+  gross_item_per_order        Decimal  @default(0.00) @db.Decimal(10, 2)
+  gross_avg_selling_price_usd Decimal  @default(0.00) @db.Decimal(18, 2)
+  gross_avg_selling_price_local Decimal @default(0.00) @db.Decimal(18, 2)
+  product_views               Int      @default(0)
+  product_clicks              Int      @default(0)
+  unique_visitors             Int      @default(0)
+  gross_order_conversion_rate Decimal  @default(0.0000) @db.Decimal(10, 4)
+  gross_item_conversion_rate  Decimal  @default(0.0000) @db.Decimal(10, 4)
+  created_at                  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime? @db.Timestamptz(6)
+
+  @@schema("marketing")
+}
+
+/// Shopee Livestream — data sesi livestream Shopee
+model shopee_livestream {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date                DateTime @db.Date
+  sesi                String   @db.VarChar(50)
+  pengunjung          Int      @default(0)
+  penonton_terbanyak  Int      @default(0)
+  rata_durasi_menonton String  @db.VarChar(8) // format HH:MM:SS
+  pesanan             Int      @default(0)
+  penjualan           Decimal  @default(0.00) @db.Decimal(18, 2)
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime? @db.Timestamptz(6)
+
+  @@schema("marketing")
+}
+
+/// TikTok Traffic — data lalu lintas toko TikTok harian
+model tiktok_traffic {
+  id                         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date                       DateTime @db.Date
+  gross_merchandise_value    Decimal  @default(0.00) @db.Decimal(18, 2)
+  refund_amount              Decimal  @default(0.00) @db.Decimal(18, 2)
+  gross_revenue_platform_subsidy Decimal @default(0.00) @db.Decimal(18, 2)
+  products_sold              Int      @default(0)
+  buyers                     Int      @default(0)
+  page_views                 Int      @default(0)
+  store_visits               Int      @default(0)
+  sku_orders                 Int      @default(0)
+  orders                     Int      @default(0)
+  conversion_rate            Decimal  @default(0.0000) @db.Decimal(10, 4)
+  created_at                 DateTime @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime? @db.Timestamptz(6)
+
+  @@schema("marketing")
+}
+
+/// TikTok Livestream — data sesi livestream TikTok
+model tiktok_livestream {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date           DateTime @db.Date
+  sesi           String   @db.VarChar(50)
+  impressions    Int      @default(0)
+  views          Int      @default(0)
+  product_clicks Int      @default(0)
+  pesanan        Int      @default(0)
+  penjualan      Decimal  @default(0.00) @db.Decimal(18, 2)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime? @db.Timestamptz(6)
+
+  @@schema("marketing")
+}
+
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model stock_movements {
   id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid

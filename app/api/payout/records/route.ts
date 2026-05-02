@@ -33,18 +33,21 @@ export async function GET() {
   try {
     await requireApiPermission(PERMISSIONS.PAYOUT_RECORD_VIEW);
 
+    console.log("[payout/records] Fetching all payout records...");
     const payouts = await prisma.t_payout.findMany({
-      orderBy: [{ payout_date: "desc" }, { payout_id: "desc" }],
+      orderBy: { payout_id: "desc" },
       include: {
         t_order: {
-          select: payoutOrderSelect,
+          include: { m_channel: true },
         },
       },
     });
 
-    return NextResponse.json(toJsonValue(payouts));
+    console.log(`[payout/records] Found ${payouts.length} payout records`);
+    return NextResponse.json(payouts);
   } catch (error) {
-    return jsonError(error, "Failed to load payouts.");
+    console.error("[payout/records] Error fetching payout records:", error);
+    return jsonError(error);
   }
 }
 

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Session } from "next-auth";
-import { useRef } from "react";
+import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { ModuleSidebar } from "@/components/shell/module-sidebar";
 import { TOP_NAV_ITEMS, ERP_MODULE_ITEMS, ANALYTICS_MODULE_ITEMS, TASK_MODULE_ITEMS, TEAM_MODULE_ITEMS, type ModuleNavItem } from "@/lib/navigation";
@@ -10,7 +10,7 @@ import { hasAnyPermission, hasPermission } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 import { Bot, PanelLeftOpen } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 
 /**
@@ -106,9 +106,8 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [activeTop, setActiveTop] = useState<(typeof TOP_NAV_ITEMS)[number]["id"]>("erp");
-  const lastManualTop = useRef<(typeof TOP_NAV_ITEMS)[number]["id"]>("erp");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [lastManualTop, setLastManualTop] = useState<(typeof TOP_NAV_ITEMS)[number]["id"]>("erp");
   const { data: session, status } = useSession();
   const resolvedSession = status === "loading" ? (session ?? initialSession) : session;
   const permissions = resolvedSession?.user?.permissions ?? [];
@@ -124,16 +123,10 @@ export function AppShell({
     if (item.id === "team") return filteredTeamModules.length > 0;
     return true;
   });
+
+  const activeTop = topNavForPath(pathname, lastManualTop);
+
   const activeTopItem = visibleTopNavItems.find((item) => item.id === activeTop) ?? visibleTopNavItems[0] ?? TOP_NAV_ITEMS[0];
-
-  useEffect(() => {
-    setActiveTop((prev) => topNavForPath(pathname, prev));
-  }, [pathname]);
-
-  // Keeps lastManualTop in sync with activeTop after pathname-driven updates settle
-  useEffect(() => {
-    lastManualTop.current = activeTop;
-  }, [activeTop]);
 
   const sidebarModules =
     activeTop === "erp"
@@ -317,9 +310,7 @@ export function AppShell({
                             )}
                             onClick={() => {
                               if (!item.disabled) {
-                                // Update last manual selection before setting activeTop
-                                lastManualTop.current = item.id;
-                                setActiveTop(item.id);
+                                setLastManualTop(item.id);
                                 setSidebarCollapsed(false);
                                 router.push(overviewPathForTopNav(item.id));
                               }

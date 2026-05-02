@@ -1,6 +1,6 @@
 # Pekerjaan Selesai (Done)
 
-Tanggal update: `2026-05-01`
+Tanggal update: `2026-05-02`
 
 Ringkasan task yang sudah selesai dipindahkan dari `to-do.md`.
 
@@ -104,5 +104,28 @@ Ringkasan task yang sudah selesai dipindahkan dari `to-do.md`.
 - **Fix:** Struktur nesting diubah dari `<WorkspacePanel>...DialogTrigger...</WorkspacePanel><Dialog>...DialogContent...</Dialog>` menjadi `<Dialog>...<WorkspacePanel>...DialogTrigger...</WorkspacePanel>...DialogContent...</Dialog>`.
 - **Regression check:** Tidak ada perubahan logic, state, filter, atau tabel. Pre-existing TS errors di `payout/records/page.tsx` (2 errors, unrelated).
 
+## P0 — Marketing: Database + CRUD MP Ads Shopee & TikTok
+
+- **Status:** ✅ Selesai
+- **Tanggal:** `2026-05-02`
+- **Files changed:**
+  - `prisma/schema.prisma` — tambah model `mp_ads_shopee` & `mp_ads_tiktok` di schema `marketing`
+  - `prisma/migrations/20260502_add_mp_ads_shopee_tiktok/migration.sql` — migration SQL
+  - `types/marketing.ts` — tambah tipe `MpAdsShopee`, `MpAdsTiktok`, `MpAdsFormData`, `MpAdsPlatform`
+  - `schemas/marketing-module.ts` — tambah `mpAdsFormCreateSchema` & `mpAdsFormUpdateSchema` (Zod)
+  - `app/api/marketing/mp-ads/shopee/route.ts` — GET (list) + POST (create)
+  - `app/api/marketing/mp-ads/shopee/[id]/route.ts` — PUT (update) + DELETE
+  - `app/api/marketing/mp-ads/tiktok/route.ts` — GET (list) + POST (create)
+  - `app/api/marketing/mp-ads/tiktok/[id]/route.ts` — PUT (update) + DELETE
+  - `features/marketing/mp-ads-service.ts` — service client (`fetchMpAds`, `createMpAd`, `updateMpAd`, `deleteMpAd`)
+  - `features/marketing/mp-ads-workspace.tsx` — komponen DataTable + CRUD form
+  - `app/(app)/marketing/data-shopee/page.tsx` — halaman Data Shopee (render `MpAdsWorkspace` platform shopee)
+  - `app/(app)/marketing/data-tiktok/page.tsx` — halaman Data TikTok (render `MpAdsWorkspace` platform tiktok)
+  - `app/(app)/marketing/mp-ads/page.tsx` — halaman Iklan MP (tab toggle shopee/tiktok)
+- **Migration:** Deployed ✅ (2 tabel `marketing.mp_ads_shopee` & `marketing.mp_ads_tiktok`)
+- **Service:** Sudah pakai API nyata (fetch ke `/api/marketing/mp-ads/{platform}`)
+- **Type-check:** Pre-existing error di `payout/records/page.tsx` (unrelated)
+- **Key fields per tabel:** `date`, `produk`, `impression`, `click`, `ctr`, `qty_buyer`, `qty_produk`, `omset`, `spent`, `roas`, `cancel_qty`, `cancel_omset`, `roas_fix`, `target_roas`
+
 ---
-_Last updated: 2026-05-01 — P2 runtime fix Dialog nesting, P2 form add pop-up dialog selesai._
+_Last updated: 2026-05-02 — P0 MP Ads Shopee & TikTok database + CRUD selesai. Pre-existing TS error di payout/records/page.tsx tidak terkait._

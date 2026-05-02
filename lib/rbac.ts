@@ -1,6 +1,7 @@
 export const ROLE_CODES = [
   "OWNER",
   "DIREKTUR",
+  "BRAND_OWNER",
   "LEADER",
   "ADVERTISER",
   "SALES",
@@ -112,9 +113,11 @@ export const PERMISSIONS = {
 
   MARKETING_WORKSPACE_VIEW: "marketing.workspace.view",
   MARKETING_PRODUCT_PERFORMANCE_VIEW: "marketing.product_performance.view",
-  MARKETING_TRAFFIC_VIEW: "marketing.traffic.view",
   MARKETING_MP_ADS_VIEW: "marketing.mp_ads.view",
-  MARKETING_LIVE_STREAMING_VIEW: "marketing.live_streaming.view",
+  MARKETING_SHOPEE_TRAFFIC_VIEW: "marketing.shopee_traffic.view",
+  MARKETING_SHOPEE_LIVESTREAM_VIEW: "marketing.shopee_livestream.view",
+  MARKETING_TIKTOK_TRAFFIC_VIEW: "marketing.tiktok_traffic.view",
+  MARKETING_TIKTOK_LIVESTREAM_VIEW: "marketing.tiktok_livestream.view",
 
   CONTENT_WORKSPACE_VIEW: "content.workspace.view",
   CONTENT_TIKTOK_VIEW: "content.tiktok.view",
@@ -160,6 +163,9 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
   DIREKTUR: uniquePermissions(
     ALL_PERMISSIONS.filter((permission) => permission !== PERMISSIONS.AUTH_ROLE_UPDATE)
   ),
+  BRAND_OWNER: uniquePermissions(
+    ALL_PERMISSIONS.filter((p) => p.endsWith(".view"))
+  ),
   LEADER: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
     PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW,
@@ -185,6 +191,8 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW,
     PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
     ...permissionsByPrefix(["marketing.", "content."]),
+    PERMISSIONS.MARKETING_SHOPEE_TRAFFIC_VIEW,
+    PERMISSIONS.MARKETING_SHOPEE_LIVESTREAM_VIEW,
     PERMISSIONS.TASK_WORKSPACE_VIEW,
     PERMISSIONS.TEAM_WORKSPACE_VIEW,
   ]),

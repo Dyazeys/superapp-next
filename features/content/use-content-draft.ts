@@ -75,7 +75,6 @@ export function useContentDraft() {
   // Load data dari API saat mount
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
     apiFetchAll()
       .then((data) => {
         if (!cancelled) {

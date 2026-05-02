@@ -109,13 +109,6 @@ function asMoney(value) {
   return Number.isFinite(num) ? num : 0;
 }
 
-function escapePg(val) {
-  if (val === null || val === undefined) return "NULL";
-  if (typeof val === "number") return String(val);
-  if (val instanceof Date) return `'${val.toISOString()}'`;
-  return `'${String(val).replace(/'/g, "''")}'`;
-}
-
 // ─── Main ───
 
 async function main() {
