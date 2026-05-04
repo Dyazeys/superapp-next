@@ -22,6 +22,7 @@ import {
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
 
 /* ─── Helpers ─── */
@@ -113,12 +114,24 @@ export function TiktokTrafficWorkspace() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const visible = items.filter((d) => {
     if (filterDateFrom && d.date < filterDateFrom) return false;
     if (filterDateTo && d.date > filterDateTo) return false;
     return true;
   });
+
+  useEffect(() => { setPageIndex(0); }, [filterDateFrom, filterDateTo]);
+
+  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
+  const paginated = visible.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+
+  useEffect(() => {
+    if (pageIndex >= pageCount) setPageIndex(Math.max(0, pageCount - 1));
+  }, [pageIndex, pageCount]);
 
   function handleChange<K extends keyof TikTokTrafficFormData>(key: K, value: TikTokTrafficFormData[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -168,16 +181,6 @@ export function TiktokTrafficWorkspace() {
     setModalOpen(true);
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Yakin ingin menghapus data ini?")) return;
-    try {
-      await deleteTiktokTraffic(id);
-      dispatch({ type: "remove", id });
-    } catch {
-      // error handled by api-error
-    }
-  }
-
   function handleOpenModal() {
     setForm({ ...emptyForm });
     setEditingId(null);
@@ -191,6 +194,43 @@ export function TiktokTrafficWorkspace() {
     setErrors({});
     setModalOpen(false);
   }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === visible.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(visible.map((d) => d.id)));
+    }
+  }
+
+  function handleToolbarEdit() {
+    const first = visible.find((d) => selectedIds.has(d.id));
+    if (first) handleEdit(first);
+  }
+
+  async function handleToolbarDelete() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Yakin ingin menghapus ${ids.length} data?`)) return;
+    for (const id of ids) {
+      await deleteTiktokTraffic(id)
+        .then(() => dispatch({ type: "remove", id }))
+        .catch(() => {});
+    }
+    setSelectedIds(new Set());
+  }
+
+  const isAllSelected = visible.length > 0 && selectedIds.size === visible.length;
+  const someSelected = selectedIds.size > 0;
 
   return (
     <div className="space-y-6">
@@ -257,10 +297,25 @@ export function TiktokTrafficWorkspace() {
         title="Tabel Traffic TikTok"
         description="Data traffic toko TikTok harian."
       >
+        {someSelected && (
+          <div className="flex items-center gap-2 mb-3">
+            <Button variant="outline" size="sm" onClick={handleToolbarEdit}>
+              <Pencil className="mr-1 size-4" />
+              Edit
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleToolbarDelete}>
+              <Trash2 className="mr-1 size-4" />
+              Hapus ({selectedIds.size})
+            </Button>
+          </div>
+        )}
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} />
+                </TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead className="text-right">GMV</TableHead>
                 <TableHead className="text-right">Refund</TableHead>
@@ -272,25 +327,27 @@ export function TiktokTrafficWorkspace() {
                 <TableHead className="text-right">SKU Orders</TableHead>
                 <TableHead className="text-right">Orders</TableHead>
                 <TableHead className="text-right">Conv. Rate</TableHead>
-                <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={13} className="py-8 text-center text-muted-foreground">
                     <Loader2 className="mx-auto size-6 animate-spin" />
                   </TableCell>
                 </TableRow>
               ) : visible.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={13} className="py-8 text-center text-muted-foreground">
                     Belum ada data. Klik &ldquo;Input Baru&rdquo; untuk menambahkan.
                   </TableCell>
                 </TableRow>
               ) : (
-                visible.map((d) => (
+                paginated.map((d) => (
                   <TableRow key={d.id}>
+                    <TableCell>
+                      <Checkbox checked={selectedIds.has(d.id)} onCheckedChange={() => toggleSelect(d.id)} />
+                    </TableCell>
                     <TableCell className="whitespace-nowrap">{d.date}</TableCell>
                     <TableCell className="text-right">{formatIDR(Number(d.gross_merchandise_value))}</TableCell>
                     <TableCell className="text-right">{formatIDR(Number(d.refund_amount))}</TableCell>
@@ -302,26 +359,38 @@ export function TiktokTrafficWorkspace() {
                     <TableCell className="text-right">{formatNum(Number(d.sku_orders))}</TableCell>
                     <TableCell className="text-right">{formatNum(Number(d.orders))}</TableCell>
                     <TableCell className="text-right font-medium">{pct(Number(d.conversion_rate))}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(d)}>
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(d.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
+        {visible.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2">
+            <p className="text-xs text-slate-500">
+              Menampilkan {paginated.length > 0 ? `${pageIndex * pageSize + 1}-${pageIndex * pageSize + paginated.length}` : 0} dari {visible.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <label className="text-xs text-slate-500" htmlFor="ttraffic_page_size">Baris</label>
+              <select
+                id="ttraffic_page_size"
+                className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-700"
+                value={pageSize}
+                onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(0); }}
+              >
+                {[5, 10, 20, 50].map((size) => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+              <Button size="sm" variant="outline" className="h-8 px-2" disabled={pageIndex === 0} onClick={() => setPageIndex((p) => p - 1)}>
+                Prev
+              </Button>
+              <span className="px-1 text-xs text-slate-600">{pageIndex + 1} / {pageCount}</span>
+              <Button size="sm" variant="outline" className="h-8 px-2" disabled={pageIndex >= pageCount - 1} onClick={() => setPageIndex((p) => p + 1)}>
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
         </div>
       </WorkspacePanel>
     </div>
