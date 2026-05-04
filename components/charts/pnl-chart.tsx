@@ -49,8 +49,8 @@ export function PnlChart({ series }: PnlChartProps) {
             width={72}
           />
           <Tooltip
-            formatter={(value: number | string | undefined, name: string) => [
-              formatCompactCurrency(Number(value) || 0),
+            formatter={(value: unknown, name: string) => [
+              formatCompactCurrency(typeof value === "number" ? value : Number(value) || 0),
               name === "grossSales" ? "Gross Sales" : "Gross Profit Margin",
             ]}
             labelStyle={{ fontWeight: 600, color: "#1e293b", marginBottom: 4 }}
