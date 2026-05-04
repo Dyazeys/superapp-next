@@ -207,11 +207,9 @@ export function ContentDailyWorkspace() {
             >
               <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
-            <DialogTrigger>
-              <Button size="sm" className="ml-2">
-                <Plus className="mr-1 size-4" />
-                Input Baru
-              </Button>
+            <DialogTrigger render={<Button size="sm" className="ml-2" />}>
+              <Plus className="mr-1 size-4" />
+              Input Baru
             </DialogTrigger>
           </div>
         </div>
