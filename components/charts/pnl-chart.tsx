@@ -45,7 +45,7 @@ export function PnlChart({ series }: PnlChartProps) {
             axisLine={false}
             dx={-4}
             tick={{ fill: "#94a3b8", fontSize: 11 }}
-            tickFormatter={(v: number) => formatCompactCurrency(v)}
+            tickFormatter={(v: unknown) => formatCompactCurrency(typeof v === "number" ? v : Number(v) || 0)}
             width={72}
           />
           <Tooltip
@@ -63,8 +63,8 @@ export function PnlChart({ series }: PnlChartProps) {
             }}
           />
           <Legend
-            formatter={(value: string) => (
-              <span className="text-sm font-medium text-slate-700">{value}</span>
+            formatter={(value: unknown) => (
+              <span className="text-sm font-medium text-slate-700">{String(value)}</span>
             )}
           />
           <Area
