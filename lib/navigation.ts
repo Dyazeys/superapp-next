@@ -369,6 +369,7 @@ export const ANALYTICS_MODULE_ITEMS: ModuleNavItem[] = [
     permissionAny: [
       PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW,
       PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
+      PERMISSIONS.MARKETING_WORKSPACE_VIEW,
     ],
   },
   {
@@ -392,6 +393,29 @@ export const ANALYTICS_MODULE_ITEMS: ModuleNavItem[] = [
         href: "/analytics/financial/budget-meters",
         icon: Gauge,
         permission: PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
+      },
+    ],
+  },
+  {
+    label: "Marketing",
+    href: "/analytics/marketing",
+    icon: Megaphone,
+    badge: "Visual",
+    permissionAny: [
+      PERMISSIONS.MARKETING_WORKSPACE_VIEW,
+    ],
+    children: [
+      {
+        label: "Shopee",
+        href: "/analytics/marketing/shopee",
+        icon: Store,
+        permission: PERMISSIONS.MARKETING_WORKSPACE_VIEW,
+      },
+      {
+        label: "TikTok",
+        href: "/analytics/marketing/tiktok",
+        icon: Music,
+        permission: PERMISSIONS.MARKETING_WORKSPACE_VIEW,
       },
     ],
   },
