@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Pencil } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -77,6 +78,7 @@ export function ContentDailyWorkspace() {
   const [picLoading, setPicLoading] = useState(true);
   const [productOptions, setProductOptions] = useState<PicOption[]>([]);
   const [productLoading, setProductLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -210,6 +212,41 @@ export function ContentDailyWorkspace() {
     setFilterDateTo("");
     setFilterPlatform("");
   }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === visible.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(visible.map((d) => d.id)));
+    }
+  }
+
+  function handleToolbarEdit() {
+    const first = visible.find((d) => selectedIds.has(d.id));
+    if (first) handleEdit(first);
+  }
+
+  async function handleToolbarDelete() {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Yakin ingin menghapus ${ids.length} data?`)) return;
+    for (const id of ids) {
+      await remove(id).catch(() => {});
+    }
+    setSelectedIds(new Set());
+  }
+
+  const isAllSelected = visible.length > 0 && selectedIds.size === visible.length;
+  const someSelected = selectedIds.size > 0;
 
   return (
     <div className="space-y-6">
@@ -406,9 +443,27 @@ export function ContentDailyWorkspace() {
           title="Rekap Daily Upload"
           description={`Total ${visible.length} data${filterPlatform ? ` — platform: ${filterPlatform}` : ""}.`}
         >
+          {someSelected && (
+            <div className="mb-3 flex items-center gap-3 rounded-xl border border-border/70 bg-card/80 px-4 py-2">
+              <span className="text-sm font-medium text-foreground">{selectedIds.size} terpilih</span>
+              <div className="ml-auto flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={handleToolbarEdit} disabled={selectedIds.size !== 1}>
+                  <Pencil className="mr-1 size-3.5" />
+                  Edit
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleToolbarDelete} className="text-destructive hover:text-destructive">
+                  <Trash2 className="mr-1 size-3.5" />
+                  Hapus
+                </Button>
+              </div>
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox checked={isAllSelected} onCheckedChange={toggleSelectAll} />
+                </TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead>Platform</TableHead>
                 <TableHead>Akun</TableHead>
@@ -417,20 +472,22 @@ export function ContentDailyWorkspace() {
                 <TableHead>Produk</TableHead>
                 <TableHead>PIC</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="w-16" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {visible.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
                     Belum ada data. Klik &ldquo;Input Baru&rdquo; untuk menambahkan.
                   </TableCell>
                 </TableRow>
               ) : (
                 visible.map((d) => (
                   <TableRow key={d.id}>
-                    <TableCell className="cursor-pointer hover:text-primary" onClick={() => handleEdit(d)}>{d.tanggal_aktivitas}</TableCell>
+                    <TableCell>
+                      <Checkbox checked={selectedIds.has(d.id)} onCheckedChange={() => toggleSelect(d.id)} />
+                    </TableCell>
+                    <TableCell>{d.tanggal_aktivitas}</TableCell>
                     <TableCell>{d.platform}</TableCell>
                     <TableCell>{d.akun}</TableCell>
                     <TableCell>{d.jenis_konten}</TableCell>
@@ -438,16 +495,6 @@ export function ContentDailyWorkspace() {
                     <TableCell className="max-w-[150px] truncate">{d.produk || "—"}</TableCell>
                     <TableCell>{d.pic}</TableCell>
                     <TableCell>{d.status}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => d.id && remove(d.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 ))
               )}
