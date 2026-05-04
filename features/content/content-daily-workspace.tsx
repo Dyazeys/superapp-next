@@ -200,7 +200,7 @@ export function ContentDailyWorkspace() {
       pic: item.pic,
       status: item.status as (typeof emptyForm)["status"],
     });
-    setEditingId(item.id);
+    setEditingId(item.id ?? null);
     setErrors({});
     setOpen(true);
   }
