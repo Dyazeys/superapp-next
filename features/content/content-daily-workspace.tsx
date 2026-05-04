@@ -246,7 +246,7 @@ export function ContentDailyWorkspace() {
   }
 
   function handleToolbarEdit() {
-    const first = visible.find((d) => selectedIds.has(d.id));
+    const first = visible.find((d) => selectedIds.has(d.id!));
     if (first) handleEdit(first);
   }
 
@@ -500,7 +500,7 @@ export function ContentDailyWorkspace() {
                 paginated.map((d) => (
                   <TableRow key={d.id}>
                     <TableCell>
-                      <Checkbox checked={selectedIds.has(d.id)} onCheckedChange={() => toggleSelect(d.id)} />
+                      <Checkbox checked={selectedIds.has(d.id!)} onCheckedChange={() => toggleSelect(d.id!)} />
                     </TableCell>
                     <TableCell>{d.tanggal_aktivitas}</TableCell>
                     <TableCell>{d.platform}</TableCell>
