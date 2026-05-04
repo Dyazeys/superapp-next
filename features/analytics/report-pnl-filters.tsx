@@ -81,7 +81,7 @@ export function ReportPnlFilters({
             className={cn(
               "flex h-11 w-full items-center justify-between rounded-2xl border px-4 text-left text-sm shadow-sm transition-all",
               openMonthPicker
-                ? "border-sky-300 bg-sky-50/70 ring-4 ring-sky-100"
+                ? "border-slate-300 bg-slate-50 ring-4 ring-slate-100"
                 : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
             )}
           >
@@ -112,7 +112,7 @@ export function ReportPnlFilters({
                       className={cn(
                         "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm transition-colors",
                         active
-                          ? "bg-sky-50 text-sky-700"
+                          ? "bg-slate-100 text-slate-900"
                           : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                       )}
                     >

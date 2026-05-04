@@ -369,8 +369,6 @@ export const ANALYTICS_MODULE_ITEMS: ModuleNavItem[] = [
     permissionAny: [
       PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW,
       PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
-      PERMISSIONS.MARKETING_WORKSPACE_VIEW,
-      PERMISSIONS.CONTENT_WORKSPACE_VIEW,
     ],
   },
   {
@@ -385,20 +383,18 @@ export const ANALYTICS_MODULE_ITEMS: ModuleNavItem[] = [
     children: [
       {
         label: "Report PNL",
-        href: "/dashboard/report-pnl",
+        href: "/analytics/financial/report-pnl",
         icon: ScrollText,
         permission: PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW,
       },
       {
         label: "Budget Meters",
-        href: "/dashboard/budget-meters",
+        href: "/analytics/financial/budget-meters",
         icon: Gauge,
         permission: PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
       },
     ],
   },
-  MARKETING_MODULE_ITEM,
-  CONTENT_MODULE_ITEM,
 ];
 
 export const TASK_MODULE_ITEMS: ModuleNavItem[] = [

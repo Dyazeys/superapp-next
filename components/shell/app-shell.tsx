@@ -15,9 +15,7 @@ import { useSession } from "next-auth/react";
 
 /**
  * Recursively checks if pathname matches any item or its children.
- * This is needed because items like /dashboard/report-pnl are nested
- * under "Financial" child array in ANALYTICS_MODULE_ITEMS, while being
- * matched by /dashboard/* in ERP_MODULE_ITEMS at top level.
+ * This handles items nested under child arrays in module items.
  */
 function isPathInModuleItems(pathname: string, items: ModuleNavItem[]): boolean {
   return items.some((item) => {
@@ -50,8 +48,7 @@ function topNavForPath(
   const inErp = isPathInModuleItems(pathname, ERP_MODULE_ITEMS);
   const inAnalytics = isPathInModuleItems(pathname, ANALYTICS_MODULE_ITEMS);
 
-  // Ambiguous: path matches both ERP and Analytics (e.g. /marketing/*, /content/*, /dashboard/report-pnl)
-  // → use the preferred top-nav context (last manual selection) instead of jumping
+  // Ambiguous: path matches both ERP and Analytics → use last manual selection
   if (inErp && inAnalytics) {
     if (preferredTop === "analytics") return "analytics" as const;
     return "erp" as const;
@@ -199,8 +196,8 @@ export function AppShell({
       "/accounting/journal-entries": "Lihat detail debit/kredit untuk rekonsiliasi cepat.",
       "/accounting/accounts": "Lihat COA dan relasi parent untuk struktur akun.",
       "/accounting/channel-report": "Ringkasan accounting per channel berbasis jurnal: sales, payout, saldo, transfer, outstanding, dan status.",
-      "/dashboard/budget-meters": "Visualisasi budget dan realisasi beban bulanan sebagai titik awal kontrol biaya di modul Analytic.",
-      "/dashboard/report-pnl": "Visualisasi profit and loss bulanan dengan filter channel untuk membaca sales, margin, dan biaya utama dari data ERP.",
+      "/analytics/financial/budget-meters": "Visualisasi budget dan realisasi beban bulanan sebagai titik awal kontrol biaya di modul Analytic.",
+      "/analytics/financial/report-pnl": "Visualisasi profit and loss bulanan dengan filter channel untuk membaca sales, margin, dan biaya utama dari data ERP.",
       "/payout": "Ringkasan payout, adjustment, dan nilai bersih berdasarkan data yang ada.",
       "/payout/records": "Kelola header payout dan cek nilai gross/net.",
       "/payout/adjustments": "Kelola adjustment payout sesuai referensi yang sudah ada.",
@@ -347,7 +344,7 @@ export function AppShell({
         type="button"
         disabled
         title="AI Assistant coming soon"
-        className="fixed right-6 bottom-6 z-30 inline-flex items-center gap-3 rounded-full border border-slate-200/90 bg-white/95 px-4 py-3 text-left text-slate-500 shadow-[0_18px_40px_rgba(15,23,42,0.12)] backdrop-blur opacity-80"
+        className="fixed right-6 top-20 z-30 inline-flex items-center gap-3 rounded-full border border-slate-200/90 bg-white/95 px-4 py-3 text-left text-slate-500 shadow-[0_18px_40px_rgba(15,23,42,0.12)] backdrop-blur opacity-80"
       >
         <span className="inline-flex size-11 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm">
           <Bot className="size-5" />

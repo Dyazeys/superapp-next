@@ -1,6 +1,5 @@
 import "server-only";
 import { prisma } from "@/db/prisma";
-import { isFailedPayoutStatus } from "@/lib/payout-status";
 
 type PnlLeafRow = {
   key: string;
@@ -27,6 +26,7 @@ export type ProfitAndLossReport = {
   retur: number;
   discount: number;
   netSales: number;
+  totalAdjustment: number;
   hpp: number;
   grossProfitMargin: number;
   adminMarketplace: PnlSectionRow;
@@ -91,6 +91,7 @@ export async function getProfitAndLossReport(input?: {
       gte: start,
       lt: end,
     },
+    post_status: { in: ["POSTED", "LOCKED"] },
     ...(selectedChannelId
       ? {
           t_order: {
@@ -111,6 +112,15 @@ export async function getProfitAndLossReport(input?: {
     },
   };
 
+  const adjustmentWhere = {
+    payout_date: {
+      gte: start,
+      lt: end,
+    },
+    post_status: { in: ["POSTED", "LOCKED"] },
+    ...(selectedChannelId ? { channel_id: selectedChannelId } : {}),
+  };
+
   const barterWhere = {
     status: "POSTED" as const,
     barter_date: {
@@ -119,7 +129,7 @@ export async function getProfitAndLossReport(input?: {
     },
   };
 
-  const [payoutRows, manualOpexRows, barterRows, channel] = await Promise.all([
+  const [payoutRows, manualOpexRows, barterRows, adjustmentRows, channel] = await Promise.all([
     prisma.t_payout.findMany({
       where: payoutWhere,
       select: {
@@ -158,6 +168,10 @@ export async function getProfitAndLossReport(input?: {
         },
       },
     }),
+    prisma.t_adjustments.findMany({
+      where: adjustmentWhere,
+      select: { amount: true },
+    }),
     selectedChannelId
       ? prisma.m_channel.findUnique({
           where: { channel_id: selectedChannelId },
@@ -168,37 +182,36 @@ export async function getProfitAndLossReport(input?: {
       : Promise.resolve(null),
   ]);
 
-  const settledPayoutRows = payoutRows.filter((row) => !isFailedPayoutStatus(row.payout_status));
-
-  const grossSales = settledPayoutRows.reduce((sum, row) => sum + toNumber(row.total_price), 0);
+  const grossSales = payoutRows.reduce((sum, row) => sum + toNumber(row.total_price), 0);
   const retur = 0;
-  const discount = settledPayoutRows.reduce((sum, row) => sum + toNumber(row.seller_discount), 0);
-  const hpp = settledPayoutRows.reduce((sum, row) => sum + toNumber(row.hpp), 0);
+  const discount = payoutRows.reduce((sum, row) => sum + toNumber(row.seller_discount), 0);
+  const totalAdjustment = adjustmentRows.reduce((sum, row) => sum + toNumber(row.amount), 0);
+  const hpp = payoutRows.reduce((sum, row) => sum + toNumber(row.hpp), 0);
 
   const adminChildren: PnlLeafRow[] = [
     {
       key: "admin-fee",
       label: "Admin fee",
-      amount: settledPayoutRows.reduce((sum, row) => sum + toNumber(row.fee_admin), 0),
+      amount: payoutRows.reduce((sum, row) => sum + toNumber(row.fee_admin), 0),
     },
     {
       key: "service-fee",
       label: "Biaya Layanan",
-      amount: settledPayoutRows.reduce((sum, row) => sum + toNumber(row.fee_service), 0),
+      amount: payoutRows.reduce((sum, row) => sum + toNumber(row.fee_service), 0),
     },
     {
       key: "program-fee",
       label: "Biaya Program",
-      amount: settledPayoutRows.reduce((sum, row) => sum + toNumber(row.fee_program), 0),
+      amount: payoutRows.reduce((sum, row) => sum + toNumber(row.fee_program), 0),
     },
     {
       key: "order-process-fee",
       label: "Biaya Proses Pesanan",
-      amount: settledPayoutRows.reduce((sum, row) => sum + toNumber(row.fee_order_process), 0),
+      amount: payoutRows.reduce((sum, row) => sum + toNumber(row.fee_order_process), 0),
     },
   ].filter((row) => row.amount > 0);
 
-  const affiliateAmount = settledPayoutRows.reduce((sum, row) => sum + toNumber(row.fee_affiliate), 0);
+  const affiliateAmount = payoutRows.reduce((sum, row) => sum + toNumber(row.fee_affiliate), 0);
 
   const marketingMap = new Map<string, PnlLeafRow>();
   const operationalMap = new Map<string, PnlLeafRow>();
@@ -243,7 +256,7 @@ export async function getProfitAndLossReport(input?: {
   const adminMarketplaceAmount = adminChildren.reduce((sum, row) => sum + row.amount, 0);
   const marketingAmount = marketingChildren.reduce((sum, row) => sum + row.amount, 0);
   const operationalAmount = operationalChildren.reduce((sum, row) => sum + row.amount, 0);
-  const netSales = grossSales - retur - discount;
+  const netSales = grossSales - retur - discount + totalAdjustment;
   const grossProfitMargin = netSales - hpp;
   const netProfit = grossProfitMargin - adminMarketplaceAmount - affiliateAmount - marketingAmount - operationalAmount;
 
@@ -256,6 +269,7 @@ export async function getProfitAndLossReport(input?: {
     grossSales,
     retur,
     discount,
+    totalAdjustment,
     netSales,
     hpp,
     grossProfitMargin,
@@ -288,4 +302,39 @@ export async function getProfitAndLossReport(input?: {
     },
     netProfit,
   };
+}
+
+export type PnlTimeSeriesPoint = {
+  month: string;
+  grossSales: number;
+  grossProfitMargin: number;
+};
+
+export async function getPnlTimeSeries(
+  channelId?: string | null
+): Promise<PnlTimeSeriesPoint[]> {
+  const now = new Date();
+  const startYear = 2026;
+  const startMonth = 0;
+  const endYear = now.getUTCFullYear();
+  const endMonth = now.getUTCMonth();
+  const months: string[] = [];
+
+  for (let y = startYear; y <= endYear; y++) {
+    const mStart = y === startYear ? startMonth : 0;
+    const mEnd = y === endYear ? endMonth : 11;
+    for (let m = mStart; m <= mEnd; m++) {
+      months.push(`${y}-${String(m + 1).padStart(2, "0")}`);
+    }
+  }
+
+  const results = await Promise.all(
+    months.map((month) => getProfitAndLossReport({ month, channelId }))
+  );
+
+  return results.map((r) => ({
+    month: r.monthLabel,
+    grossSales: r.grossSales,
+    grossProfitMargin: r.grossProfitMargin,
+  }));
 }

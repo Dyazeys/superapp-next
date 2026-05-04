@@ -34,13 +34,13 @@ export default async function AnalyticsFinancialPage() {
           {
             title: "Report PNL",
             description: "Visualisasi profit and loss untuk membaca kesehatan bisnis dari sisi revenue, margin, dan biaya utama.",
-            href: "/dashboard/report-pnl",
+            href: "/analytics/financial/report-pnl",
             icon: ScrollText,
           },
           {
             title: "Budget Meters",
             description: "Visualisasi kontrol budget dan realisasi beban untuk monitoring biaya secara cepat.",
-            href: "/dashboard/budget-meters",
+            href: "/analytics/financial/budget-meters",
             icon: Gauge,
           },
         ]}
