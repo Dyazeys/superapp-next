@@ -79,6 +79,8 @@ export function ContentDailyWorkspace() {
   const [productOptions, setProductOptions] = useState<PicOption[]>([]);
   const [productLoading, setProductLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     let cancelled = false;
@@ -136,6 +138,19 @@ export function ContentDailyWorkspace() {
     return true;
   });
   const contentTypeOptions = CONTENT_TYPE_OPTIONS_BY_PLATFORM[form.platform];
+
+  useEffect(() => {
+    setPageIndex(0);
+  }, [filterDateFrom, filterDateTo, filterPlatform]);
+
+  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
+  const paginated = visible.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
+
+  useEffect(() => {
+    if (pageIndex >= pageCount) {
+      setPageIndex(Math.max(0, pageCount - 1));
+    }
+  }, [pageIndex, pageCount]);
 
   function handleFormChange<K extends FormKeys>(
     key: K,
@@ -482,7 +497,7 @@ export function ContentDailyWorkspace() {
                   </TableCell>
                 </TableRow>
               ) : (
-                visible.map((d) => (
+                paginated.map((d) => (
                   <TableRow key={d.id}>
                     <TableCell>
                       <Checkbox checked={selectedIds.has(d.id)} onCheckedChange={() => toggleSelect(d.id)} />
@@ -500,6 +515,48 @@ export function ContentDailyWorkspace() {
               )}
             </TableBody>
           </Table>
+
+          {visible.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2">
+              <p className="text-xs text-slate-500">
+                Menampilkan {paginated.length > 0 ? `${pageIndex * pageSize + 1}-${pageIndex * pageSize + paginated.length}` : 0} dari {visible.length}
+              </p>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-500" htmlFor="daily_page_size">Baris</label>
+                <select
+                  id="daily_page_size"
+                  className="h-8 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-700"
+                  value={pageSize}
+                  onChange={(e) => { setPageSize(Number(e.target.value)); setPageIndex(0); }}
+                >
+                  {[5, 10, 20, 50].map((size) => (
+                    <option key={size} value={size}>{size}</option>
+                  ))}
+                </select>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-2"
+                  disabled={pageIndex === 0}
+                  onClick={() => setPageIndex((p) => p - 1)}
+                >
+                  Prev
+                </Button>
+                <span className="px-1 text-xs text-slate-600">
+                  {pageIndex + 1} / {pageCount}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-2"
+                  disabled={pageIndex >= pageCount - 1}
+                  onClick={() => setPageIndex((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </WorkspacePanel>
       )}
     </div>
