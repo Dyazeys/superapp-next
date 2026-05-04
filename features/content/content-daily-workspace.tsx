@@ -74,6 +74,8 @@ export function ContentDailyWorkspace() {
   const [submitting, setSubmitting] = useState(false);
   const [picOptions, setPicOptions] = useState<PicOption[]>([]);
   const [picLoading, setPicLoading] = useState(true);
+  const [productOptions, setProductOptions] = useState<PicOption[]>([]);
+  const [productLoading, setProductLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -103,11 +105,26 @@ export function ContentDailyWorkspace() {
     }
 
     void loadPicOptions();
+    void loadProductOptions();
 
     return () => {
       cancelled = true;
     };
   }, []);
+
+  async function loadProductOptions() {
+    setProductLoading(true);
+    try {
+      const response = await fetch("/api/content/daily-upload/product-options");
+      if (!response.ok) throw new Error("Gagal memuat opsi produk");
+      const payload = (await response.json()) as PicOption[];
+      setProductOptions(payload);
+    } catch {
+      setProductOptions([]);
+    } finally {
+      setProductLoading(false);
+    }
+  }
 
   const visible = items.filter((d) => {
     if (filterDateFrom && d.tanggal_aktivitas < filterDateFrom) return false;
@@ -316,12 +333,18 @@ export function ContentDailyWorkspace() {
               </select>
             </FormField>
             <FormField label="Produk" htmlFor="draft_produk">
-              <Input
+              <select
                 id="draft_produk"
-                placeholder="Opsional"
+                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={form.produk}
                 onChange={(e) => handleFormChange("produk", e.target.value)}
-              />
+                disabled={productLoading}
+              >
+                <option value="">{productLoading ? "Memuat produk..." : "Pilih Produk (Opsional)"}</option>
+                {productOptions.map((p) => (
+                  <option key={p.value} value={p.value}>{p.label}</option>
+                ))}
+              </select>
             </FormField>
             <FormField label="Link Konten" htmlFor="draft_link">
               <Input
