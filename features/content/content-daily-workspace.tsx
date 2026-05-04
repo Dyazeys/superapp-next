@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, RefreshCw } from "lucide-react";
+import { Pencil, Plus, Trash2, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,6 +70,8 @@ export function ContentDailyWorkspace() {
   const [filterDateTo, setFilterDateTo] = useState("");
   const [filterPlatform, setFilterPlatform] = useState("");
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [picOptions, setPicOptions] = useState<PicOption[]>([]);
   const [picLoading, setPicLoading] = useState(true);
 
@@ -144,10 +145,46 @@ export function ContentDailyWorkspace() {
       return;
     }
 
-    await upsert(form);
+    setSubmitting(true);
+    try {
+      if (editingId) {
+        await upsert({ ...form, id: editingId });
+      } else {
+        await upsert(form);
+      }
+      setForm({ ...emptyForm });
+      setErrors({});
+      setEditingId(null);
+      setOpen(false);
+    } catch {
+      // error surfaced by the hook
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function openCreate() {
     setForm({ ...emptyForm });
+    setEditingId(null);
     setErrors({});
-    setOpen(false);
+    setOpen(true);
+  }
+
+  function handleEdit(item: DailyUpload) {
+    setForm({
+      tanggal_aktivitas: item.tanggal_aktivitas?.slice(0, 10) ?? "",
+      akun: item.akun as (typeof emptyForm)["akun"],
+      platform: item.platform as (typeof emptyForm)["platform"],
+      jenis_konten: item.jenis_konten as (typeof emptyForm)["jenis_konten"],
+      tipe_aktivitas: item.tipe_aktivitas as (typeof emptyForm)["tipe_aktivitas"],
+      produk: item.produk ?? "",
+      link_konten: item.link_konten ?? "",
+      pic: item.pic,
+      status: item.status as (typeof emptyForm)["status"],
+    });
+    setEditingId(item.id);
+    setErrors({});
+    setOpen(true);
   }
 
   function resetFilters() {
@@ -158,7 +195,7 @@ export function ContentDailyWorkspace() {
 
   return (
     <div className="space-y-6">
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); setErrors({}); } }}>
         {/* ── Filter bar ── */}
         <WorkspacePanel
         title="Filter Daily Upload"
@@ -207,10 +244,10 @@ export function ContentDailyWorkspace() {
             >
               <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} />
             </Button>
-            <DialogTrigger render={<Button size="sm" className="ml-2" />}>
+            <Button size="sm" className="ml-2" onClick={openCreate}>
               <Plus className="mr-1 size-4" />
               Input Baru
-            </DialogTrigger>
+            </Button>
           </div>
         </div>
       </WorkspacePanel>
@@ -218,8 +255,8 @@ export function ContentDailyWorkspace() {
         {/* ── Input form (dialog) ── */}
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Input Konten Harian</DialogTitle>
-            <DialogDescription>Isi data konten harian untuk dicatat.</DialogDescription>
+            <DialogTitle>{editingId ? "Edit Konten Harian" : "Input Konten Harian"}</DialogTitle>
+            <DialogDescription>{editingId ? "Ubah data konten harian yang sudah ada." : "Isi data konten harian untuk dicatat."}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField label="Tanggal" htmlFor="draft_date" error={errors.tanggal_aktivitas}>
@@ -323,10 +360,12 @@ export function ContentDailyWorkspace() {
           </div>
           <FieldError message={errors.jenis_konten || errors.tipe_aktivitas ? "Periksa kembali field yang wajib diisi." : undefined} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setOpen(false); setErrors({}); }}>
+            <Button variant="outline" onClick={() => { setOpen(false); setEditingId(null); setErrors({}); }}>
               Batal
             </Button>
-            <Button onClick={handleSubmit}>Simpan</Button>
+            <Button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? "Menyimpan..." : editingId ? "Update" : "Simpan"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -379,14 +418,23 @@ export function ContentDailyWorkspace() {
                     <TableCell>{d.pic}</TableCell>
                     <TableCell>{d.status}</TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => d.id && remove(d.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(d)}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => d.id && remove(d.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
