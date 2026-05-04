@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Pencil, Plus, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Trash2, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -430,7 +430,7 @@ export function ContentDailyWorkspace() {
               ) : (
                 visible.map((d) => (
                   <TableRow key={d.id}>
-                    <TableCell>{d.tanggal_aktivitas}</TableCell>
+                    <TableCell className="cursor-pointer hover:text-primary" onClick={() => handleEdit(d)}>{d.tanggal_aktivitas}</TableCell>
                     <TableCell>{d.platform}</TableCell>
                     <TableCell>{d.akun}</TableCell>
                     <TableCell>{d.jenis_konten}</TableCell>
@@ -439,23 +439,14 @@ export function ContentDailyWorkspace() {
                     <TableCell>{d.pic}</TableCell>
                     <TableCell>{d.status}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(d)}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => d.id && remove(d.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => d.id && remove(d.id)}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))
