@@ -4,14 +4,7 @@ import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
-import { productBomSchema } from "@/schemas/product-module";
-
-function normalizeBomGroup(value: unknown) {
-  if (typeof value !== "string") return value;
-  const normalized = value.trim().toUpperCase();
-  if (normalized === "OVERHEAD") return "BRANDING";
-  return normalized;
-}
+import { normalizeBomGroup, productBomSchema } from "@/schemas/product-module";
 
 async function syncProductHpp(sku: string) {
   const aggregate = await prisma.product_bom.aggregate({
@@ -63,7 +56,7 @@ export async function POST(
     const raw = await request.json();
     const payload = productBomSchema.parse({
       ...raw,
-      component_group: normalizeBomGroup(raw?.component_group),
+      component_group: normalizeBomGroup(raw?.component_group ?? ""),
       sku,
     });
 

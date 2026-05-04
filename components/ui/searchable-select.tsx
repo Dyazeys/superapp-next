@@ -2,10 +2,11 @@
 
 import * as React from "react"
 import { createPortal } from "react-dom"
+import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
-type SearchableOption = {
+export type SearchableOption = {
   label: string
   value: string
 }
@@ -22,6 +23,7 @@ type SearchableSelectProps = {
   emptyText?: string
   maxResults?: number
   portal?: boolean
+  renderOption?: (option: SearchableOption, isHighlighted: boolean) => React.ReactNode
 }
 
 function normalize(value: string) {
@@ -51,6 +53,7 @@ function SearchableSelect({
   emptyText = "No matches found.",
   maxResults = 80,
   portal = true,
+  renderOption,
 }: SearchableSelectProps) {
   const containerRef = React.useRef<HTMLDivElement | null>(null)
   const menuRef = React.useRef<HTMLDivElement | null>(null)
@@ -171,7 +174,7 @@ function SearchableSelect({
               setOpen(false)
             }}
           >
-            {option.label}
+            {renderOption ? renderOption(option, option.value === value) : option.label}
           </button>
         ))
       ) : (
@@ -182,39 +185,42 @@ function SearchableSelect({
 
   return (
     <div ref={containerRef} className={cn("relative w-full", className)}>
-      <input
-        ref={inputRef}
-        id={id}
-        value={open ? query : (selected?.label ?? "")}
-        disabled={disabled}
-        placeholder={placeholder}
-        className={cn(
-          "h-9 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-1 text-base text-slate-800 shadow-sm transition-colors outline-none placeholder:text-slate-400 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm",
-          inputClassName
-        )}
-        onFocus={() => {
-          setOpen(true)
-          setQuery(selected?.label ?? "")
-          updateMenuPosition()
-        }}
-        onChange={(event) => {
-          const nextValue = event.target.value
-          setQuery(nextValue)
-          setOpen(true)
-          if (!nextValue.trim()) {
-            onValueChange("")
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            setOpen(false)
-          }
-        }}
-      />
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+        <input
+          ref={inputRef}
+          id={id}
+          value={open ? query : (selected?.label ?? "")}
+          disabled={disabled}
+          placeholder={placeholder}
+          className={cn(
+            "h-9 w-full min-w-0 rounded-xl border border-input bg-white pl-10 pr-3 py-1 text-base text-slate-800 shadow-sm transition-colors outline-none placeholder:text-slate-400 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm",
+            inputClassName
+          )}
+          onFocus={() => {
+            setOpen(true)
+            setQuery(selected?.label ?? "")
+            updateMenuPosition()
+          }}
+          onChange={(event) => {
+            const nextValue = event.target.value
+            setQuery(nextValue)
+            setOpen(true)
+            if (!nextValue.trim()) {
+              onValueChange("")
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              setOpen(false)
+            }
+          }}
+        />
+      </div>
 
       {mounted && open ? (portal ? createPortal(menuContent, document.body) : menuContent) : null}
     </div>
   )
 }
 
-export { SearchableSelect, type SearchableOption }
+export { SearchableSelect }

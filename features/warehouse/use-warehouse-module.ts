@@ -19,6 +19,7 @@ import {
   WAREHOUSE_PO_STATUS_OPTIONS,
   WAREHOUSE_QC_STATUS_OPTIONS,
   type AdjustmentInput,
+  type CreateWarehouseReturnInput,
   type InboundDeliveryInput,
   type InboundItemInput,
   type PurchaseOrderInput,
@@ -29,9 +30,10 @@ import type {
   InboundDeliveryRecord,
   InboundItemRecord,
   PurchaseOrderRecord,
+  SalesReturnCandidate,
   StockBalanceRecord,
-  StockMovementRecord,
   VendorRecord,
+  WarehouseReturn,
 } from "@/types/warehouse";
 
 type InventoryLookupRecord = {
@@ -72,6 +74,7 @@ type PurchaseOrderHook = {
     }
   ) => Promise<PurchaseOrderRecord>;
   deletePurchaseOrder: (id: string) => Promise<void>;
+  bulkDeletePurchaseOrders: (ids: string[]) => Promise<void>;
 };
 
 type InboundHook = {
@@ -99,6 +102,14 @@ type AdjustmentHook = {
   saveAdjustment: (values: AdjustmentInput) => Promise<void>;
   deleteAdjustment: (id: string) => Promise<void>;
   postAdjustment: (id: string) => Promise<void>;
+};
+
+type ReturnsHook = {
+  returnsQuery: UseQueryResult<WarehouseReturn[]>;
+  candidatesQuery: UseQueryResult<SalesReturnCandidate[]>;
+  createModal: ReturnType<typeof useModalState>;
+  createReturn: (values: CreateWarehouseReturnInput) => Promise<WarehouseReturn>;
+  postReturnStock: (id: string) => Promise<void>;
 };
 
 export const WAREHOUSE_BOOLEAN_OPTIONS = [
@@ -129,6 +140,8 @@ const WAREHOUSE_ADJUSTMENT_KEY = ["warehouse-adjustments"] as const;
 const WAREHOUSE_STOCK_BALANCE_KEY = ["warehouse-stock-balances"] as const;
 const WAREHOUSE_STOCK_MOVEMENT_KEY = ["warehouse-stock-movements"] as const;
 const WAREHOUSE_INVENTORY_LOOKUP_KEY = ["warehouse-inventory-lookup"] as const;
+const WAREHOUSE_RETURNS_KEY = ["warehouse-returns"] as const;
+const WAREHOUSE_RETURN_CANDIDATES_KEY = ["warehouse-return-candidates"] as const;
 
 function useBaseMutation(invalidateKeys: ReadonlyArray<ReadonlyArray<unknown>>) {
   const queryClient = useQueryClient();
@@ -296,6 +309,12 @@ export function useWarehousePurchaseOrders(): PurchaseOrderHook {
     }
   };
 
+  const bulkDeletePurchaseOrders = async (ids: string[]) => {
+    const result = await warehouseApi.purchaseOrders.bulkRemove(ids);
+    toast.success(`${result.deleted} purchase orders deleted`);
+    await invalidate();
+  };
+
   const openPurchaseOrderModal = (purchaseOrder?: PurchaseOrderRecord) => {
     setEditingPurchaseOrder(purchaseOrder ?? null);
     purchaseOrderForm.reset({
@@ -314,6 +333,7 @@ export function useWarehousePurchaseOrders(): PurchaseOrderHook {
     openPurchaseOrderModal,
     savePurchaseOrder,
     deletePurchaseOrder,
+    bulkDeletePurchaseOrders,
   };
 }
 
@@ -394,7 +414,7 @@ export function useWarehouseInbound(): InboundHook {
       await invalidate();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to post inbound");
-      return;
+      throw error;
     }
   };
 
@@ -655,9 +675,45 @@ export function useWarehouseStockBalances() {
   }) as UseQueryResult<StockBalanceRecord[]>;
 }
 
-export function useWarehouseStockMovements() {
+export function useWarehouseStockMovements(params?: { page?: number; limit?: number }) {
   return useQuery({
-    queryKey: WAREHOUSE_STOCK_MOVEMENT_KEY,
-    queryFn: warehouseApi.stock.movements,
-  }) as UseQueryResult<StockMovementRecord[]>;
+    queryKey: [...WAREHOUSE_STOCK_MOVEMENT_KEY, params],
+    queryFn: () => warehouseApi.stock.movements(params),
+  });
+}
+
+export function useWarehouseReturns(): ReturnsHook {
+  const createModal = useModalState();
+  const returnsQuery = useQuery({
+    queryKey: WAREHOUSE_RETURNS_KEY,
+    queryFn: warehouseApi.returns.list,
+  });
+  const candidatesQuery = useQuery({
+    queryKey: WAREHOUSE_RETURN_CANDIDATES_KEY,
+    queryFn: warehouseApi.returns.candidates,
+    enabled: createModal.open,
+  });
+  const queryClient = useQueryClient();
+
+  const createReturn = async (values: CreateWarehouseReturnInput) => {
+    const result = await warehouseApi.returns.create(values);
+    toast.success("Return created");
+    await queryClient.invalidateQueries({ queryKey: WAREHOUSE_RETURNS_KEY });
+    createModal.closeModal();
+    return result;
+  };
+
+  const postReturnStock = async (id: string) => {
+    const result = await warehouseApi.returns.postStock(id);
+    toast.success(`Posted: ${result.summary.posted} items, skipped: ${result.summary.skipped}`);
+    await queryClient.invalidateQueries({ queryKey: WAREHOUSE_RETURNS_KEY });
+  };
+
+  return {
+    returnsQuery,
+    candidatesQuery,
+    createModal,
+    createReturn,
+    postReturnStock,
+  };
 }

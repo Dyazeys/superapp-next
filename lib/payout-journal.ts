@@ -2,8 +2,6 @@ import { createHash } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { invariant } from "@/lib/api-error";
 import { upsertJournalEntryReplacingLines } from "@/lib/accounting-journal-upsert";
-import { isFailedPayoutStatus } from "@/lib/payout-status";
-
 type Tx = Prisma.TransactionClient;
 
 const PAYOUT_JOURNAL_REFERENCE_TYPE = "PAYOUT_SETTLEMENT";
@@ -191,13 +189,6 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
     },
     select: { id: true },
   });
-
-  if (isFailedPayoutStatus(payout.payout_status)) {
-    if (existing) {
-      await tx.journal_entries.delete({ where: { id: existing.id } });
-    }
-    return;
-  }
 
   if (!payout.ref) {
     if (existing) {

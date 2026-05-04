@@ -1,4 +1,4 @@
-import { ClipboardList, Gauge } from "lucide-react";
+import { ClipboardList, Gauge, ListChecks } from "lucide-react";
 import { PageShell } from "@/components/foundation/page-shell";
 import { ModuleHub } from "@/features/shared/module-hub";
 import { requireTaskAccess } from "@/lib/team-access";
@@ -18,6 +18,7 @@ export default async function TaskMyTasksPage() {
         bullets={[
           "To Do dipakai untuk daftar tugas aktif, prioritas, deadline, dan blocker yang sedang dihadapi.",
           "KPI dipakai untuk membaca target personal, realisasi, dan indikator hasil kerja secara ringkas.",
+          "Rutinitas dipakai untuk checklist kegiatan harian yang berulang.",
         ]}
         items={[
           {
@@ -31,6 +32,12 @@ export default async function TaskMyTasksPage() {
             description: "Tempat target kerja, realisasi, dan indikator performa personal yang ingin dipantau rutin.",
             href: "/task/tugas-saya/kpi",
             icon: Gauge,
+          },
+          {
+            title: "Rutinitas",
+            description: "Checklist kegiatan harian yang berulang, centang selesai dan reset otomatis besok.",
+            href: "/task/tugas-saya/rutinitas",
+            icon: ListChecks,
           },
         ]}
       />

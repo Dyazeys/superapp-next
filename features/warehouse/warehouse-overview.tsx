@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Box, Boxes, ClipboardList, PackageCheck, PackageSearch, ScanSearch, Truck } from "lucide-react";
+import { ArrowRight, Box, Boxes, ClipboardList, PackageCheck, PackageSearch, ScanSearch, Truck, Undo2 } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 
 const warehouseSections = [
@@ -40,6 +40,12 @@ const warehouseSections = [
     description: "Saldo on-hand terkini dari ledger stok yang sudah ada.",
     href: "/warehouse/stock-balances",
     icon: ScanSearch,
+  },
+  {
+    title: "Returns",
+    description: "Verifikasi retur pelanggan, pisahkan kondisi baik dan rusak.",
+    href: "/warehouse/returns",
+    icon: Undo2,
   },
   {
     title: "Stock Movements",

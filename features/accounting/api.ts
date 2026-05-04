@@ -4,6 +4,7 @@ import type {
   AccountingJournalRecord,
   AccountingOperationalExpenseBarterRecord,
   AccountingOperationalExpenseRecord,
+  AccountMutationResponse,
 } from "@/types/accounting";
 import type {
   OperationalExpenseBarterInput,
@@ -110,5 +111,11 @@ export const accountingApi = {
           method: "DELETE",
         }
       ),
+  },
+  accountMutations: {
+    list: (accountCode: string, startDate: string, endDate: string, openingBalance?: number) => {
+      const params = new URLSearchParams({ accountCode, startDate, endDate, openingBalance: String(openingBalance ?? 0) });
+      return requestJson<AccountMutationResponse>(`/api/accounting/account-mutations?${params.toString()}`);
+    },
   },
 };

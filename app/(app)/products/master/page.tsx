@@ -10,6 +10,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import {
   PRODUCT_BOOLEAN_OPTIONS,
   parseBooleanInput,
@@ -67,7 +68,7 @@ export default function ProductMasterPage() {
           <Button size="icon-xs" variant="outline" onClick={() => openProductModal(row.original)}>
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => deleteProduct(row.original.sku)}>
+          <Button size="icon-xs" variant="outline" onClick={() => { if (window.confirm("Hapus produk ini?")) deleteProduct(row.original.sku); }}>
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -142,12 +143,17 @@ export default function ProductMasterPage() {
             <Input id="busa_code" {...productForm.register("busa_code")} />
           </FormField>
           <FormField label="Bundling" htmlFor="is_bundling">
-            <Input
+            <SelectNative
               id="is_bundling"
-              list="product-boolean-options"
               value={String(productForm.watch("is_bundling"))}
               onChange={(e) => productForm.setValue("is_bundling", parseBooleanInput(e.target.value))}
-            />
+            >
+              {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -164,12 +170,17 @@ export default function ProductMasterPage() {
           </FormField>
         </div>
         <FormField label="Active" htmlFor="product_active">
-          <Input
+          <SelectNative
             id="product_active"
-            list="product-boolean-options"
             value={String(productForm.watch("is_active"))}
             onChange={(e) => productForm.setValue("is_active", parseBooleanInput(e.target.value))}
-          />
+          >
+            {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </SelectNative>
         </FormField>
 
         <datalist id="product-category-codes">

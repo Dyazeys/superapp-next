@@ -1,24 +1,33 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { requireApiPermission } from "@/lib/authz";
 import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   await requireApiPermission(PERMISSIONS.WAREHOUSE_STOCK_VIEW);
 
-  const stockMovements = await prisma.stock_movements.findMany({
-    orderBy: [{ movement_date: "desc" }, { created_at: "desc" }, { id: "desc" }],
-    include: {
-      master_inventory: {
-        select: {
-          inv_code: true,
-          inv_name: true,
+  const searchParams = request.nextUrl.searchParams;
+  const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 50));
+  const skip = (page - 1) * limit;
+
+  const [stockMovements, total] = await Promise.all([
+    prisma.stock_movements.findMany({
+      orderBy: [{ movement_date: "desc" }, { created_at: "desc" }, { id: "desc" }],
+      include: {
+        master_inventory: {
+          select: {
+            inv_code: true,
+            inv_name: true,
+          },
         },
       },
-    },
-    take: 100,
-  });
+      skip,
+      take: limit,
+    }),
+    prisma.stock_movements.count(),
+  ]);
 
   const saleItemIds = Array.from(
     new Set(
@@ -58,5 +67,13 @@ export async function GET() {
       movement.reference_type === "SALE" ? saleItemById.get(movement.reference_id) ?? null : null,
   }));
 
-  return NextResponse.json(toJsonValue(payload));
+  return NextResponse.json(
+    toJsonValue({
+      data: payload,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    })
+  );
 }

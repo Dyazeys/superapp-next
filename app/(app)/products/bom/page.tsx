@@ -12,6 +12,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InventoryPicker } from "@/components/patterns/inventory-picker";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,18 +27,11 @@ import {
   useProductMaster,
   useProductSelection,
 } from "@/features/product/use-product-module";
+import { asBomGroup } from "@/schemas/product-module";
 import type { ProductBomInput } from "@/schemas/product-module";
 import type { ProductBomRecord } from "@/types/product";
 
 const columnHelper = createColumnHelper<ProductBomRecord>();
-
-function asBomGroup(value: string) {
-  if (value === "OVERHEAD") return "BRANDING";
-  if (value === "OTHER_COST") return "BRANDING";
-  return PRODUCT_BOM_GROUP_OPTIONS.includes(value as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
-    ? (value as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
-    : "MAIN";
-}
 
 function toBomDraft(row: ProductBomRecord): ProductBomInput {
   const group = asBomGroup(row.component_group);
@@ -207,9 +201,10 @@ export default function ProductBomPage() {
       header: "Inventory Ref",
       cell: ({ row, getValue }) =>
         isEditingRow(row.original.id) ? (
-          <SearchableSelect
+          <InventoryPicker
             value={bomDraft?.inv_code ?? getValue() ?? ""}
             options={inventoryOptions}
+            isLoading={inventoryQuery.isLoading}
             placeholder="Search inventory..."
             inputClassName="h-8 min-w-[180px]"
             onValueChange={(next) => setBomDraft((prev) => (prev ? { ...prev, inv_code: next || null } : prev))}
@@ -341,7 +336,7 @@ export default function ProductBomPage() {
             >
               <Pencil className="size-3.5" />
             </Button>
-            <Button size="icon-xs" variant="outline" disabled={actionPending} onClick={() => deleteBom(row.original.id)}>
+            <Button size="icon-xs" variant="outline" disabled={actionPending} onClick={() => { if (window.confirm("Hapus baris BOM ini?")) deleteBom(row.original.id); }}>
               <Trash2 className="size-3.5" />
             </Button>
           </div>
@@ -504,10 +499,11 @@ export default function ProductBomPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField label="Inventory ref" htmlFor="add_bom_inventory_ref">
-            <SearchableSelect
+            <InventoryPicker
               id="add_bom_inventory_ref"
               value={addDraft?.inv_code ?? ""}
               options={inventoryOptions}
+              isLoading={inventoryQuery.isLoading}
               placeholder="Search inventory..."
               onValueChange={(next) => setAddDraft((prev) => (prev ? { ...prev, inv_code: next || null } : prev))}
             />

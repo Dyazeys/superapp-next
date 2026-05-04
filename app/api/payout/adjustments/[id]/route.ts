@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { requireApiPermission } from "@/lib/authz";
-import { jsonError } from "@/lib/api-error";
+import { invariant, jsonError } from "@/lib/api-error";
 import { resolvePayoutAdjustmentChannelId } from "@/lib/payout-adjustment-channel";
 import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
-import { deletePayoutAdjustmentJournal, syncPayoutAdjustmentJournal } from "@/lib/payout-adjustment-journal";
+import { deletePayoutAdjustmentJournal } from "@/lib/payout-adjustment-journal";
 import { payoutAdjustmentSchema } from "@/schemas/payout-module";
 
 function asDateOnly(value: string) {
@@ -53,8 +53,11 @@ export async function PATCH(
         select: {
           ref: true,
           channel_id: true,
+          post_status: true,
         },
       });
+
+      invariant(current.post_status === "DRAFT", "Hanya adjustment DRAFT yang bisa diubah.");
 
       const resolvedChannelId = await resolvePayoutAdjustmentChannelId(tx, {
         channelId: payload.channel_id === undefined ? current.channel_id : payload.channel_id,
@@ -80,8 +83,6 @@ export async function PATCH(
           amount: payload.amount,
         },
       });
-
-      await syncPayoutAdjustmentJournal(tx, adjustmentId);
 
       return tx.t_adjustments.findUniqueOrThrow({
         where: { adjustment_id: adjustmentId },
@@ -113,6 +114,13 @@ export async function DELETE(
     const adjustmentId = Number(id);
 
     await prisma.$transaction(async (tx) => {
+      const current = await tx.t_adjustments.findUniqueOrThrow({
+        where: { adjustment_id: adjustmentId },
+        select: { post_status: true },
+      });
+
+      invariant(current.post_status === "DRAFT", "Hanya adjustment DRAFT yang bisa dihapus.");
+
       await deletePayoutAdjustmentJournal(tx, adjustmentId);
 
       await tx.t_adjustments.delete({

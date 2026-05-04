@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Lock, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
@@ -113,17 +113,61 @@ export default function PayoutAdjustmentsPage() {
       header: "Nominal",
       cell: (info) => formatMoney(Number(info.getValue())),
     }),
+    columnHelper.accessor("post_status", {
+      header: "Post",
+      cell: (info) => {
+        const status = String(info.getValue() ?? "DRAFT").toUpperCase();
+        return (
+          <StatusBadge
+            label={status}
+            tone={
+              status === "LOCKED"
+                ? "warning"
+                : status === "VOID"
+                  ? "danger"
+                  : status === "POSTED"
+                    ? "success"
+                    : "neutral"
+            }
+          />
+        );
+      },
+    }),
     columnHelper.display({
       id: "actions",
       header: "",
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.openAdjustmentModal(row.original)}>
-            <Pencil className="size-3.5" />
-          </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.deleteAdjustment(row.original.adjustment_id)}>
-            <Trash2 className="size-3.5" />
-          </Button>
+          {(row.original.post_status ?? "DRAFT") === "DRAFT" ? (
+            <Button size="icon-xs" variant="outline" onClick={() => hooks.openAdjustmentModal(row.original)}>
+              <Pencil className="size-3.5" />
+            </Button>
+          ) : null}
+          {(row.original.post_status ?? "DRAFT") === "DRAFT" ? (
+            <Button size="icon-xs" variant="outline" onClick={() => hooks.deleteAdjustment(row.original.adjustment_id)}>
+              <Trash2 className="size-3.5" />
+            </Button>
+          ) : null}
+          {(row.original.post_status ?? "DRAFT") === "DRAFT" ? (
+            <Button size="sm" variant="outline" onClick={() => void hooks.changeAdjustmentLifecycle(row.original.adjustment_id, "POST")}>
+              Post
+            </Button>
+          ) : null}
+          {(row.original.post_status ?? "DRAFT") === "POSTED" ? (
+            <>
+              <Button size="sm" variant="outline" onClick={() => void hooks.changeAdjustmentLifecycle(row.original.adjustment_id, "LOCK")}>
+                <Lock className="size-3.5" />
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => void hooks.changeAdjustmentLifecycle(row.original.adjustment_id, "VOID")}>
+                <RotateCcw className="size-3.5" />
+              </Button>
+            </>
+          ) : null}
+          {(row.original.post_status ?? "DRAFT") === "LOCKED" ? (
+            <Button size="sm" variant="outline" onClick={() => void hooks.changeAdjustmentLifecycle(row.original.adjustment_id, "VOID")}>
+              <RotateCcw className="size-3.5" />
+            </Button>
+          ) : null}
         </div>
       ),
     }),
@@ -181,7 +225,7 @@ export default function PayoutAdjustmentsPage() {
         open={hooks.adjustmentModal.open}
         onOpenChange={hooks.adjustmentModal.setOpen}
         title={hooks.editingAdjustment ? "Ubah adjustment payout" : "Buat adjustment payout"}
-        description="Adjustment akan sinkron ke jurnal payout adjustment dan ikut dihitung di reconciliation payout."
+        description="Adjustment akan sinkron ke jurnal payout adjustment saat di-POST."
         isSubmitting={hooks.adjustmentForm.formState.isSubmitting}
         onSubmit={() => {
           return hooks.adjustmentForm.handleSubmit((values: PayoutAdjustmentInput) => hooks.saveAdjustment(values))();

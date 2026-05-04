@@ -46,6 +46,11 @@ export const payoutApi = {
         method: "POST",
         body: JSON.stringify({ action }),
       }),
+    adjustmentLifecycle: (id: number, action: "POST" | "LOCK" | "VOID") =>
+      requestJson<PayoutAdjustmentRecord>(`/api/payout/adjustments/${id}/lifecycle`, {
+        method: "POST",
+        body: JSON.stringify({ action }),
+      }),
   },
   adjustments: {
     list: (ref?: string) =>

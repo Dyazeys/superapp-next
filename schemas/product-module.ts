@@ -3,6 +3,19 @@ import { z } from "zod";
 export const PRODUCT_BOM_GROUP_OPTIONS = ["MAIN", "MATERIAL", "PACKING", "ACCESSORY", "LABOR", "BRANDING"] as const;
 export const PRODUCT_BOM_TYPE_OPTIONS = ["INVENTORY", "NON_INVENTORY"] as const;
 
+export function normalizeBomGroup(value: string) {
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "OVERHEAD" || normalized === "OTHER_COST") return "BRANDING" as const;
+  return normalized as string;
+}
+
+export function asBomGroup(value: string): (typeof PRODUCT_BOM_GROUP_OPTIONS)[number] {
+  const normalized = normalizeBomGroup(value);
+  return PRODUCT_BOM_GROUP_OPTIONS.includes(normalized as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
+    ? (normalized as (typeof PRODUCT_BOM_GROUP_OPTIONS)[number])
+    : "MAIN";
+}
+
 const decimalInput = z
   .union([z.string(), z.number()])
   .transform((value) => String(value))

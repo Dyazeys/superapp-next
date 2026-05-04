@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useMemo, useState } from "react";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Lock, Pencil, Plus, Search, Trash2, Upload } from "lucide-react";
+import { Lock, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { DataTable } from "@/components/data/data-table";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
@@ -14,12 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
+import { InventoryPicker } from "@/components/patterns/inventory-picker";
 import {
   isAdjustmentPosted,
   WAREHOUSE_ADJUSTMENT_TYPE_OPTIONS,
   toDateInput,
   useWarehouseAdjustments,
-  useWarehouseInventoryLookup,
   useWarehouseStockMovements,
 } from "@/features/warehouse/use-warehouse-module";
 import { WAREHOUSE_ADJUSTMENT_REASON_OPTIONS, type AdjustmentInput } from "@/schemas/warehouse-module";
@@ -28,211 +27,16 @@ import { cn } from "@/lib/utils";
 
 const columnHelper = createColumnHelper<AdjustmentRecord>();
 
-type InventoryOption = {
-  value: string;
-  label: string;
-};
-
-function normalizeSearch(value: string) {
-  return value.toLowerCase().replace(/\s+/g, " ").trim();
-}
-
-function splitInventoryLabel(label: string) {
-  const [code, ...rest] = label.split(" - ");
-  return {
-    code: code ?? "",
-    name: rest.join(" - "),
-  };
-}
-
-function InventoryPicker({
-  value,
-  options,
-  onValueChange,
-  placeholder,
-  disabled,
-  className,
-  inputClassName,
-  emptyText = "Inventory tidak ditemukan.",
-  maxResults = 120,
-}: {
-  value: string;
-  options: InventoryOption[];
-  onValueChange: (value: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
-  className?: string;
-  inputClassName?: string;
-  emptyText?: string;
-  maxResults?: number;
-}) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({
-    left: 0,
-    top: 0,
-    width: 0,
-  });
-  const selected = useMemo(() => options.find((option) => option.value === value) ?? null, [options, value]);
-
-  useEffect(() => {
-    function onClickOutside(event: MouseEvent) {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, []);
-
-  const updateMenuPosition = useCallback(() => {
-    const element = inputRef.current;
-    if (!element) return;
-
-    const rect = element.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const menuHeight = 260;
-    const openAbove = rect.bottom + menuHeight > viewportHeight && rect.top > menuHeight;
-    const top = openAbove ? rect.top - 4 : rect.bottom + 4;
-
-    setMenuStyle({
-      left: rect.left,
-      top,
-      width: rect.width,
-      transform: openAbove ? "translateY(-100%)" : undefined,
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-
-    function onViewportChange() {
-      updateMenuPosition();
-    }
-
-    window.addEventListener("resize", onViewportChange);
-    window.addEventListener("scroll", onViewportChange, true);
-    return () => {
-      window.removeEventListener("resize", onViewportChange);
-      window.removeEventListener("scroll", onViewportChange, true);
-    };
-  }, [open, updateMenuPosition]);
-
-  const filteredOptions = useMemo(() => {
-    const normalized = normalizeSearch(query);
-    if (!normalized) {
-      return options.slice(0, maxResults);
-    }
-
-    return options
-      .filter((option) => normalizeSearch(option.label).includes(normalized) || normalizeSearch(option.value).includes(normalized))
-      .slice(0, maxResults);
-  }, [maxResults, options, query]);
-
-  return (
-    <div ref={containerRef} className={cn("relative w-full", className)}>
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-        <input
-          ref={inputRef}
-          value={open ? query : (selected?.label ?? "")}
-          disabled={disabled}
-          placeholder={placeholder}
-          className={cn(
-            "h-10 w-full min-w-0 rounded-2xl border border-slate-200 bg-white pl-10 pr-3 py-2 text-sm text-slate-800 shadow-sm shadow-slate-900/5 transition-colors outline-none placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-4 focus-visible:ring-slate-200/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50",
-            inputClassName,
-          )}
-          onFocus={() => {
-            setOpen(true);
-            setQuery(selected?.label ?? "");
-            updateMenuPosition();
-          }}
-          onChange={(event) => {
-            const nextValue = event.target.value;
-            setQuery(nextValue);
-            setOpen(true);
-            updateMenuPosition();
-            if (!nextValue.trim()) {
-              onValueChange("");
-            }
-            requestAnimationFrame(() => {
-              inputRef.current?.focus();
-            });
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Escape") {
-              setOpen(false);
-            }
-          }}
-        />
-      </div>
-      {typeof document !== "undefined" && open
-        ? createPortal(
-            <div
-              className="fixed z-[200] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-950/12"
-              style={menuStyle}
-            >
-              <div className="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-500">
-                {filteredOptions.length} result{filteredOptions.length === 1 ? "" : "s"}
-              </div>
-              <div className="max-h-64 overflow-auto p-1.5">
-                {filteredOptions.length > 0 ? (
-                  filteredOptions.map((option) => {
-                    const parts = splitInventoryLabel(option.label);
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        className={cn(
-                          "block w-full rounded-xl px-3 py-2 text-left transition-colors hover:bg-slate-100",
-                          option.value === value ? "bg-slate-100 ring-1 ring-slate-200" : undefined,
-                        )}
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          onValueChange(option.value);
-                          setQuery(option.label);
-                          setOpen(false);
-                        }}
-                      >
-                        <div className="font-medium text-slate-900">{parts.code}</div>
-                        {parts.name ? <div className="truncate text-xs text-slate-500">{parts.name}</div> : null}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <p className="px-3 py-3 text-sm text-slate-500">{emptyText}</p>
-                )}
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
-    </div>
-  );
-}
-
 export default function WarehouseAdjustmentsPage() {
   const hooks = useWarehouseAdjustments();
-  const inventoryQuery = useWarehouseInventoryLookup();
   const stockMovementsQuery = useWarehouseStockMovements();
   const { adjustmentsQuery, adjustmentForm, adjustmentModal, editingAdjustment } = hooks;
   const [detailAdjustment, setDetailAdjustment] = useState<AdjustmentRecord | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-  const inventoryOptions = useMemo(
-    () =>
-      (inventoryQuery.data ?? []).map((inventory) => ({
-        value: inventory.inv_code,
-        label: `${inventory.inv_code} - ${inventory.inv_name}`,
-      })),
-    [inventoryQuery.data],
-  );
   const adjustmentRows = adjustmentsQuery.data ?? [];
   const relatedMovementRows = useMemo(() => {
     if (!detailAdjustment) return [];
-    return (stockMovementsQuery.data ?? [])
+    return (stockMovementsQuery.data?.data ?? [])
       .filter(
         (row) =>
           row.reference_type === "ADJUSTMENT" &&
@@ -392,9 +196,7 @@ export default function WarehouseAdjustmentsPage() {
           >
             <InventoryPicker
               value={adjustmentForm.watch("inv_code") ?? ""}
-              options={inventoryOptions}
               placeholder="Cari inventory..."
-              disabled={inventoryQuery.isLoading}
               className="w-full"
               inputClassName="h-10"
               onValueChange={(next) =>

@@ -16,12 +16,12 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InventoryPicker } from "@/components/patterns/inventory-picker";
 import { SelectNative } from "@/components/ui/select-native";
 import { cn } from "@/lib/utils";
 import { warehouseApi } from "@/features/warehouse/api";
 import {
   toDateInput,
-  useWarehouseInventoryLookup,
   useWarehousePurchaseOrders,
   useWarehouseVendors,
 } from "@/features/warehouse/use-warehouse-module";
@@ -35,7 +35,6 @@ type PurchaseOrderItemFormValues = z.input<typeof purchaseOrderItemSchema>;
 export default function WarehousePurchaseOrdersPage() {
   const hooks = useWarehousePurchaseOrders();
   const { vendorsQuery } = useWarehouseVendors();
-  const inventoryQuery = useWarehouseInventoryLookup();
   const { purchaseOrdersQuery, purchaseOrderForm, purchaseOrderModal, editingPurchaseOrder } = hooks;
   const poRows = useMemo(() => purchaseOrdersQuery.data ?? [], [purchaseOrdersQuery.data]);
   const totalPo = poRows.length;
@@ -70,10 +69,10 @@ export default function WarehousePurchaseOrdersPage() {
 
     try {
       setBulkDeletingPo(true);
-      for (const poId of selectedPoIds) {
-        await hooks.deletePurchaseOrder(poId);
-      }
+      await hooks.bulkDeletePurchaseOrders(selectedPoIds);
       setSelectedPoIds([]);
+    } catch {
+      // toast sudah di-handle di hook
     } finally {
       setBulkDeletingPo(false);
     }
@@ -434,14 +433,12 @@ export default function WarehousePurchaseOrdersPage() {
             htmlFor="po_item_inv_code"
             error={itemForm.formState.errors.inv_code?.message}
           >
-            <SelectNative id="po_item_inv_code" {...itemForm.register("inv_code")}>
-              <option value="">Select inventory</option>
-              {(inventoryQuery.data ?? []).map((inventory) => (
-                <option key={inventory.inv_code} value={inventory.inv_code}>
-                  {inventory.inv_code} - {inventory.inv_name}
-                </option>
-              ))}
-            </SelectNative>
+            <InventoryPicker
+              id="po_item_inv_code"
+              value={itemForm.watch("inv_code") ?? ""}
+              placeholder="Select inventory"
+              onValueChange={(next) => itemForm.setValue("inv_code", next, { shouldValidate: true })}
+            />
           </FormField>
           <FormField
             label="Qty ordered"

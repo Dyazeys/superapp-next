@@ -44,6 +44,10 @@ export const PERMISSIONS = {
   WAREHOUSE_ADJUSTMENT_CREATE: "warehouse.adjustment.create",
   WAREHOUSE_ADJUSTMENT_UPDATE: "warehouse.adjustment.update",
   WAREHOUSE_ADJUSTMENT_POST: "warehouse.adjustment.post",
+  WAREHOUSE_RETURN_VIEW: "warehouse.return.view",
+  WAREHOUSE_RETURN_CREATE: "warehouse.return.create",
+  WAREHOUSE_RETURN_UPDATE: "warehouse.return.update",
+  WAREHOUSE_RETURN_POST: "warehouse.return.post",
   WAREHOUSE_STOCK_VIEW: "warehouse.stock.view",
 
   PRODUCT_CATEGORY_VIEW: "product.category.view",
@@ -110,6 +114,7 @@ export const PERMISSIONS = {
   ACCOUNTING_OPEX_BARTER_DELETE: "accounting.opex.barter.delete",
   ACCOUNTING_OPEX_BARTER_POST: "accounting.opex.barter.post",
   ACCOUNTING_OPEX_BARTER_VOID: "accounting.opex.barter.void",
+  ACCOUNTING_MUTATION_VIEW: "accounting.mutation.view",
 
   MARKETING_WORKSPACE_VIEW: "marketing.workspace.view",
   MARKETING_PRODUCT_PERFORMANCE_VIEW: "marketing.product_performance.view",
@@ -143,8 +148,458 @@ export const PERMISSIONS = {
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+export type PermissionEntityGroup = {
+  key: string;
+  label: string;
+  permissions: Permission[];
+};
+
+export type PermissionDomainGroup = {
+  domain: string;
+  label: string;
+  entities: PermissionEntityGroup[];
+};
+
+export const PERMISSION_GROUPS: PermissionDomainGroup[] = [
+  {
+    domain: "dashboard",
+    label: "Dashboard",
+    entities: [
+      {
+        key: "dashboard",
+        label: "Dashboard",
+        permissions: [PERMISSIONS.DASHBOARD_VIEW],
+      },
+    ],
+  },
+  {
+    domain: "analytics",
+    label: "Analitik",
+    entities: [
+      {
+        key: "analytics.report_pnl",
+        label: "Laporan P&L",
+        permissions: [PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW],
+      },
+      {
+        key: "analytics.budget_meters",
+        label: "Budget Meters",
+        permissions: [PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW],
+      },
+    ],
+  },
+  {
+    domain: "sales",
+    label: "Penjualan",
+    entities: [
+      {
+        key: "sales.order",
+        label: "Order",
+        permissions: [
+          PERMISSIONS.SALES_ORDER_VIEW,
+          PERMISSIONS.SALES_ORDER_CREATE,
+          PERMISSIONS.SALES_ORDER_UPDATE,
+          PERMISSIONS.SALES_ORDER_DELETE,
+          PERMISSIONS.SALES_ORDER_POST,
+        ],
+      },
+      {
+        key: "sales.customer",
+        label: "Customer",
+        permissions: [
+          PERMISSIONS.SALES_CUSTOMER_VIEW,
+          PERMISSIONS.SALES_CUSTOMER_CREATE,
+          PERMISSIONS.SALES_CUSTOMER_UPDATE,
+          PERMISSIONS.SALES_CUSTOMER_DELETE,
+        ],
+      },
+    ],
+  },
+  {
+    domain: "warehouse",
+    label: "Gudang",
+    entities: [
+      {
+        key: "warehouse.vendor",
+        label: "Vendor",
+        permissions: [
+          PERMISSIONS.WAREHOUSE_VENDOR_VIEW,
+          PERMISSIONS.WAREHOUSE_VENDOR_CREATE,
+          PERMISSIONS.WAREHOUSE_VENDOR_UPDATE,
+          PERMISSIONS.WAREHOUSE_VENDOR_DELETE,
+        ],
+      },
+      {
+        key: "warehouse.purchase_order",
+        label: "Purchase Order",
+        permissions: [
+          PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_VIEW,
+          PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_CREATE,
+          PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_UPDATE,
+          PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_DELETE,
+        ],
+      },
+      {
+        key: "warehouse.inbound",
+        label: "Inbound",
+        permissions: [
+          PERMISSIONS.WAREHOUSE_INBOUND_VIEW,
+          PERMISSIONS.WAREHOUSE_INBOUND_CREATE,
+          PERMISSIONS.WAREHOUSE_INBOUND_UPDATE,
+          PERMISSIONS.WAREHOUSE_INBOUND_POST,
+        ],
+      },
+      {
+        key: "warehouse.adjustment",
+        label: "Adjustment",
+        permissions: [
+          PERMISSIONS.WAREHOUSE_ADJUSTMENT_VIEW,
+          PERMISSIONS.WAREHOUSE_ADJUSTMENT_CREATE,
+          PERMISSIONS.WAREHOUSE_ADJUSTMENT_UPDATE,
+          PERMISSIONS.WAREHOUSE_ADJUSTMENT_POST,
+        ],
+      },
+      {
+        key: "warehouse.return",
+        label: "Return",
+        permissions: [
+          PERMISSIONS.WAREHOUSE_RETURN_VIEW,
+          PERMISSIONS.WAREHOUSE_RETURN_CREATE,
+          PERMISSIONS.WAREHOUSE_RETURN_UPDATE,
+          PERMISSIONS.WAREHOUSE_RETURN_POST,
+        ],
+      },
+      {
+        key: "warehouse.stock",
+        label: "Stok",
+        permissions: [PERMISSIONS.WAREHOUSE_STOCK_VIEW],
+      },
+    ],
+  },
+  {
+    domain: "product",
+    label: "Produk",
+    entities: [
+      {
+        key: "product.category",
+        label: "Kategori",
+        permissions: [
+          PERMISSIONS.PRODUCT_CATEGORY_VIEW,
+          PERMISSIONS.PRODUCT_CATEGORY_CREATE,
+          PERMISSIONS.PRODUCT_CATEGORY_UPDATE,
+          PERMISSIONS.PRODUCT_CATEGORY_DELETE,
+        ],
+      },
+      {
+        key: "product.inventory",
+        label: "Inventori",
+        permissions: [
+          PERMISSIONS.PRODUCT_INVENTORY_VIEW,
+          PERMISSIONS.PRODUCT_INVENTORY_CREATE,
+          PERMISSIONS.PRODUCT_INVENTORY_UPDATE,
+          PERMISSIONS.PRODUCT_INVENTORY_DELETE,
+        ],
+      },
+      {
+        key: "product.master",
+        label: "Master Produk",
+        permissions: [
+          PERMISSIONS.PRODUCT_MASTER_VIEW,
+          PERMISSIONS.PRODUCT_MASTER_CREATE,
+          PERMISSIONS.PRODUCT_MASTER_UPDATE,
+          PERMISSIONS.PRODUCT_MASTER_DELETE,
+        ],
+      },
+      {
+        key: "product.bom",
+        label: "BOM",
+        permissions: [
+          PERMISSIONS.PRODUCT_BOM_VIEW,
+          PERMISSIONS.PRODUCT_BOM_CREATE,
+          PERMISSIONS.PRODUCT_BOM_UPDATE,
+          PERMISSIONS.PRODUCT_BOM_DELETE,
+        ],
+      },
+    ],
+  },
+  {
+    domain: "channel",
+    label: "Channel",
+    entities: [
+      {
+        key: "channel.group",
+        label: "Grup Channel",
+        permissions: [
+          PERMISSIONS.CHANNEL_GROUP_VIEW,
+          PERMISSIONS.CHANNEL_GROUP_CREATE,
+          PERMISSIONS.CHANNEL_GROUP_UPDATE,
+          PERMISSIONS.CHANNEL_GROUP_DELETE,
+        ],
+      },
+      {
+        key: "channel.category",
+        label: "Kategori Channel",
+        permissions: [
+          PERMISSIONS.CHANNEL_CATEGORY_VIEW,
+          PERMISSIONS.CHANNEL_CATEGORY_CREATE,
+          PERMISSIONS.CHANNEL_CATEGORY_UPDATE,
+          PERMISSIONS.CHANNEL_CATEGORY_DELETE,
+        ],
+      },
+      {
+        key: "channel.master",
+        label: "Master Channel",
+        permissions: [
+          PERMISSIONS.CHANNEL_MASTER_VIEW,
+          PERMISSIONS.CHANNEL_MASTER_CREATE,
+          PERMISSIONS.CHANNEL_MASTER_UPDATE,
+          PERMISSIONS.CHANNEL_MASTER_DELETE,
+        ],
+      },
+    ],
+  },
+  {
+    domain: "payout",
+    label: "Pembayaran",
+    entities: [
+      {
+        key: "payout.record",
+        label: "Record",
+        permissions: [
+          PERMISSIONS.PAYOUT_RECORD_VIEW,
+          PERMISSIONS.PAYOUT_RECORD_CREATE,
+          PERMISSIONS.PAYOUT_RECORD_UPDATE,
+          PERMISSIONS.PAYOUT_RECORD_DELETE,
+        ],
+      },
+      {
+        key: "payout.adjustment",
+        label: "Adjustment",
+        permissions: [
+          PERMISSIONS.PAYOUT_ADJUSTMENT_VIEW,
+          PERMISSIONS.PAYOUT_ADJUSTMENT_CREATE,
+          PERMISSIONS.PAYOUT_ADJUSTMENT_UPDATE,
+          PERMISSIONS.PAYOUT_ADJUSTMENT_DELETE,
+        ],
+      },
+      {
+        key: "payout.transfer",
+        label: "Transfer",
+        permissions: [
+          PERMISSIONS.PAYOUT_TRANSFER_VIEW,
+          PERMISSIONS.PAYOUT_TRANSFER_CREATE,
+          PERMISSIONS.PAYOUT_TRANSFER_UPDATE,
+          PERMISSIONS.PAYOUT_TRANSFER_DELETE,
+        ],
+      },
+      {
+        key: "payout.reconciliation",
+        label: "Rekonsiliasi",
+        permissions: [PERMISSIONS.PAYOUT_RECONCILIATION_VIEW],
+      },
+    ],
+  },
+  {
+    domain: "accounting",
+    label: "Akuntansi",
+    entities: [
+      {
+        key: "accounting.account",
+        label: "Akun",
+        permissions: [
+          PERMISSIONS.ACCOUNTING_ACCOUNT_VIEW,
+          PERMISSIONS.ACCOUNTING_ACCOUNT_CREATE,
+          PERMISSIONS.ACCOUNTING_ACCOUNT_UPDATE,
+          PERMISSIONS.ACCOUNTING_ACCOUNT_DELETE,
+        ],
+      },
+      {
+        key: "accounting.journal",
+        label: "Jurnal",
+        permissions: [
+          PERMISSIONS.ACCOUNTING_JOURNAL_VIEW,
+          PERMISSIONS.ACCOUNTING_JOURNAL_CREATE,
+          PERMISSIONS.ACCOUNTING_JOURNAL_UPDATE,
+          PERMISSIONS.ACCOUNTING_JOURNAL_DELETE,
+        ],
+      },
+      {
+        key: "accounting.opex",
+        label: "Operasional",
+        permissions: [
+          PERMISSIONS.ACCOUNTING_OPEX_VIEW,
+          PERMISSIONS.ACCOUNTING_OPEX_CREATE,
+          PERMISSIONS.ACCOUNTING_OPEX_UPDATE,
+          PERMISSIONS.ACCOUNTING_OPEX_DELETE,
+          PERMISSIONS.ACCOUNTING_OPEX_POST,
+          PERMISSIONS.ACCOUNTING_OPEX_VOID,
+        ],
+      },
+      {
+        key: "accounting.opex.barter",
+        label: "Barter",
+        permissions: [
+          PERMISSIONS.ACCOUNTING_OPEX_BARTER_VIEW,
+          PERMISSIONS.ACCOUNTING_OPEX_BARTER_CREATE,
+          PERMISSIONS.ACCOUNTING_OPEX_BARTER_UPDATE,
+          PERMISSIONS.ACCOUNTING_OPEX_BARTER_DELETE,
+          PERMISSIONS.ACCOUNTING_OPEX_BARTER_POST,
+          PERMISSIONS.ACCOUNTING_OPEX_BARTER_VOID,
+        ],
+      },
+      {
+        key: "accounting.mutation",
+        label: "Mutasi",
+        permissions: [
+          PERMISSIONS.ACCOUNTING_MUTATION_VIEW,
+        ],
+      },
+    ],
+  },
+  {
+    domain: "marketing",
+    label: "Marketing",
+    entities: [
+      {
+        key: "marketing.workspace",
+        label: "Workspace",
+        permissions: [PERMISSIONS.MARKETING_WORKSPACE_VIEW],
+      },
+      {
+        key: "marketing.product_performance",
+        label: "Product Performance",
+        permissions: [PERMISSIONS.MARKETING_PRODUCT_PERFORMANCE_VIEW],
+      },
+      {
+        key: "marketing.mp_ads",
+        label: "MP Ads",
+        permissions: [PERMISSIONS.MARKETING_MP_ADS_VIEW],
+      },
+      {
+        key: "marketing.shopee_traffic",
+        label: "Shopee Traffic",
+        permissions: [PERMISSIONS.MARKETING_SHOPEE_TRAFFIC_VIEW],
+      },
+      {
+        key: "marketing.shopee_livestream",
+        label: "Shopee Livestream",
+        permissions: [PERMISSIONS.MARKETING_SHOPEE_LIVESTREAM_VIEW],
+      },
+      {
+        key: "marketing.tiktok_traffic",
+        label: "TikTok Traffic",
+        permissions: [PERMISSIONS.MARKETING_TIKTOK_TRAFFIC_VIEW],
+      },
+      {
+        key: "marketing.tiktok_livestream",
+        label: "TikTok Livestream",
+        permissions: [PERMISSIONS.MARKETING_TIKTOK_LIVESTREAM_VIEW],
+      },
+    ],
+  },
+  {
+    domain: "content",
+    label: "Konten",
+    entities: [
+      {
+        key: "content.workspace",
+        label: "Workspace",
+        permissions: [PERMISSIONS.CONTENT_WORKSPACE_VIEW],
+      },
+      {
+        key: "content.tiktok",
+        label: "TikTok",
+        permissions: [PERMISSIONS.CONTENT_TIKTOK_VIEW],
+      },
+      {
+        key: "content.instagram",
+        label: "Instagram",
+        permissions: [PERMISSIONS.CONTENT_INSTAGRAM_VIEW],
+      },
+      {
+        key: "content.daily_report",
+        label: "Laporan Harian",
+        permissions: [
+          PERMISSIONS.CONTENT_DAILY_REPORT_VIEW,
+          PERMISSIONS.CONTENT_DAILY_REPORT_CREATE,
+          PERMISSIONS.CONTENT_DAILY_REPORT_UPDATE,
+          PERMISSIONS.CONTENT_DAILY_REPORT_DELETE,
+          PERMISSIONS.CONTENT_DAILY_REPORT_APPROVE,
+        ],
+      },
+    ],
+  },
+  {
+    domain: "task",
+    label: "Tugas",
+    entities: [
+      {
+        key: "task.workspace",
+        label: "Task Workspace",
+        permissions: [PERMISSIONS.TASK_WORKSPACE_VIEW],
+      },
+    ],
+  },
+  {
+    domain: "team",
+    label: "Tim",
+    entities: [
+      {
+        key: "team.workspace",
+        label: "Team Workspace",
+        permissions: [PERMISSIONS.TEAM_WORKSPACE_VIEW],
+      },
+    ],
+  },
+  {
+    domain: "auth",
+    label: "Autentikasi",
+    entities: [
+      {
+        key: "auth.user",
+        label: "User",
+        permissions: [
+          PERMISSIONS.AUTH_USER_VIEW,
+          PERMISSIONS.AUTH_USER_CREATE,
+          PERMISSIONS.AUTH_USER_UPDATE,
+          PERMISSIONS.AUTH_USER_DELETE,
+          PERMISSIONS.AUTH_USER_RESET_PASSWORD,
+        ],
+      },
+      {
+        key: "auth.role",
+        label: "Role",
+        permissions: [
+          PERMISSIONS.AUTH_ROLE_VIEW,
+          PERMISSIONS.AUTH_ROLE_CREATE,
+          PERMISSIONS.AUTH_ROLE_UPDATE,
+          PERMISSIONS.AUTH_ROLE_DELETE,
+        ],
+      },
+    ],
+  },
+];
+
+const ACTION_LABELS: Record<string, string> = {
+  view: "Lihat",
+  create: "Buat",
+  update: "Ubah",
+  delete: "Hapus",
+  post: "Posting",
+  void: "Void",
+  reset_password: "Reset Password",
+  approve: "Approve",
+};
+
+export function getPermissionActionLabel(permission: string): string {
+  const parts = permission.split(".");
+  const action = parts[parts.length - 1];
+  return ACTION_LABELS[action] ?? action;
+}
+
 export const SUPERADMIN_ROLE_CODE = "OWNER";
-export const SUPERADMIN_ROLE_LABEL = "SUPERADMIIN";
+export const SUPERADMIN_ROLE_LABEL = "SUPERADMIN";
 
 const ALL_PERMISSIONS = Object.values(PERMISSIONS);
 
@@ -229,6 +684,7 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.ACCOUNTING_OPEX_BARTER_UPDATE,
     PERMISSIONS.ACCOUNTING_OPEX_BARTER_POST,
     PERMISSIONS.ACCOUNTING_OPEX_BARTER_VOID,
+    PERMISSIONS.ACCOUNTING_MUTATION_VIEW,
     PERMISSIONS.PAYOUT_RECORD_VIEW,
     PERMISSIONS.PAYOUT_ADJUSTMENT_VIEW,
     PERMISSIONS.PAYOUT_TRANSFER_VIEW,
@@ -252,6 +708,7 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_CREATE,
     PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_UPDATE,
     PERMISSIONS.WAREHOUSE_INBOUND_VIEW,
+    PERMISSIONS.WAREHOUSE_RETURN_VIEW,
     PERMISSIONS.WAREHOUSE_STOCK_VIEW,
     PERMISSIONS.TASK_WORKSPACE_VIEW,
     PERMISSIONS.TEAM_WORKSPACE_VIEW,
@@ -270,6 +727,10 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.WAREHOUSE_ADJUSTMENT_CREATE,
     PERMISSIONS.WAREHOUSE_ADJUSTMENT_UPDATE,
     PERMISSIONS.WAREHOUSE_ADJUSTMENT_POST,
+    PERMISSIONS.WAREHOUSE_RETURN_VIEW,
+    PERMISSIONS.WAREHOUSE_RETURN_CREATE,
+    PERMISSIONS.WAREHOUSE_RETURN_UPDATE,
+    PERMISSIONS.WAREHOUSE_RETURN_POST,
     PERMISSIONS.WAREHOUSE_STOCK_VIEW,
     PERMISSIONS.PRODUCT_INVENTORY_VIEW,
     PERMISSIONS.PRODUCT_MASTER_VIEW,

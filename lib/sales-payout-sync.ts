@@ -3,22 +3,12 @@ import { Prisma } from "@prisma/client";
 type Tx = Prisma.TransactionClient;
 
 /**
- * Mapping payout_status → sales_order status
- * Canonical payout status: SETTLED | FAILED
- *   "SETTLED"   → "SUKSES"
- *   "FAILED"    → "RETUR"
- *   lainnya     → "PICKUP"
- */
-function payoutStatusToSalesStatus(payoutStatus: string | null | undefined): string {
-  const normalized = (payoutStatus ?? "").toUpperCase();
-  if (normalized === "SETTLED") return "SUKSES";
-  if (normalized === "FAILED") return "RETUR";
-  return "PICKUP";
-}
-
-/**
  * Sync status sales_order berdasarkan ref_no dari payout.
  * Dipanggil dalam transaction yang sama dengan create/update payout.
+ *
+ * Aturan:
+ *   SETTLED → SUKSES hanya jika order masih PICKUP
+ *   FAILED  → TIDAK ubah status (hanya info, warehouse yang kontrol return)
  */
 export async function syncSalesStatusFromPayout(
   tx: Tx,
@@ -27,10 +17,21 @@ export async function syncSalesStatusFromPayout(
 ): Promise<void> {
   if (!ref) return;
 
-  const newSalesStatus = payoutStatusToSalesStatus(payoutStatus);
+  const normalized = (payoutStatus ?? "").toUpperCase();
 
-  await tx.t_order.updateMany({
-    where: { ref_no: ref },
-    data: { status: newSalesStatus },
-  });
+  if (normalized === "FAILED") return;
+
+  if (normalized === "SETTLED") {
+    const order = await tx.t_order.findUnique({
+      where: { ref_no: ref },
+      select: { status: true },
+    });
+    if (order && order.status === "PICKUP") {
+      await tx.t_order.updateMany({
+        where: { ref_no: ref },
+        data: { status: "SUKSES" },
+      });
+    }
+    return;
+  }
 }

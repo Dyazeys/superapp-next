@@ -13,7 +13,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SearchableSelect } from "@/components/ui/searchable-select";
+import { InventoryPicker } from "@/components/patterns/inventory-picker";
 import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -79,11 +79,6 @@ export default function WarehouseInboundPage() {
           .map((row) => row.receive_date)
           .reduce((latest, next) => (next > latest ? next : latest))
           .slice(0, 10);
-
-  const inventoryOptions = (inventoryQuery.data ?? []).map((inventory) => ({
-    value: inventory.inv_code,
-    label: `${inventory.inv_code} - ${inventory.inv_name}`,
-  }));
 
   const inboundItems = useMemo(() => inboundItemsQuery.data ?? [], [inboundItemsQuery.data]);
   const poItemSummaryQuery = useQuery({
@@ -361,9 +356,8 @@ export default function WarehouseInboundPage() {
       header: "Inventory",
       cell: ({ row, getValue }) =>
         isEditingItemRow(row.original.id) ? (
-          <SearchableSelect
+          <InventoryPicker
             value={inboundItemDraft?.inv_code ?? getValue()}
-            options={inventoryOptions}
             placeholder="Search inventory..."
             inputClassName="h-8 min-w-[260px]"
             disabled={actionPending || activeInboundPosted}

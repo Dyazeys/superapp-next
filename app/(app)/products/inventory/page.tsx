@@ -10,6 +10,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import {
   PRODUCT_BOOLEAN_OPTIONS,
@@ -51,7 +52,7 @@ export default function ProductInventoryPage() {
           <Button size="icon-xs" variant="outline" onClick={() => hooks.openInventoryModal(row.original)}>
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.deleteInventory(row.original.inv_code)}>
+          <Button size="icon-xs" variant="outline" onClick={() => { if (window.confirm("Hapus inventory ini?")) hooks.deleteInventory(row.original.inv_code); }}>
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -113,24 +114,22 @@ export default function ProductInventoryPage() {
             <Input id="unit_price" {...inventoryForm.register("unit_price")} />
           </FormField>
           <FormField label="Active" htmlFor="inventory_active">
-            <Input
+            <SelectNative
               id="inventory_active"
-              list="inventory-boolean-options"
               value={String(inventoryForm.watch("is_active"))}
               onChange={(e) => inventoryForm.setValue("is_active", parseBooleanInput(e.target.value))}
-            />
+            >
+              {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SelectNative>
           </FormField>
         </div>
         <FormField label="Description" htmlFor="description">
           <Textarea id="description" {...inventoryForm.register("description")} />
         </FormField>
-        <datalist id="inventory-boolean-options">
-          {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </datalist>
       </ModalFormShell>
     </PageShell>
   );

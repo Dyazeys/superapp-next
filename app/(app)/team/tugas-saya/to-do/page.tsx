@@ -1,5 +1,7 @@
-import { redirect } from "next/navigation";
+import { requireTeamAccess } from "@/lib/team-access";
+import { TeamTodoWorkspace } from "@/features/team/team-todo-workspace";
 
-export default function TeamMyTasksTodoPage() {
-  redirect("/task/tugas-saya/to-do");
+export default async function TeamMyTasksTodoPage() {
+  await requireTeamAccess();
+  return <TeamTodoWorkspace />;
 }

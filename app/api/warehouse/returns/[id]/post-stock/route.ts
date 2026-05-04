@@ -33,7 +33,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_POST);
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_RETURN_POST);
 
     const { id } = await params;
 

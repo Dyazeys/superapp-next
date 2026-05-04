@@ -5,7 +5,6 @@ import { jsonError } from "@/lib/api-error";
 import { resolvePayoutAdjustmentChannelId } from "@/lib/payout-adjustment-channel";
 import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
-import { syncPayoutAdjustmentJournal } from "@/lib/payout-adjustment-journal";
 import { payoutAdjustmentSchema } from "@/schemas/payout-module";
 
 function asDateOnly(value: string) {
@@ -84,10 +83,9 @@ export async function POST(request: NextRequest) {
           adjustment_type: payload.adjustment_type || null,
           reason: payload.reason || null,
           amount: payload.amount,
+          post_status: "DRAFT",
         },
       });
-
-      await syncPayoutAdjustmentJournal(tx, created.adjustment_id);
 
       return tx.t_adjustments.findUniqueOrThrow({
         where: { adjustment_id: created.adjustment_id },

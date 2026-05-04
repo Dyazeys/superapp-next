@@ -12,8 +12,8 @@ import { MetricCard } from "@/components/layout/stats-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { getRoleDisplayName, PERMISSIONS, ROLE_CODES, SUPERADMIN_ROLE_CODE, SUPERADMIN_ROLE_LABEL, hasPermission } from "@/lib/rbac";
+import { PermissionSelector } from "@/features/team/permission-selector";
 import { useTeamRoles } from "@/features/team/use-team-module";
 import type { RoleInput } from "@/schemas/team-module";
 import type { TeamRoleRecord } from "@/types/team";
@@ -103,7 +103,8 @@ export function TeamRolesWorkspace() {
         open={hooks.roleModal.open}
         onOpenChange={hooks.roleModal.setOpen}
         title={hooks.editingRole ? "Edit role" : "Create role"}
-        description="Permissions ditulis per baris. Kamu juga bisa isi cepat dari template role yang sudah kita siapkan."
+        description="Pilih permission untuk role ini. Gunakan template untuk isi cepat, lalu sesuaikan dengan klik checkbox."
+        dialogClassName="sm:max-w-[800px]"
         isSubmitting={hooks.roleForm.formState.isSubmitting}
         onSubmit={() =>
           hooks.roleForm.handleSubmit((values: RoleInput) =>
@@ -132,30 +133,21 @@ export function TeamRolesWorkspace() {
         <FormField
           label="Permissions"
           htmlFor="team_role_permissions"
-          helperText="Satu permission per baris. Contoh: sales.order.view"
           error={hooks.roleForm.formState.errors.permissions?.message as string | undefined}
         >
-          <Textarea
-            id="team_role_permissions"
-            rows={12}
-            value={currentPermissions.join("\n")}
-            onChange={(event) =>
-              hooks.roleForm.setValue(
-                "permissions",
-                event.target.value
-                  .split("\n")
-                  .map((value) => value.trim())
-                  .filter(Boolean)
-              )
+          <PermissionSelector
+            value={currentPermissions}
+            onChange={(perms) =>
+              hooks.roleForm.setValue("permissions", perms, { shouldDirty: true })
             }
           />
         </FormField>
 
         <div className="rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-slate-900">Parsed permissions</p>
+            <p className="text-sm font-medium text-slate-900">Total dipilih</p>
             <Badge variant="outline" className="border-sky-200 bg-sky-50 text-sky-700">
-              {currentPermissions.length}
+              {currentPermissions.length} permissions
             </Badge>
           </div>
         </div>

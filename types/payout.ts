@@ -68,6 +68,10 @@ export type PayoutAdjustmentRecord = {
   adjustment_type: string | null;
   reason: string | null;
   amount: string;
+  post_status: string;
+  posted_at: string | null;
+  locked_at: string | null;
+  voided_at: string | null;
   created_at: string;
   m_channel?: PayoutChannelRecord | null;
   t_order?: PayoutOrderLookupRecord | null;

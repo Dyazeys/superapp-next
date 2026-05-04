@@ -51,6 +51,7 @@ type PayoutAdjustmentsHook = {
   openAdjustmentModal: (adjustment?: PayoutAdjustmentRecord) => void;
   saveAdjustment: (values: PayoutAdjustmentInput) => Promise<PayoutAdjustmentRecord>;
   deleteAdjustment: (id: number) => Promise<void>;
+  changeAdjustmentLifecycle: (id: number, action: "POST" | "LOCK" | "VOID") => Promise<PayoutAdjustmentRecord>;
 };
 
 type PayoutTransfersHook = {
@@ -314,6 +315,18 @@ export function usePayoutAdjustments(ref?: string): PayoutAdjustmentsHook {
     }
   };
 
+  const changeAdjustmentLifecycle = async (id: number, action: "POST" | "LOCK" | "VOID") => {
+    try {
+      const adjustment = await payoutApi.records.adjustmentLifecycle(id, action);
+      toast.success(`Adjustment ${action} berhasil`);
+      await invalidate();
+      return adjustment;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : `Failed to ${action} adjustment`);
+      throw error;
+    }
+  };
+
   const openAdjustmentModal = (adjustment?: PayoutAdjustmentRecord) => {
     setEditingAdjustment(adjustment ?? null);
     adjustmentForm.reset({
@@ -336,6 +349,7 @@ export function usePayoutAdjustments(ref?: string): PayoutAdjustmentsHook {
     openAdjustmentModal,
     saveAdjustment,
     deleteAdjustment,
+    changeAdjustmentLifecycle,
   };
 }
 

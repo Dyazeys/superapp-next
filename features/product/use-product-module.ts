@@ -320,16 +320,21 @@ export function useProductBom(selectedSku?: string) {
         ProductBomInput,
         "sku"
       >;
-      const action = editingBomId
-        ? productApi.products.bom.update(selectedSku, editingBomId, body)
-        : productApi.products.bom.create(selectedSku, body);
-      await action;
-      toast.success(`BOM row ${editingBomId ? "updated" : "created"}`);
-      await invalidate();
+      const isUpdate = Boolean(editingBomId);
+      const currentId = editingBomId;
+
       setEditingBomId(null);
       setBomDraft(null);
+
+      const action = isUpdate
+        ? productApi.products.bom.update(selectedSku, currentId!, body)
+        : productApi.products.bom.create(selectedSku, body);
+      await action;
+      toast.success(`BOM row ${isUpdate ? "updated" : "created"}`);
+      await invalidate();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to save BOM row");
+      await invalidate();
       throw error;
     } finally {
       setActionPending(false);

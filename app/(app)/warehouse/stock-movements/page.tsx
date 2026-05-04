@@ -11,11 +11,11 @@ import type { StockMovementRecord } from "@/types/warehouse";
 const columnHelper = createColumnHelper<StockMovementRecord>();
 
 export default function WarehouseStockMovementsPage() {
-  const stockMovementsQuery = useWarehouseStockMovements();
-  const movementRows = stockMovementsQuery.data ?? [];
-  const totalMovements = movementRows.length;
+  const stockMovementsQuery = useWarehouseStockMovements({ limit: 50 });
+  const paginatedData = stockMovementsQuery.data;
+  const movementRows = paginatedData?.data ?? [];
+  const totalMovements = paginatedData?.total ?? 0;
   const uniqueInventory = new Set(movementRows.map((row) => row.inv_code)).size;
-  const netQty = movementRows.reduce((sum, row) => sum + Number(row.qty_change || 0), 0);
   const latestMovementDate =
     movementRows.length === 0
       ? "-"
@@ -86,12 +86,12 @@ export default function WarehouseStockMovementsPage() {
     >
       <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-4">
-          <MetricCard title="Total rows" value={String(totalMovements)} subtitle="Jumlah movement rows yang terlihat." />
-          <MetricCard title="Inventory codes" value={String(uniqueInventory)} subtitle="Jumlah inventory unik di ledger." />
-          <MetricCard title="Net qty change" value={netQty.toLocaleString("id-ID")} subtitle="Σ qty_change dari data yang terlihat." />
+          <MetricCard title="Total rows" value={totalMovements.toLocaleString("id-ID")} subtitle="Jumlah movement rows di database." />
+          <MetricCard title="Showing" value={String(movementRows.length)} subtitle={`Rows ditampilkan (limit 50).`} />
+          <MetricCard title="Inventory codes" value={String(uniqueInventory)} subtitle="Jumlah inventory unik di halaman ini." />
           <MetricCard title="Latest date" value={latestMovementDate} subtitle="Tanggal movement terbaru." />
         </div>
-        <DataTable columns={columns} data={stockMovementsQuery.data ?? []} emptyMessage="No stock movements yet." />
+        <DataTable columns={columns} data={movementRows} emptyMessage="No stock movements yet." />
       </div>
     </PageShell>
   );

@@ -12,7 +12,7 @@ function asDateOnly(value: string) {
 
 export async function GET() {
   try {
-    await requireApiPermission(PERMISSIONS.WAREHOUSE_STOCK_VIEW);
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_RETURN_VIEW);
 
     const returns = await prisma.warehouse_returns.findMany({
       orderBy: [{ return_date: "desc" }, { created_at: "desc" }],
@@ -52,7 +52,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_CREATE);
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_RETURN_CREATE);
 
     const payload = createWarehouseReturnSchema.parse(await request.json());
 
@@ -62,7 +62,10 @@ export async function POST(request: NextRequest) {
       select: { ref_no: true, status: true, is_historical: true },
     });
     invariant(order, "Sales order reference was not found.");
-    invariant(order.status === "RETUR", "Sales order must be in RETUR status.");
+    invariant(
+      order.status === "PICKUP" || order.status === "RETUR",
+      "Sales order must be in PICKUP or RETUR status.",
+    );
     invariant(!order.is_historical, "Historical sales order cannot be processed as warehouse return.");
 
     // Validasi setiap SKU + inv_code
@@ -108,6 +111,14 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Update order status ke RETUR (kalo belum)
+    if (order.status !== "RETUR") {
+      await prisma.t_order.update({
+        where: { ref_no: payload.ref_no },
+        data: { status: "RETUR" },
+      });
+    }
 
     return NextResponse.json(toJsonValue(warehouseReturn), { status: 201 });
   } catch (error) {

@@ -1,7 +1,7 @@
 import {
   ArrowDownToLine,
   ArrowRightLeft,
-  BellRing,
+  Banknote,
   BookOpenText,
   Boxes,
   Calculator,
@@ -10,6 +10,7 @@ import {
   CheckCheck,
   ClipboardList,
   Clock3,
+  Eye,
   FileText,
   FolderTree,
   Gauge,
@@ -21,6 +22,7 @@ import {
   Landmark,
   LayoutGrid,
   LayoutDashboard,
+  ListChecks,
   ListOrdered,
   Megaphone,
   PackageSearch,
@@ -36,6 +38,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Tags,
+  Undo2,
   UserRound,
   Users,
   Warehouse,
@@ -111,6 +114,12 @@ const TASK_MY_TASKS_ITEM: ModuleNavItem = {
       icon: Gauge,
       permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
     },
+    {
+      label: "Rutinitas",
+      href: "/task/tugas-saya/rutinitas",
+      icon: ListChecks,
+      permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
+    },
   ],
 };
 
@@ -141,14 +150,6 @@ const TASK_MY_CALENDAR_ITEM: ModuleNavItem = {
   href: "/task/kalender-saya",
   icon: CalendarDays,
   badge: "Plan",
-  permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
-};
-
-const TASK_REMINDER_ITEM: ModuleNavItem = {
-  label: "Reminder",
-  href: "/task/reminder",
-  icon: BellRing,
-  badge: "Focus",
   permission: PERMISSIONS.TASK_WORKSPACE_VIEW,
 };
 
@@ -186,7 +187,7 @@ const TEAM_MEETING_ITEM: ModuleNavItem = {
       permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
     },
     {
-      label: "To Do",
+      label: "Ceklis",
       href: "/team/meeting/to-do",
       icon: ClipboardList,
       permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
@@ -216,6 +217,20 @@ const TEAM_APPROVAL_ITEM: ModuleNavItem = {
   icon: CheckCheck,
   badge: "Flow",
   permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
+  children: [
+    {
+      label: "Leader",
+      href: "/team/approval/leader",
+      icon: CheckCheck,
+      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    },
+    {
+      label: "Manager",
+      href: "/team/approval/manager",
+      icon: Eye,
+      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    },
+  ],
 };
 
 const TEAM_STRUCTURE_ITEM: ModuleNavItem = {
@@ -234,6 +249,22 @@ const TEAM_SOP_ITEM: ModuleNavItem = {
   permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
 };
 
+const TEAM_TODO_ITEM: ModuleNavItem = {
+  label: "Kelola Tugas Tim",
+  href: "/team/tugas-saya/to-do",
+  icon: ClipboardList,
+  badge: "Task",
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
+};
+
+const TEAM_KPI_ITEM: ModuleNavItem = {
+  label: "KPI Tim",
+  href: "/team/tugas-saya/kpi",
+  icon: Gauge,
+  badge: "Task",
+  permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
+};
+
 export const TOP_NAV_ITEMS: TopNavItem[] = [
   { id: "erp", label: "ERP", icon: LayoutGrid },
   { id: "analytics", label: "Analytic", icon: ChartBar },
@@ -246,12 +277,13 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
   {
     label: "Sales",
     href: "/sales",
-    icon: HandCoins,
+    icon: Store,
     badge: "Transaksi",
     permission: PERMISSIONS.SALES_ORDER_VIEW,
     children: [
       { label: "Sales Orders", href: "/sales/orders", icon: ClipboardList, permission: PERMISSIONS.SALES_ORDER_VIEW },
       { label: "Customers", href: "/sales/customers", icon: UserRound, permission: PERMISSIONS.SALES_CUSTOMER_VIEW },
+      { label: "Channels", href: "/sales/channels", icon: LayoutGrid, permission: PERMISSIONS.SALES_ORDER_VIEW },
     ],
   },
   {
@@ -266,6 +298,7 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Inbound", href: "/warehouse/inbound", icon: ArrowDownToLine, permission: PERMISSIONS.WAREHOUSE_INBOUND_VIEW },
       { label: "Adjustments", href: "/warehouse/adjustments", icon: SlidersHorizontal, permission: PERMISSIONS.WAREHOUSE_ADJUSTMENT_VIEW },
       { label: "Stock Balances", href: "/warehouse/stock-balances", icon: Scale, permission: PERMISSIONS.WAREHOUSE_STOCK_VIEW },
+      { label: "Returns", href: "/warehouse/returns", icon: Undo2, permission: PERMISSIONS.WAREHOUSE_RETURN_VIEW },
       { label: "Stock Movements", href: "/warehouse/stock-movements", icon: ArrowRightLeft, permission: PERMISSIONS.WAREHOUSE_STOCK_VIEW },
     ],
   },
@@ -279,6 +312,8 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Accounts", href: "/accounting/accounts", icon: Landmark, permission: PERMISSIONS.ACCOUNTING_ACCOUNT_VIEW },
       { label: "Journals", href: "/accounting/journals", icon: BookOpenText, permission: PERMISSIONS.ACCOUNTING_JOURNAL_VIEW },
       { label: "Opex", href: "/accounting/operational-expenses", icon: ReceiptText, permission: PERMISSIONS.ACCOUNTING_OPEX_VIEW },
+      { label: "Mutasi BCA", href: "/accounting/bank-mutation", icon: ArrowRightLeft, permission: PERMISSIONS.ACCOUNTING_MUTATION_VIEW },
+      { label: "Mutasi Kas", href: "/accounting/cash-mutation", icon: Banknote, permission: PERMISSIONS.ACCOUNTING_MUTATION_VIEW },
     ],
   },
   {
@@ -291,8 +326,6 @@ export const ERP_MODULE_ITEMS: ModuleNavItem[] = [
       { label: "Overview", href: "/payout", icon: LayoutDashboard, permission: PERMISSIONS.PAYOUT_RECORD_VIEW },
       { label: "Records", href: "/payout/records", icon: ClipboardList, permission: PERMISSIONS.PAYOUT_RECORD_VIEW },
       { label: "Adjustments", href: "/payout/adjustments", icon: SlidersHorizontal, permission: PERMISSIONS.PAYOUT_ADJUSTMENT_VIEW },
-      { label: "Transfers", href: "/payout/transfers", icon: ArrowRightLeft, permission: PERMISSIONS.PAYOUT_TRANSFER_VIEW },
-      { label: "Reconciliation", href: "/payout/reconciliation", icon: Scale, permission: PERMISSIONS.PAYOUT_RECONCILIATION_VIEW },
     ],
   },
   {
@@ -371,7 +404,6 @@ export const TASK_MODULE_ITEMS: ModuleNavItem[] = [
   TASK_MY_TASKS_ITEM,
   TASK_ATTENDANCE_ITEM,
   TASK_MY_CALENDAR_ITEM,
-  TASK_REMINDER_ITEM,
 ];
 
 export const TEAM_MODULE_ITEMS: ModuleNavItem[] = [
@@ -382,5 +414,7 @@ export const TEAM_MODULE_ITEMS: ModuleNavItem[] = [
   TEAM_APPROVAL_ITEM,
   TEAM_STRUCTURE_ITEM,
   TEAM_SOP_ITEM,
+  TEAM_TODO_ITEM,
+  TEAM_KPI_ITEM,
   TEAM_MODULE_ITEM,
 ];

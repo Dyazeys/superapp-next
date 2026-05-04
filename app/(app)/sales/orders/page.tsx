@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Check, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
+import { Check, Pencil, Plus, Save, Search, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/data/data-table";
 import { EmptyState } from "@/components/feedback/empty-state";
@@ -28,6 +28,8 @@ import {
   useSalesOrderSelection,
   useSalesProductsLookup,
 } from "@/features/sales/use-sales-module";
+import { useModalState } from "@/hooks/use-modal-state";
+import { SalesOrderCsvImport } from "@/features/sales/sales-order-csv-import";
 import type { SalesOrderInput } from "@/schemas/sales-module";
 import type { SalesOrderItemRecord, SalesOrderRecord } from "@/types/sales";
 
@@ -46,6 +48,8 @@ export default function SalesOrdersPage() {
   const channelsQuery = useSalesChannels();
   const customersQuery = useSalesCustomers();
   const productsQuery = useSalesProductsLookup();
+  const csvImportModal = useModalState();
+  const queryClient = useQueryClient();
 
   const { orderForm, orderModal, editingOrder } = hooks;
   const ordersListQuery = useQuery({
@@ -479,6 +483,15 @@ export default function SalesOrdersPage() {
               </Button>
               <Button
                 size="sm"
+                variant="outline"
+                className="h-9 px-3.5"
+                onClick={csvImportModal.openModal}
+              >
+                <Upload className="size-4" />
+                Import CSV
+              </Button>
+              <Button
+                size="sm"
                 onClick={() => {
                   setSelectedOrderNo(null);
                   hooks.openOrderModal();
@@ -706,6 +719,15 @@ export default function SalesOrdersPage() {
           )}
         </div>
       </ModalFormShell>
+
+      <SalesOrderCsvImport
+        open={csvImportModal.open}
+        onOpenChange={csvImportModal.setOpen}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ["sales-orders"] });
+          queryClient.invalidateQueries({ queryKey: ["sales-customers"] });
+        }}
+      />
     </PageShell>
   );
 }

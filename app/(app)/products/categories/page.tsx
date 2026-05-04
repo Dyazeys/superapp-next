@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SelectNative } from "@/components/ui/select-native";
 import { DataTable } from "@/components/data/data-table";
 import { StatusBadge } from "@/components/feedback/status-badge";
 import { PageShell } from "@/components/foundation/page-shell";
@@ -52,7 +53,7 @@ export default function ProductCategoriesPage() {
           <Button size="icon-xs" variant="outline" onClick={() => hooks.openCategoryModal(row.original)}>
             <Pencil className="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.deleteCategory(row.original.category_code)}>
+          <Button size="icon-xs" variant="outline" onClick={() => { if (window.confirm("Hapus kategori ini?")) hooks.deleteCategory(row.original.category_code); }}>
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -105,19 +106,17 @@ export default function ProductCategoriesPage() {
           <Input id="category_name" {...categoryForm.register("category_name")} />
         </FormField>
         <FormField label="Active" htmlFor="is_active">
-          <Input
+          <SelectNative
             id="is_active"
-            list="boolean-options"
             value={String(categoryForm.watch("is_active"))}
             onChange={(e) => categoryForm.setValue("is_active", parseBooleanInput(e.target.value))}
-          />
-          <datalist id="boolean-options">
+          >
             {PRODUCT_BOOLEAN_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </datalist>
+          </SelectNative>
         </FormField>
       </ModalFormShell>
     </PageShell>

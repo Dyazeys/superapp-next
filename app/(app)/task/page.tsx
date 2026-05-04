@@ -1,4 +1,4 @@
-import { BellRing, CalendarDays, ClipboardList, Clock3, Gauge } from "lucide-react";
+import { CalendarDays, ClipboardList, Clock3, Gauge } from "lucide-react";
 import { PageShell } from "@/components/foundation/page-shell";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import { ModuleHub } from "@/features/shared/module-hub";
@@ -43,7 +43,6 @@ export default async function TaskPage() {
           "Tugas Saya dipakai untuk daftar to do dan KPI personal.",
           "Absensi dipakai untuk clock in/out serta pengajuan izin atau sakit.",
           "Kalender Saya dipakai untuk membaca ritme deadline, meeting, dan target personal.",
-          "Reminder dipakai untuk pengingat follow up agar pekerjaan penting tidak tercecer.",
         ]}
         items={[
           {
@@ -69,12 +68,6 @@ export default async function TaskPage() {
             description: "Area pribadi untuk deadline, jadwal meeting, target mingguan, dan ritme kerja yang ingin dijaga.",
             href: "/task/kalender-saya",
             icon: CalendarDays,
-          },
-          {
-            title: "Reminder",
-            description: "Area pengingat untuk follow up tugas, approval, dan pekerjaan penting yang sensitif terhadap waktu.",
-            href: "/task/reminder",
-            icon: BellRing,
           },
         ]}
       />

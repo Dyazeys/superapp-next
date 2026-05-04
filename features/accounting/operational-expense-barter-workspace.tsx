@@ -13,6 +13,7 @@ import { MetricCard } from "@/components/layout/stats-card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { InventoryPicker } from "@/components/patterns/inventory-picker";
 import { SelectNative } from "@/components/ui/select-native";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -108,6 +109,10 @@ export function OperationalExpenseBarterWorkspace() {
   const inventoryRows = useMemo(
     () => (inventoryQuery.data ?? []).filter((row) => row.is_active),
     [inventoryQuery.data]
+  );
+  const inventoryOptions = useMemo(
+    () => inventoryRows.map((inv) => ({ value: inv.inv_code, label: `${inv.inv_code} - ${inv.inv_name}` })),
+    [inventoryRows]
   );
   const barterRows = hooks.barterRows;
   const expenseAccountOptions = useMemo(() => manualOpexAccounts(accountRows), [accountRows]);
@@ -537,18 +542,14 @@ export function OperationalExpenseBarterWorkspace() {
           htmlFor="barter_item_inventory"
           error={hooks.itemForm.formState.errors.inv_code?.message}
         >
-          <SelectNative
+          <InventoryPicker
             id="barter_item_inventory"
             value={hooks.itemForm.watch("inv_code") ?? ""}
-            onChange={(event) => hooks.itemForm.setValue("inv_code", event.target.value)}
-          >
-            <option value="">Pilih inventory</option>
-            {inventoryRows.map((inventory) => (
-              <option key={inventory.inv_code} value={inventory.inv_code}>
-                {inventory.inv_code} - {inventory.inv_name}
-              </option>
-            ))}
-          </SelectNative>
+            options={inventoryOptions}
+            isLoading={inventoryQuery.isLoading}
+            placeholder="Pilih inventory"
+            onValueChange={(next) => hooks.itemForm.setValue("inv_code", next)}
+          />
         </FormField>
 
         <div className="grid gap-4 md:grid-cols-2">

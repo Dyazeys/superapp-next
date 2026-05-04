@@ -15,6 +15,7 @@ export interface SalesReturnCandidate {
   channel_id: number | null;
   channel_name: string | null;
   status: string;
+  payout_status: string | null;
   items: SalesReturnCandidateItem[];
 }
 
@@ -92,14 +93,23 @@ export interface OrderReturnCandidate {
 
 export interface StockBalanceRecord {
   inv_code: string;
-  inv_name: string;
   qty_on_hand: number;
-  is_active: boolean;
   last_updated: string;
-  master_inventory?: {
+  master_inventory: {
+    inv_code: string;
     inv_name: string;
-    unit_price: string | null;
-  } | null;
+    unit_price: string;
+    is_active: boolean;
+    master_product_master_product_inv_mainTomaster_inventory: Array<{
+      sku: string;
+      product_name: string;
+      variations: string | null;
+      total_hpp: string | null;
+      category_code: string | null;
+      inv_main: string | null;
+      inv_acc: string | null;
+    }>;
+  };
 }
 
 // Existing types for adjustments, stock movements, etc.
@@ -138,6 +148,14 @@ export interface StockMovementRecord {
     item_id: string;
     sku: string;
   } | null;
+}
+
+export interface PaginatedStockMovements {
+  data: StockMovementRecord[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export interface InventoryRecord {
@@ -202,7 +220,6 @@ export interface InboundDeliveryRecord {
   received_by: string;
   notes: string | null;
   created_at: string;
-  purchase_order?: PurchaseOrderRecord | null;
   purchase_orders?: PurchaseOrderRecord | null;
   inbound_items?: InboundItemRecord[];
   _count?: {

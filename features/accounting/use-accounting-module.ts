@@ -25,6 +25,7 @@ import type {
   AccountingOperationalExpenseBarterItemRecord,
   AccountingOperationalExpenseBarterRecord,
   AccountingOperationalExpenseRecord,
+  AccountMutationResponse,
 } from "@/types/accounting";
 import type { MasterInventoryRecord } from "@/types/product";
 
@@ -58,6 +59,14 @@ export function useAccountingJournalSelection(journals: AccountingJournalRecord[
   );
 
   return { selectedJournalId, currentJournalId, setSelectedJournalId };
+}
+
+export function useAccountMutation(accountCode: string, startDate: string, endDate: string, openingBalance: number) {
+  return useQuery({
+    queryKey: ["account-mutations", accountCode, startDate, endDate, openingBalance],
+    queryFn: () => accountingApi.accountMutations.list(accountCode, startDate, endDate, openingBalance),
+    enabled: !!accountCode && !!startDate && !!endDate,
+  }) as UseQueryResult<AccountMutationResponse>;
 }
 
 export function useAccountingJournalEntries(journalId?: string) {

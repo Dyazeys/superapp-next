@@ -1,20 +1,24 @@
 import type {
   AdjustmentInput,
+  CreateWarehouseReturnInput,
   InboundDeliveryInput,
   InboundItemInput,
   PurchaseOrderItemInput,
   PurchaseOrderInput,
   VendorInput,
+  VerifyWarehouseReturnInput,
 } from "@/schemas/warehouse-module";
 import type {
   AdjustmentRecord,
   InboundDeliveryRecord,
   InboundItemRecord,
+  PaginatedStockMovements,
   PurchaseOrderItemRecord,
   PurchaseOrderRecord,
+  SalesReturnCandidate,
   StockBalanceRecord,
-  StockMovementRecord,
   VendorRecord,
+  WarehouseReturn,
 } from "@/types/warehouse";
 import { requestJson } from "@/lib/request";
 
@@ -51,6 +55,11 @@ export const warehouseApi = {
     remove: (id: string) =>
       requestJson<{ ok: true }>(`/api/warehouse/purchase-orders/${encodeURIComponent(id)}`, {
         method: "DELETE",
+      }),
+    bulkRemove: (ids: string[]) =>
+      requestJson<{ ok: true; deleted: number }>("/api/warehouse/purchase-orders/bulk-delete", {
+        method: "POST",
+        body: JSON.stringify({ ids }),
       }),
     items: {
       list: (poId: string) =>
@@ -154,6 +163,34 @@ export const warehouseApi = {
   },
   stock: {
     balances: () => requestJson<StockBalanceRecord[]>("/api/warehouse/stock-balances"),
-    movements: () => requestJson<StockMovementRecord[]>("/api/warehouse/stock-movements"),
+    movements: (params?: { page?: number; limit?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.page) qs.set("page", String(params.page));
+      if (params?.limit) qs.set("limit", String(params.limit));
+      const query = qs.toString();
+      return requestJson<PaginatedStockMovements>(
+        `/api/warehouse/stock-movements${query ? `?${query}` : ""}`
+      );
+    },
+  },
+  returns: {
+    list: () => requestJson<WarehouseReturn[]>("/api/warehouse/returns"),
+    create: (payload: CreateWarehouseReturnInput) =>
+      requestJson<WarehouseReturn>("/api/warehouse/returns", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    verify: (id: string, payload: VerifyWarehouseReturnInput) =>
+      requestJson<WarehouseReturn>(`/api/warehouse/returns/${encodeURIComponent(id)}`, {
+        method: "PATCH",
+        body: JSON.stringify(payload),
+      }),
+    postStock: (id: string) =>
+      requestJson<{ warehouseReturn: WarehouseReturn; summary: { posted: number; skipped: number } }>(
+        `/api/warehouse/returns/${encodeURIComponent(id)}/post-stock`,
+        { method: "POST" },
+      ),
+    candidates: () =>
+      requestJson<SalesReturnCandidate[]>("/api/warehouse/sales-returns/candidates"),
   },
 };

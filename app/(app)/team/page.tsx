@@ -1,4 +1,4 @@
-import { CalendarDays, CheckCheck, FileText, Megaphone, Presentation, Route, ShieldCheck, UserRound } from "lucide-react";
+import { CalendarDays, CheckCheck, ClipboardList, FileText, Gauge, Megaphone, Presentation, Route, ShieldCheck, UserRound } from "lucide-react";
 import { PageShell } from "@/components/foundation/page-shell";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import { ModuleHub } from "@/features/shared/module-hub";
@@ -51,6 +51,18 @@ export default async function TeamPage() {
             description: "Area agenda, notulen, dan to do hasil rapat agar diskusi tidak berhenti di meeting saja.",
             href: "/team/meeting",
             icon: Presentation,
+          },
+          {
+            title: "Kelola Tugas Tim",
+            description: "Kelola to do dan rutinitas semua anggota tim dari satu tempat.",
+            href: "/team/tugas-saya/to-do",
+            icon: ClipboardList,
+          },
+          {
+            title: "KPI Tim",
+            description: "Pantau target, realisasi, dan approval KPI setiap anggota tim.",
+            href: "/team/tugas-saya/kpi",
+            icon: Gauge,
           },
           {
             title: "Users",

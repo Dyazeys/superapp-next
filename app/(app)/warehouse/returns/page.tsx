@@ -1,60 +1,35 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { PageShell } from "@/components/foundation/page-shell";
 import { WarehouseReturnWorkspace } from "@/features/warehouse/warehouse-return-workspace";
-import type { WarehouseReturn } from "@/types/warehouse";
+import { useWarehouseReturns } from "@/features/warehouse/use-warehouse-module";
 
 export default function WarehouseReturnsPage() {
-  const [returns, setReturns] = useState<WarehouseReturn[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { returnsQuery } = useWarehouseReturns();
 
-  const fetchReturns = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await fetch("/api/warehouse/returns");
-      if (!response.ok) {
-        throw new Error(`Failed to load returns: ${response.statusText}`);
-      }
-      const data = await response.json();
-      setReturns(data ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchReturns();
-  }, [fetchReturns]);
-
-  return (
-    <PageShell
-      eyebrow="Warehouse"
-      title="Returns"
-      description="Kelola retur barang dari pelanggan, termasuk verifikasi kondisi baik/rusak."
-    >
-      {isLoading ? (
+  if (returnsQuery.isLoading) {
+    return (
+      <PageShell eyebrow="Warehouse" title="Returns" description="Kelola retur barang dari pelanggan, termasuk verifikasi kondisi baik/rusak.">
         <div className="flex items-center justify-center py-20">
           <p className="text-sm text-slate-500">Loading returns...</p>
         </div>
-      ) : error ? (
+      </PageShell>
+    );
+  }
+
+  if (returnsQuery.error) {
+    return (
+      <PageShell eyebrow="Warehouse" title="Returns" description="Kelola retur barang dari pelanggan, termasuk verifikasi kondisi baik/rusak.">
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-          {error}
-          <button
-            type="button"
-            onClick={fetchReturns}
-            className="ml-2 underline hover:no-underline"
-          >
-            Retry
-          </button>
+          {returnsQuery.error instanceof Error ? returnsQuery.error.message : "Failed to load returns"}
         </div>
-      ) : (
-        <WarehouseReturnWorkspace returns={returns} onRefresh={fetchReturns} />
-      )}
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell eyebrow="Warehouse" title="Returns" description="Kelola retur barang dari pelanggan, termasuk verifikasi kondisi baik/rusak.">
+      <WarehouseReturnWorkspace returns={returnsQuery.data ?? []} />
     </PageShell>
   );
 }

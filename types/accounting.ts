@@ -131,3 +131,22 @@ export type AccountingOperationalExpenseBarterRecord = {
   };
   operational_expense_barter_items: AccountingOperationalExpenseBarterItemRecord[];
 };
+
+export type AccountMutationLine = {
+  id: string;
+  transaction_date: string;
+  description: string;
+  journal_entry_id: string;
+  debit: number;
+  credit: number;
+  balance_after: number;
+};
+
+export type AccountMutationResponse = {
+  account: { code: string; name: string };
+  opening_balance: number;
+  total_debit: number;
+  total_credit: number;
+  ending_balance: number;
+  lines: AccountMutationLine[];
+};

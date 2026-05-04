@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["accounting", "auth", "channel", "marketing", "payout", "product", "public", "sales", "warehouse"]
+  schemas  = ["accounting", "auth", "channel", "marketing", "payout", "product", "public", "sales", "warehouse", "task", "team"]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -245,6 +245,10 @@ model t_adjustments {
   adjustment_type String?    @db.VarChar(100)
   reason          String?
   amount          Decimal    @db.Decimal(18, 2)
+  post_status     String     @default("DRAFT") @db.VarChar(20)
+  posted_at       DateTime?  @db.Timestamptz(6)
+  locked_at       DateTime?  @db.Timestamptz(6)
+  voided_at       DateTime?  @db.Timestamptz(6)
   created_at      DateTime   @default(now()) @db.Timestamptz(6)
   m_channel       m_channel? @relation(fields: [channel_id], references: [channel_id], onDelete: Restrict, map: "fk_t_adjustments_channel_id")
   t_order         t_order?   @relation(fields: [ref], references: [ref_no], onDelete: Restrict, map: "fk_t_adjustments_ref")
@@ -797,4 +801,210 @@ model stock_movements {
   @@index([inv_code], map: "idx_warehouse_stock_movements_inv_code")
   @@index([reference_type, reference_id], map: "idx_warehouse_stock_movements_reference")
   @@schema("warehouse")
+}
+
+// ── Task Module ─────────────────────────────────────────────────────────────
+// Task workspace — todo, KPI, attendance, leave, events, routines
+
+model todos {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String    @db.Uuid
+  title       String    @db.VarChar(255)
+  description String?
+  status      String    @default("backlog") @db.VarChar(20)  // backlog | todo | in_progress | done
+  priority    String    @default("medium") @db.VarChar(20)   // low | medium | high
+  assignee_id String?   @db.Uuid
+  due_date    DateTime? @db.Date
+  started_at  DateTime? @db.Timestamptz(6)
+  is_archived Boolean   @default(false)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+
+  @@index([user_id], map: "idx_task_todos_user_id")
+  @@index([status], map: "idx_task_todos_status")
+  @@schema("task")
+}
+
+model kpis {
+  id                 String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id            String   @db.Uuid
+  title              String   @db.VarChar(255)
+  description        String?
+  type               String   @db.VarChar(20)  // maximize | minimize
+  bobot              Int      @default(1)
+  target_value       Decimal  @db.Decimal(15, 2)
+  realization_value  Decimal  @default(0.00) @db.Decimal(15, 2)
+  unit               String   @db.VarChar(50)
+  period_start       DateTime @db.Date
+  period_end         DateTime @db.Date
+  approval_status    String   @default("draft") @db.VarChar(20) // draft | pending | approved | rejected
+  notes              String?
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime? @db.Timestamptz(6)
+
+  @@index([user_id], map: "idx_task_kpis_user_id")
+  @@schema("task")
+}
+
+model attendances {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id   String    @db.Uuid
+  date      DateTime  @db.Date
+  clock_in  DateTime? @db.Timestamptz(6)
+  clock_out DateTime? @db.Timestamptz(6)
+  status    String    @db.VarChar(20)  // present | late | early_leave | absent
+  note      String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([user_id, date])
+  @@schema("task")
+}
+
+model leave_requests {
+  id                         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                    String    @db.Uuid
+  application_date           DateTime  @default(now()) @db.Date
+  type                       String    @db.VarChar(30)  // izin_direncanakan | izin_mendesak
+  category                   String    @db.VarChar(30)  // tidak_masuk | datang_terlambat | pulang_cepat
+  start_date                 DateTime  @db.Date
+  end_date                   DateTime  @db.Date
+  total_days                 Int       @default(1)
+  time_value                 String?   @db.VarChar(10)  // HH:mm
+  reason                     String
+  attachment_url             String?
+  status                     String    @default("pending") @db.VarChar(30) // pending | leader_approved | manager_acknowledged | rejected
+  leader_approved_at         DateTime? @db.Timestamptz(6)
+  leader_approved_by         String?   @db.Uuid
+  manager_acknowledged_at    DateTime? @db.Timestamptz(6)
+  manager_acknowledged_by    String?   @db.Uuid
+  created_at                 DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime? @db.Timestamptz(6)
+
+  @@index([user_id], map: "idx_task_leave_requests_user_id")
+  @@index([status], map: "idx_task_leave_requests_status")
+  @@schema("task")
+}
+
+model events {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creator_id    String    @db.Uuid
+  title         String    @db.VarChar(255)
+  description   String?
+  start_time    DateTime  @db.Timestamptz(6)
+  end_time      DateTime  @db.Timestamptz(6)
+  is_team_event Boolean   @default(false)
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+
+  @@index([creator_id], map: "idx_task_events_creator_id")
+  @@schema("task")
+}
+
+model routines {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id      String    @db.Uuid
+  title        String    @db.VarChar(255)
+  description  String?
+  is_completed Boolean   @default(false)
+  completed_at DateTime? @db.Timestamptz(6)
+  sort_order   Int       @default(0)
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @db.Timestamptz(6)
+
+  @@index([user_id], map: "idx_task_routines_user_id")
+  @@schema("task")
+}
+
+// ── Team Module ─────────────────────────────────────────────────────────────
+// Team workspace — meetings, to-dos, announcements, approvals, departments
+
+model meetings {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizer_id String    @db.Uuid
+  title        String    @db.VarChar(255)
+  date         DateTime  @db.Date
+  start_time   String    @db.VarChar(10)  // HH:mm
+  end_time     String    @db.VarChar(10)
+  location     String?   @db.VarChar(255)
+  notes        String?
+  status       String    @default("draft") @db.VarChar(20) // draft | pending | approved
+  participants Json      @default("[]")
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @db.Timestamptz(6)
+
+  @@index([organizer_id], map: "idx_team_meetings_organizer_id")
+  @@schema("team")
+}
+
+model meeting_todos {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  meeting_id  String    @db.Uuid
+  title       String    @db.VarChar(255)
+  description String?
+  assignee_id String?   @db.Uuid
+  status      String    @default("todo") @db.VarChar(20)  // todo | in_progress | done
+  priority    String    @default("medium") @db.VarChar(20) // low | medium | high
+  due_date    DateTime? @db.Date
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @db.Timestamptz(6)
+
+  @@index([meeting_id], map: "idx_team_meeting_todos_meeting_id")
+  @@index([assignee_id], map: "idx_team_meeting_todos_assignee_id")
+  @@schema("team")
+}
+
+model announcements {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  author_id  String    @db.Uuid
+  title      String    @db.VarChar(255)
+  content    String
+  category   String    @default("umum") @db.VarChar(30) // umum | operasional | kebijakan | event
+  is_pinned  Boolean   @default(false)
+  status     String    @default("draft") @db.VarChar(20) // draft | pending | published
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @db.Timestamptz(6)
+
+  @@index([author_id], map: "idx_team_announcements_author_id")
+  @@schema("team")
+}
+
+model approvals {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type          String   @db.VarChar(30)  // leave | announcement | meeting_note
+  source_id     String   @db.Uuid
+  requester_id  String   @db.Uuid
+  title         String   @db.VarChar(255)
+  status        String   @default("pending") @db.VarChar(30) // pending | leader_approved | manager_acknowledged | rejected
+  decision_note String?
+  decided_by    String?  @db.Uuid
+  decided_at    DateTime? @db.Timestamptz(6)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @db.Timestamptz(6)
+
+  @@unique([type, source_id])
+  @@index([requester_id], map: "idx_team_approvals_requester_id")
+  @@index([status], map: "idx_team_approvals_status")
+  @@schema("team")
+}
+
+model departments {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String    @db.VarChar(150)
+  parent_id    String?   @db.Uuid
+  head_user_id String?   @db.Uuid
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([parent_id], map: "idx_team_departments_parent_id")
+  @@schema("team")
+}
+
+model department_members {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  department_id String   @db.Uuid
+  user_id       String   @db.Uuid
+  role_title    String?  @db.VarChar(100)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([department_id, user_id])
+  @@schema("team")
 }

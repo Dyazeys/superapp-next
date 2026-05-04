@@ -7,18 +7,21 @@ import { PERMISSIONS } from "@/lib/rbac";
 import type { SalesReturnCandidate } from "@/types/warehouse";
 export async function GET() {
   try {
-    await requireApiPermission(PERMISSIONS.WAREHOUSE_STOCK_VIEW);
+    await requireApiPermission(PERMISSIONS.WAREHOUSE_RETURN_VIEW);
 
-    // Cari t_order non-historical dengan status RETUR
+    // Cari t_order non-historical dengan status PICKUP atau RETUR
     // yang belum ada di warehouse_returns
     const orders = await prisma.t_order.findMany({
       where: {
-        status: "RETUR",
+        status: { in: ["PICKUP", "RETUR"] },
         is_historical: false,
         ref_no: { not: null },
         warehouseReturns: null,
       },
       include: {
+        t_payout: {
+          select: { payout_status: true },
+        },
         m_channel: {
           select: { channel_name: true },
         },
@@ -49,6 +52,7 @@ export async function GET() {
       channel_id: order.channel_id,
       channel_name: order.m_channel?.channel_name ?? null,
       status: order.status,
+      payout_status: order.t_payout?.payout_status ?? null,
       items: order.t_order_item
         .filter((item): item is typeof item & { sku: string; master_product: NonNullable<typeof item.master_product> } => !!item.sku && !!item.master_product)
         .map((item) => {
