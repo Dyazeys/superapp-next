@@ -2,6 +2,7 @@ import {
   ArrowDownToLine,
   ArrowRightLeft,
   Banknote,
+  BarChart3,
   BookOpenText,
   Boxes,
   Calculator,
@@ -73,6 +74,7 @@ const MARKETING_MODULE_ITEM: ModuleNavItem = {
   children: [
     { label: "Data Shopee", href: "/marketing/data-shopee", icon: Store, permission: PERMISSIONS.MARKETING_WORKSPACE_VIEW },
     { label: "Data TikTok", href: "/marketing/data-tiktok", icon: Music, permission: PERMISSIONS.MARKETING_WORKSPACE_VIEW },
+    { label: "Product Performance", href: "/marketing/product-performance", icon: BarChart3, permission: PERMISSIONS.MARKETING_PRODUCT_PERFORMANCE_VIEW },
   ],
 };
 

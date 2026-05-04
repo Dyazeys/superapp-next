@@ -159,6 +159,7 @@ export function TiktokLivestreamWorkspace() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Yakin ingin menghapus data ini?")) return;
     try {
       await deleteTiktokLivestream(id);
       dispatch({ type: "remove", id });

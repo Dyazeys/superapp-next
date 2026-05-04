@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { requireApiPermission } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
+import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
 import { shopeeLivestreamFormUpdateSchema } from "@/schemas/marketing-module";
 
@@ -35,10 +36,11 @@ export async function PUT(
       data: {
         ...(date ? { date: new Date(date + "T00:00:00.000Z") } : {}),
         ...rest,
+        updated_at: new Date(),
       },
     });
 
-    return NextResponse.json(item);
+    return NextResponse.json(toJsonValue(item));
   } catch (error) {
     return jsonError(error, "Gagal memperbarui data livestream Shopee.");
   }

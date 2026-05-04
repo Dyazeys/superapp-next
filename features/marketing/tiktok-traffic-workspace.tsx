@@ -38,8 +38,8 @@ function formatIDR(val: number): string {
   }).format(val);
 }
 
-function pct(decimal: number): string {
-  return (decimal * 100).toFixed(2) + "%";
+function pct(val: number): string {
+  return val.toFixed(2) + "%";
 }
 
 /* ─── Reducer ─── */
@@ -168,6 +168,7 @@ export function TiktokTrafficWorkspace() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Yakin ingin menghapus data ini?")) return;
     try {
       await deleteTiktokTraffic(id);
       dispatch({ type: "remove", id });
@@ -429,14 +430,13 @@ function TiktokTrafficForm({
             onChange={(e) => onChange("orders", e.target.valueAsNumber || 0)}
           />
         </FormField>
-        <FormField label="Conv. Rate (decimal)" htmlFor="conversion_rate">
+        <FormField label="Conv. Rate (%)" htmlFor="conversion_rate">
           <Input
             id="conversion_rate"
             type="number"
-            step="0.0001"
+            step="0.01"
             min={0}
-            max={1}
-            placeholder="cth: 0.0304"
+            placeholder="cth: 3.84"
             value={form.conversion_rate}
             onChange={(e) => onChange("conversion_rate", e.target.valueAsNumber || 0)}
           />

@@ -32,8 +32,8 @@ type AdRecord = MpAdsShopee | MpAdsTiktok;
 
 /* ─── Helpers ─── */
 
-function pct(decimal: number): string {
-  return (decimal * 100).toFixed(2) + "%";
+function pct(val: number): string {
+  return val.toFixed(2) + "%";
 }
 
 function ratio(val: number): string {
@@ -203,6 +203,7 @@ export function MpAdsWorkspace({ platform }: Props) {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Yakin ingin menghapus data ini?")) return;
     try {
       await deleteMpAd(platform, id);
       dispatch({ type: "remove", id });
@@ -535,8 +536,9 @@ function MpAdsForm({
           <Input
             id="ctr"
             type="number"
-            step="0.0001"
-            placeholder="0.0304 = 3.04%"
+            step="0.01"
+            min={0}
+            placeholder="cth: 3.84"
             value={form.ctr}
             onChange={(e) => onChange("ctr", e.target.valueAsNumber || 0)}
           />

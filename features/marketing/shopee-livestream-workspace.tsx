@@ -150,6 +150,7 @@ export function ShopeeLivestreamWorkspace() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Yakin ingin menghapus data ini?")) return;
     try {
       await deleteShopeeLivestream(id);
       dispatch({ type: "remove", id });

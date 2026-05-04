@@ -47,8 +47,8 @@ function formatIDR(val: number): string {
   }).format(val);
 }
 
-function pct(decimal: number): string {
-  return (decimal * 100).toFixed(2) + "%";
+function pct(val: number): string {
+  return val.toFixed(2) + "%";
 }
 
 /* ─── Reducer ─── */
@@ -192,6 +192,7 @@ export function ShopeeTrafficWorkspace() {
   }
 
   async function handleDelete(id: string) {
+    if (!confirm("Yakin ingin menghapus data ini?")) return;
     try {
       await deleteShopeeTraffic(id);
       dispatch({ type: "remove", id });
@@ -525,26 +526,24 @@ function ShopeeTrafficForm({
             onChange={(e) => onChange("unique_visitors", e.target.valueAsNumber || 0)}
           />
         </FormField>
-        <FormField label="Order Conv. Rate (decimal)" htmlFor="gross_order_conversion_rate">
+        <FormField label="Order Conv. Rate (%)" htmlFor="gross_order_conversion_rate">
           <Input
             id="gross_order_conversion_rate"
             type="number"
-            step="0.0001"
+            step="0.01"
             min={0}
-            max={1}
-            placeholder="cth: 0.0304"
+            placeholder="cth: 3.84"
             value={form.gross_order_conversion_rate}
             onChange={(e) => onChange("gross_order_conversion_rate", e.target.valueAsNumber || 0)}
           />
         </FormField>
-        <FormField label="Item Conv. Rate (decimal)" htmlFor="gross_item_conversion_rate">
+        <FormField label="Item Conv. Rate (%)" htmlFor="gross_item_conversion_rate">
           <Input
             id="gross_item_conversion_rate"
             type="number"
-            step="0.0001"
+            step="0.01"
             min={0}
-            max={1}
-            placeholder="cth: 0.0500"
+            placeholder="cth: 5.00"
             value={form.gross_item_conversion_rate}
             onChange={(e) => onChange("gross_item_conversion_rate", e.target.valueAsNumber || 0)}
           />
