@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { FormField } from "@/components/forms/form-field";
 import { FieldError } from "@/components/forms/field-error";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import {
   AKUN_OPTIONS,
@@ -333,18 +334,15 @@ export function ContentDailyWorkspace() {
               </select>
             </FormField>
             <FormField label="Produk" htmlFor="draft_produk">
-              <select
+              <SearchableSelect
                 id="draft_produk"
-                className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                options={productOptions}
                 value={form.produk}
-                onChange={(e) => handleFormChange("produk", e.target.value)}
+                onValueChange={(v) => handleFormChange("produk", v)}
+                placeholder={productLoading ? "Memuat produk..." : "Cari produk..."}
                 disabled={productLoading}
-              >
-                <option value="">{productLoading ? "Memuat produk..." : "Pilih Produk (Opsional)"}</option>
-                {productOptions.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
-                ))}
-              </select>
+                emptyText="Produk tidak ditemukan."
+              />
             </FormField>
             <FormField label="Link Konten" htmlFor="draft_link">
               <Input

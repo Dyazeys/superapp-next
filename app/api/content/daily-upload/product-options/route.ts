@@ -18,10 +18,17 @@ export async function GET() {
       },
     });
 
-    const options = products.map((product) => ({
-      value: product.product_name,
-      label: product.product_name,
-    }));
+    const seen = new Set<string>();
+    const options = products
+      .filter((product) => {
+        if (seen.has(product.product_name)) return false;
+        seen.add(product.product_name);
+        return true;
+      })
+      .map((product) => ({
+        value: product.product_name,
+        label: product.product_name,
+      }));
 
     return NextResponse.json(toJsonValue(options));
   } catch (error) {
