@@ -232,7 +232,7 @@ export function ShopeeTrafficWorkspace() {
     if (selectedIds.size === visible.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(visible.map((d) => d.id)));
+      setSelectedIds(new Set(visible.map((d) => d.id).filter(Boolean) as string[]));
     }
   }
 

@@ -1,9 +1,9 @@
 # SuperApp Next — Petunjuk untuk Agent
 
 <!-- BEGIN:nextjs-agent-rules -->
-## Ini BUKAN Next.js yang kamu kenal
+## Bukan Next.js standar
 
-Versi ini memiliki perubahan signifikan — API, konvensi, dan struktur file mungkin berbeda dari data pelatihan kamu. Bacalah panduan yang relevan di `node_modules/next/dist/docs/` sebelum menulis kode. Perhatikan juga peringatan deprecation.
+Next.js 16.2.2 dengan `--webpack` (bukan Turbopack). Baca `node_modules/next/dist/docs/` sebelum menulis kode. Perhatikan peringatan deprecation.
 <!-- END:nextjs-agent-rules -->
 
 ## Setup
@@ -11,90 +11,116 @@ Versi ini memiliki perubahan signifikan — API, konvensi, dan struktur file mun
 ```bash
 npm install
 npm run prisma:generate   # wajib setelah install dan setelah perubahan schema
-npm run dev               # menggunakan flag --webpack (next dev --webpack)
+npm run dev               # next dev --webpack
 ```
 
 ## Verifikasi
 
 ```bash
-npm run lint               # ESLint (flat config: eslint.config.mjs)
-npm run build              # output ke .next-prod (bukan .next default)
+npm run lint              # ESLint flat config (eslint.config.mjs)
+npm run build             # output ke .next-prod (distDir di next.config.ts)
 ```
 
 ## Arsitektur
 
-### Empat ruang kerja utama
+### Empat ruang kerja (workspace)
 
-App shell (`components/shell/`) berganti antara empat ruang kerja melalui icon rail. Setiap ruang kerja memiliki sidebar modul masing-masing:
+App shell (`components/shell/app-shell.tsx`) berganti workspace lewat icon rail. Setiap workspace membaca sidebar dari `lib/navigation.ts`:
 
-| Ruang Kerja | Nav ID     | Sumber sidebar modul                    |
-|-------------|------------|----------------------------------------|
-| ERP         | `erp`      | `ERP_MODULE_ITEMS` di `lib/navigation.ts` |
-| Analytic    | `analytics`| `ANALYTICS_MODULE_ITEMS`               |
-| Task        | `task`     | `TASK_MODULE_ITEMS`                    |
-| Team        | `team`     | `TEAM_MODULE_ITEMS`                    |
+| Workspace  | Nav ID      | Module items constant       |
+|------------|-------------|-----------------------------|
+| ERP        | `erp`       | `ERP_MODULE_ITEMS`          |
+| Analytic   | `analytics` | `ANALYTICS_MODULE_ITEMS`    |
+| Task       | `task`      | `TASK_MODULE_ITEMS`         |
+| Team       | `team`      | `TEAM_MODULE_ITEMS`         |
+
+Path ambigu (cocok ERP dan Analytic) menggunakan preferensi workspace terakhir pengguna — lihat `topNavForPath` di `components/shell/app-shell.tsx:30`.
+
+### Pola service per domain
+
+Setiap domain di `features/<domain>/` mengikuti pola tiga file:
+
+| File                       | Tujuan                              |
+|----------------------------|--------------------------------------|
+| `api.ts`                   | Panggilan `fetch` ke API routes      |
+| `use-<domain>-module.ts`   | React Query + React Hook Form hooks  |
+| `<domain>-workspace.tsx`   | Komponen UI                          |
+
+Schema validasi Zod di `schemas/<domain>-module.ts`. Tipe TypeScript di `types/<domain>.ts`.
+
+Pattern components: `components/patterns/crud-modal.tsx`, `data-table.tsx`, `inline-edit-row.tsx`, `inventory-picker.tsx`.
 
 ### RBAC
 
-Izin didefinisikan di `lib/rbac.ts`. Item navigasi difilter oleh `hasPermission` / `hasAnyPermission` di `components/shell/module-sidebar.tsx`. Setiap item nav memiliki field `permission` atau `permissionAny`.
+Izin didefinisikan di `lib/rbac.ts` (781 baris). Sidebar difilter di `components/shell/module-sidebar.tsx` via `hasPermission` / `hasAnyPermission`. Setiap nav item memiliki field `permission` atau `permissionAny`.
 
 ### Prisma — introspect, bukan migrations-first
 
-Schema diambil dari database PostgreSQL yang sudah ada:
+Schema ditarik dari PostgreSQL yang sudah ada:
 ```bash
 npm run prisma:pull        # prisma db pull --force — menimpa schema dari DB
 npm run prisma:generate    # regenerate client setelah pull atau edit schema
-npm run prisma:migrate      # hanya jika sengaja membuat migrations
+npm run prisma:migrate     # hanya jika sengaja membuat migration
 ```
-Database menggunakan **8 named schemas** (accounting, auth, channel, marketing, payout, product, sales, warehouse) ditambah `public`.
+
+Database menggunakan **11 named schemas**: `accounting`, `auth`, `channel`, `marketing`, `payout`, `product`, `public`, `sales`, `warehouse`, `task`, `team`.
+
+### DB tunnel (dev lokal)
+
+```bash
+npm run db:tunnel          # buat SSH tunnel (scripts/db-tunnel.mjs)
+npm run db:tunnel:up       # PowerShell — jalankan tunnel
+npm run db:tunnel:status   # PowerShell — cek status tunnel
+```
 
 ### Struktur rute
 
-Semua rute yang ter-authentication berada di `app/(app)/`. Direktori utama:
-- `app/(app)/dashboard/` — overview ERP
-- `app/(app)/sales/` — sales orders & customers
-- `app/(app)/warehouse/` — vendors, POs, inbound, stock
-- `app/(app)/accounting/` — accounts, journals, opex
-- `app/(app)/payout/` — records, adjustments, transfers, reconciliation
-- `app/(app)/products/` — categories, inventory, master, BOM
-- `app/(app)/channel/` — channel groups dan categories
-- `app/(app)/analytics/` — laporan P&L, budget meters
-- `app/(app)/task/` — tasks, KPIs, attendance, calendar
-- `app/(app)/team/` — users, roles, meetings, approvals
-- `app/(app)/marketing/` — data Shopee & TikTok
-- `app/(app)/content/` — daily uploads
+Semua rute ter-autentikasi di `app/(app)/`. Direktori utama:
+- `dashboard/` — overview ERP, report P&L, budget meters
+- `sales/` — orders, customers, channels
+- `warehouse/` — POs, inbound, stock, returns, adjustments
+- `accounting/` — accounts, journals, opex, mutations, channel report
+- `payout/` — records, adjustments, transfers, reconciliation
+- `products/` — categories, inventory, master, BOM
+- `channel/` — groups, categories
+- `analytics/` — financial reports
+- `task/` — todos, KPIs, routines, attendance, calendar, leave requests
+- `team/` — users, roles, approvals, meetings, announcements, calendar, structure, SOP
+- `marketing/` — Shopee & TikTok data, product performance
+- `content/` — daily uploads
 
-### Feature modules
+### next.config.ts
 
-Setiap feature berada di `features/<domain>/`. Shared patterns (CRUD dialogs, tables, inline edits) ada di `components/patterns/`.
-
-### DB tunnel untuk dev lokal
-
-Dev lokal terhubung ke PostgreSQL remote via tunnel:
-```bash
-npm run db:tunnel          # buat SSH tunnel (lihat scripts/db-tunnel.mjs)
+```ts
+distDir: ".next-prod"
+serverExternalPackages: ["@prisma/client", "prisma", "@prisma/adapter-pg", "pg"]
 ```
 
-## Script Penting
+## Script
 
-| Command                     | Tujuan                                |
-|-----------------------------|---------------------------------------|
-| `npm run sales:smoke:fast`  | Smoke test cepat untuk alur sales    |
-| `npm run sales:smoke:full`  | Smoke test lengkap untuk alur sales   |
-| `npm run journal:smoke`     | Smoke test jurnal accounting          |
-| `npm run payout:smoke`     | Smoke test payout                     |
-| `npm run opex:smoke`       | Smoke test opex (operational expense) |
-| `npm run auth:hash`        | Hash password untuk bootstrap auth    |
-| `npm run auth:seed:bootstrap`| Seed role/user auth awal              |
-| `npm run bom:import-csv`  | Import product BOM dari CSV           |
-| `npm run go-live:check`   | PowerShell checklist go-live          |
+| Command                      | Tujuan                                  |
+|------------------------------|-----------------------------------------|
+| `npm run sales:smoke:fast`   | Smoke test alur sales (cepat)           |
+| `npm run sales:smoke:full`   | Smoke test alur sales (lengkap)         |
+| `npm run journal:smoke`      | Smoke test jurnal accounting            |
+| `npm run payout:smoke`       | Smoke test payout                       |
+| `npm run payout:flow:smoke`  | Smoke test alur payout dari sales       |
+| `npm run opex:smoke`         | Smoke test opex                         |
+| `npm run opex:barter:smoke`  | Smoke test opex barter                  |
+| `npm run auth:hash`          | Hash password untuk bootstrap           |
+| `npm run auth:seed:bootstrap`| Seed role/user auth awal                |
+| `npm run bom:import-csv`     | Import BOM dari CSV                     |
+| `npm run go-live:check`      | PowerShell checklist go-live            |
+
 
 ## Konvensi
 
-- Label UI menggunakan **Bahasa Indonesia** (contoh: "Tugas Saya", "Absensi", "Pengumuman")
-- Tailwind CSS **v4** — tidak ada `tailwind.config.js`; menggunakan konfigurasi berbasis CSS
+- Label UI **Bahasa Indonesia** ("Tugas Saya", "Absensi", "Pengumuman")
+- Tailwind CSS **v4** — tanpa `tailwind.config.js`; konfigurasi via CSS
 - shadcn/ui untuk komponen primitif
-- React Hook Form + Zod untuk validasi form
+- React Hook Form + Zod untuk validasi form (`schemas/`)
 - Zustand untuk client state (`store/`)
-- TanStack React Query untuk server state
-- NextAuth v4 untuk autentikasi
+- TanStack React Query untuk server state (`@tanstack/react-query`)
+- NextAuth v4 — credentials provider (`lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`)
+- `hooks/use-modal-state.ts` — helper untuk state dialog (open/close + selected item)
+- `lib/password.ts` — hashing password (digunakan `auth:hash`)
