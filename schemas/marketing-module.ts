@@ -105,6 +105,11 @@ export const tiktokTrafficFormSchema = z.object({
   sku_orders: z.coerce.number().int("Harus bilangan bulat.").min(0, "Tidak boleh negatif."),
   orders: z.coerce.number().int("Harus bilangan bulat.").min(0, "Tidak boleh negatif."),
   conversion_rate: z.coerce.number().min(0, "Tidak boleh negatif."),
+  product_impressions: z.coerce.number().int("Harus bilangan bulat.").min(0, "Tidak boleh negatif."),
+  unique_product_impressions: z.coerce.number().int("Harus bilangan bulat.").min(0, "Tidak boleh negatif."),
+  product_clicks: z.coerce.number().int("Harus bilangan bulat.").min(0, "Tidak boleh negatif."),
+  unique_clicks: z.coerce.number().int("Harus bilangan bulat.").min(0, "Tidak boleh negatif."),
+  aov: z.coerce.number().min(0, "Tidak boleh negatif."),
 });
 
 export const tiktokTrafficFormCreateSchema = tiktokTrafficFormSchema;

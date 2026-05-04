@@ -97,6 +97,11 @@ export type TikTokTraffic = {
   sku_orders: number;
   orders: number;
   conversion_rate: number;
+  product_impressions: number;
+  unique_product_impressions: number;
+  product_clicks: number;
+  unique_clicks: number;
+  aov: number;
   created_at: string | null;
   updated_at: string | null;
 };

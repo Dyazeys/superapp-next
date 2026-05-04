@@ -81,6 +81,11 @@ const emptyForm: TikTokTrafficFormData = {
   sku_orders: 0,
   orders: 0,
   conversion_rate: 0,
+  product_impressions: 0,
+  unique_product_impressions: 0,
+  product_clicks: 0,
+  unique_clicks: 0,
+  aov: 0,
 };
 
 type FormErrors = Partial<Record<keyof TikTokTrafficFormData, string>>;
@@ -175,6 +180,11 @@ export function TiktokTrafficWorkspace() {
       sku_orders: Number(d.sku_orders),
       orders: Number(d.orders),
       conversion_rate: Number(d.conversion_rate),
+      product_impressions: Number(d.product_impressions),
+      unique_product_impressions: Number(d.unique_product_impressions),
+      product_clicks: Number(d.product_clicks),
+      unique_clicks: Number(d.unique_clicks),
+      aov: Number(d.aov),
     });
     setEditingId(d.id);
     setErrors({});
@@ -298,15 +308,18 @@ export function TiktokTrafficWorkspace() {
         description="Data traffic toko TikTok harian."
       >
         {someSelected && (
-          <div className="flex items-center gap-2 mb-3">
-            <Button variant="outline" size="sm" onClick={handleToolbarEdit}>
-              <Pencil className="mr-1 size-4" />
-              Edit
-            </Button>
-            <Button variant="destructive" size="sm" onClick={handleToolbarDelete}>
-              <Trash2 className="mr-1 size-4" />
-              Hapus ({selectedIds.size})
-            </Button>
+          <div className="mb-3 flex items-center gap-3 rounded-xl border border-border/70 bg-card/80 px-4 py-2">
+            <span className="text-sm font-medium text-foreground">{selectedIds.size} terpilih</span>
+            <div className="ml-auto flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={handleToolbarEdit} disabled={selectedIds.size !== 1}>
+                <Pencil className="mr-1 size-3.5" />
+                Edit
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleToolbarDelete} className="text-destructive hover:text-destructive">
+                <Trash2 className="mr-1 size-3.5" />
+                Hapus
+              </Button>
+            </div>
           </div>
         )}
         <div className="overflow-x-auto">
@@ -318,27 +331,32 @@ export function TiktokTrafficWorkspace() {
                 </TableHead>
                 <TableHead>Tanggal</TableHead>
                 <TableHead className="text-right">GMV</TableHead>
-                <TableHead className="text-right">Refund</TableHead>
-                <TableHead className="text-right">Platform Subsidy</TableHead>
-                <TableHead className="text-right">Products Sold</TableHead>
-                <TableHead className="text-right">Buyers</TableHead>
-                <TableHead className="text-right">Page Views</TableHead>
-                <TableHead className="text-right">Store Visits</TableHead>
-                <TableHead className="text-right">SKU Orders</TableHead>
-                <TableHead className="text-right">Orders</TableHead>
-                <TableHead className="text-right">Conv. Rate</TableHead>
+                <TableHead className="text-right">Pesanan</TableHead>
+                <TableHead className="text-right">Pembeli</TableHead>
+                <TableHead className="text-right">Produk terjual</TableHead>
+                <TableHead className="text-right">Produk yang dikembalikan dananya</TableHead>
+                <TableHead className="text-right">Pesanan SKU</TableHead>
+                <TableHead className="text-right">Pendapatan bruto</TableHead>
+                <TableHead className="text-right">Tayangan halaman</TableHead>
+                <TableHead className="text-right">Pengunjung</TableHead>
+                <TableHead className="text-right">Persentase konversi</TableHead>
+                <TableHead className="text-right">Impresi produk</TableHead>
+                <TableHead className="text-right">Impresi unik</TableHead>
+                <TableHead className="text-right">Klik produk</TableHead>
+                <TableHead className="text-right">Klik unik</TableHead>
+                <TableHead className="text-right">AOV</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={13} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={17} className="py-8 text-center text-muted-foreground">
                     <Loader2 className="mx-auto size-6 animate-spin" />
                   </TableCell>
                 </TableRow>
               ) : visible.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={13} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={17} className="py-8 text-center text-muted-foreground">
                     Belum ada data. Klik &ldquo;Input Baru&rdquo; untuk menambahkan.
                   </TableCell>
                 </TableRow>
@@ -350,20 +368,29 @@ export function TiktokTrafficWorkspace() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">{d.date}</TableCell>
                     <TableCell className="text-right">{formatIDR(Number(d.gross_merchandise_value))}</TableCell>
-                    <TableCell className="text-right">{formatIDR(Number(d.refund_amount))}</TableCell>
-                    <TableCell className="text-right">{formatIDR(Number(d.gross_revenue_platform_subsidy))}</TableCell>
-                    <TableCell className="text-right">{formatNum(Number(d.products_sold))}</TableCell>
+                    <TableCell className="text-right">{formatNum(Number(d.orders))}</TableCell>
                     <TableCell className="text-right">{formatNum(Number(d.buyers))}</TableCell>
+                    <TableCell className="text-right">{formatNum(Number(d.products_sold))}</TableCell>
+                    <TableCell className="text-right">{formatIDR(Number(d.refund_amount))}</TableCell>
+                    <TableCell className="text-right">{formatNum(Number(d.sku_orders))}</TableCell>
+                    <TableCell className="text-right">{formatIDR(Number(d.gross_revenue_platform_subsidy))}</TableCell>
                     <TableCell className="text-right">{formatNum(Number(d.page_views))}</TableCell>
                     <TableCell className="text-right">{formatNum(Number(d.store_visits))}</TableCell>
-                    <TableCell className="text-right">{formatNum(Number(d.sku_orders))}</TableCell>
-                    <TableCell className="text-right">{formatNum(Number(d.orders))}</TableCell>
                     <TableCell className="text-right font-medium">{pct(Number(d.conversion_rate))}</TableCell>
+                    <TableCell className="text-right">{formatNum(Number(d.product_impressions))}</TableCell>
+                    <TableCell className="text-right">{formatNum(Number(d.unique_product_impressions))}</TableCell>
+                    <TableCell className="text-right">{formatNum(Number(d.product_clicks))}</TableCell>
+                    <TableCell className="text-right">{formatNum(Number(d.unique_clicks))}</TableCell>
+                    <TableCell className="text-right">
+                      {Number(d.orders) > 0 ? formatIDR(Number(d.gross_merchandise_value) / Number(d.orders)) : "—"}
+                    </TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
+        </div>
+
         {visible.length > 0 && (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white px-3 py-2">
             <p className="text-xs text-slate-500">
@@ -391,7 +418,6 @@ export function TiktokTrafficWorkspace() {
             </div>
           </div>
         )}
-        </div>
       </WorkspacePanel>
     </div>
   );
@@ -428,70 +454,7 @@ function TiktokTrafficForm({
             onChange={(e) => onChange("gross_merchandise_value", e.target.valueAsNumber || 0)}
           />
         </FormField>
-        <FormField label="Refund Amount" htmlFor="refund_amount">
-          <Input
-            id="refund_amount"
-            type="number"
-            min={0}
-            value={form.refund_amount}
-            onChange={(e) => onChange("refund_amount", e.target.valueAsNumber || 0)}
-          />
-        </FormField>
-        <FormField label="Platform Subsidy" htmlFor="gross_revenue_platform_subsidy">
-          <Input
-            id="gross_revenue_platform_subsidy"
-            type="number"
-            min={0}
-            value={form.gross_revenue_platform_subsidy}
-            onChange={(e) => onChange("gross_revenue_platform_subsidy", e.target.valueAsNumber || 0)}
-          />
-        </FormField>
-        <FormField label="Products Sold" htmlFor="products_sold" error={errors.products_sold}>
-          <Input
-            id="products_sold"
-            type="number"
-            min={0}
-            value={form.products_sold}
-            onChange={(e) => onChange("products_sold", e.target.valueAsNumber || 0)}
-          />
-        </FormField>
-        <FormField label="Buyers" htmlFor="buyers">
-          <Input
-            id="buyers"
-            type="number"
-            min={0}
-            value={form.buyers}
-            onChange={(e) => onChange("buyers", e.target.valueAsNumber || 0)}
-          />
-        </FormField>
-        <FormField label="Page Views" htmlFor="page_views">
-          <Input
-            id="page_views"
-            type="number"
-            min={0}
-            value={form.page_views}
-            onChange={(e) => onChange("page_views", e.target.valueAsNumber || 0)}
-          />
-        </FormField>
-        <FormField label="Store Visits" htmlFor="store_visits">
-          <Input
-            id="store_visits"
-            type="number"
-            min={0}
-            value={form.store_visits}
-            onChange={(e) => onChange("store_visits", e.target.valueAsNumber || 0)}
-          />
-        </FormField>
-        <FormField label="SKU Orders" htmlFor="sku_orders">
-          <Input
-            id="sku_orders"
-            type="number"
-            min={0}
-            value={form.sku_orders}
-            onChange={(e) => onChange("sku_orders", e.target.valueAsNumber || 0)}
-          />
-        </FormField>
-        <FormField label="Orders" htmlFor="orders">
+        <FormField label="Pesanan" htmlFor="orders">
           <Input
             id="orders"
             type="number"
@@ -500,7 +463,70 @@ function TiktokTrafficForm({
             onChange={(e) => onChange("orders", e.target.valueAsNumber || 0)}
           />
         </FormField>
-        <FormField label="Conv. Rate (%)" htmlFor="conversion_rate">
+        <FormField label="Pembeli" htmlFor="buyers">
+          <Input
+            id="buyers"
+            type="number"
+            min={0}
+            value={form.buyers}
+            onChange={(e) => onChange("buyers", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Produk terjual" htmlFor="products_sold" error={errors.products_sold}>
+          <Input
+            id="products_sold"
+            type="number"
+            min={0}
+            value={form.products_sold}
+            onChange={(e) => onChange("products_sold", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Produk yang dikembalikan dananya" htmlFor="refund_amount">
+          <Input
+            id="refund_amount"
+            type="number"
+            min={0}
+            value={form.refund_amount}
+            onChange={(e) => onChange("refund_amount", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Pesanan SKU" htmlFor="sku_orders">
+          <Input
+            id="sku_orders"
+            type="number"
+            min={0}
+            value={form.sku_orders}
+            onChange={(e) => onChange("sku_orders", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Pendapatan bruto" htmlFor="gross_revenue_platform_subsidy">
+          <Input
+            id="gross_revenue_platform_subsidy"
+            type="number"
+            min={0}
+            value={form.gross_revenue_platform_subsidy}
+            onChange={(e) => onChange("gross_revenue_platform_subsidy", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Tayangan halaman" htmlFor="page_views">
+          <Input
+            id="page_views"
+            type="number"
+            min={0}
+            value={form.page_views}
+            onChange={(e) => onChange("page_views", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Pengunjung" htmlFor="store_visits">
+          <Input
+            id="store_visits"
+            type="number"
+            min={0}
+            value={form.store_visits}
+            onChange={(e) => onChange("store_visits", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Persentase konversi" htmlFor="conversion_rate">
           <Input
             id="conversion_rate"
             type="number"
@@ -509,6 +535,51 @@ function TiktokTrafficForm({
             placeholder="cth: 3.84"
             value={form.conversion_rate}
             onChange={(e) => onChange("conversion_rate", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Impresi produk" htmlFor="product_impressions">
+          <Input
+            id="product_impressions"
+            type="number"
+            min={0}
+            value={form.product_impressions}
+            onChange={(e) => onChange("product_impressions", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Impresi produk unik" htmlFor="unique_product_impressions">
+          <Input
+            id="unique_product_impressions"
+            type="number"
+            min={0}
+            value={form.unique_product_impressions}
+            onChange={(e) => onChange("unique_product_impressions", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Klik produk" htmlFor="product_clicks">
+          <Input
+            id="product_clicks"
+            type="number"
+            min={0}
+            value={form.product_clicks}
+            onChange={(e) => onChange("product_clicks", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="Klik unik" htmlFor="unique_clicks">
+          <Input
+            id="unique_clicks"
+            type="number"
+            min={0}
+            value={form.unique_clicks}
+            onChange={(e) => onChange("unique_clicks", e.target.valueAsNumber || 0)}
+          />
+        </FormField>
+        <FormField label="AOV" htmlFor="aov">
+          <Input
+            id="aov"
+            type="number"
+            min={0}
+            value={form.aov}
+            onChange={(e) => onChange("aov", e.target.valueAsNumber || 0)}
           />
         </FormField>
       </div>
