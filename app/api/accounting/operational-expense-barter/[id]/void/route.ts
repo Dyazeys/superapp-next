@@ -9,7 +9,7 @@ import { syncOperationalExpenseBarterMovements } from "@/lib/warehouse-stock";
 
 function barterInclude() {
   return {
-    accounts_operational_expense_barter_expense_account_idToaccounts: {
+    accounts: {
       select: {
         id: true,
         code: true,
@@ -36,7 +36,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_VOID);
+    const session = await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_VOID);
+    const createdBy = session.user.username;
 
     const { id } = await params;
 
@@ -61,7 +62,7 @@ export async function POST(
       });
 
       await syncOperationalExpenseBarterMovements(tx, id);
-      await syncOperationalExpenseBarterJournal(tx, id);
+      await syncOperationalExpenseBarterJournal(tx, id, createdBy);
 
       return tx.operational_expense_barter.findUniqueOrThrow({
         where: { id },

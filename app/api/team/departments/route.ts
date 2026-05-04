@@ -8,7 +8,7 @@ import { departmentInputSchema } from "@/schemas/task-module";
 
 export async function GET() {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_DEPARTMENTS_VIEW);
 
     const [departments, members] = await Promise.all([
       prisma.departments.findMany({ orderBy: [{ name: "asc" }] }),
@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_DEPARTMENTS_CREATE);
     const body = departmentInputSchema.parse(await request.json());
 
     const department = await prisma.departments.create({

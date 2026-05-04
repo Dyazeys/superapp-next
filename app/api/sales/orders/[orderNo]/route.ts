@@ -17,7 +17,8 @@ export async function PATCH(
   { params }: { params: Promise<{ orderNo: string }> }
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.SALES_ORDER_UPDATE);
+    const session = await requireApiPermission(PERMISSIONS.SALES_ORDER_UPDATE);
+    const createdBy = session.user.username;
 
     const { orderNo } = await params;
     const rawPayload = await request.json();
@@ -75,7 +76,7 @@ export async function PATCH(
         has("ref_no")
       ) {
         await syncSalesOrderMovements(tx, orderNo);
-        await syncSalesOrderJournals(tx, orderNo);
+        await syncSalesOrderJournals(tx, orderNo, createdBy);
       }
 
       return updated;

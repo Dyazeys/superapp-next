@@ -48,11 +48,11 @@ export async function recalculateOperationalExpenseBarterTotal(tx: Tx, barterId:
   return totalAmount;
 }
 
-export async function syncOperationalExpenseBarterJournal(tx: Tx, barterId: string) {
+export async function syncOperationalExpenseBarterJournal(tx: Tx, barterId: string, createdBy?: string) {
   const barter = await tx.operational_expense_barter.findUnique({
     where: { id: barterId },
     include: {
-      accounts_operational_expense_barter_expense_account_idToaccounts: {
+      accounts: {
         select: {
           code: true,
           name: true,
@@ -87,7 +87,7 @@ export async function syncOperationalExpenseBarterJournal(tx: Tx, barterId: stri
   const totalAmount = Number(barter.total_amount);
   invariant(Number.isFinite(totalAmount) && totalAmount > 0, `Operational expense barter ${barterId} must have a positive total.`);
 
-  const expenseAccount = barter.accounts_operational_expense_barter_expense_account_idToaccounts;
+  const expenseAccount = barter.accounts;
   invariant(expenseAccount, `Expense account mapping is missing for operational expense barter ${barterId}.`);
 
   const inventoryAccount = await tx.accounts.findUnique({
@@ -124,5 +124,6 @@ export async function syncOperationalExpenseBarterJournal(tx: Tx, barterId: stri
         memo: `Persediaan keluar untuk opex barter ${barterId}`,
       },
     ],
+    createdBy,
   });
 }

@@ -14,7 +14,7 @@ export async function GET() {
         master_inventory: {
           select: {
             inv_name: true,
-            unit_price: true,
+            unit_cost: true,
             is_active: true,
             master_product_master_product_inv_mainTomaster_inventory: {
               select: {

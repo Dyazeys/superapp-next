@@ -13,7 +13,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.PAYOUT_ADJUSTMENT_UPDATE);
+    const session = await requireApiPermission(PERMISSIONS.PAYOUT_ADJUSTMENT_UPDATE);
+    const createdBy = session.user.username;
 
     const { id } = await params;
     const adjustmentId = Number(id);
@@ -32,7 +33,7 @@ export async function POST(
 
       if (action === "POST") {
         invariant(current.post_status === "DRAFT", "Hanya adjustment DRAFT yang bisa di-post.");
-        await syncPayoutAdjustmentJournal(tx, adjustmentId);
+        await syncPayoutAdjustmentJournal(tx, adjustmentId, createdBy);
         await tx.t_adjustments.update({
           where: { adjustment_id: adjustmentId },
           data: { post_status: "POSTED", posted_at: new Date(), voided_at: null },

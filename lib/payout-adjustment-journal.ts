@@ -40,6 +40,7 @@ async function upsertPayoutAdjustmentJournal(
       credit: number;
       memo: string;
     }>;
+    createdBy?: string;
   }
 ) {
   await upsertJournalEntryReplacingLines(tx, {
@@ -53,10 +54,11 @@ async function upsertPayoutAdjustmentJournal(
       credit: line.credit.toFixed(2),
       memo: line.memo,
     })),
+    createdBy: params.createdBy,
   });
 }
 
-export async function syncPayoutAdjustmentJournal(tx: Tx, adjustmentId: number) {
+export async function syncPayoutAdjustmentJournal(tx: Tx, adjustmentId: number, createdBy?: string) {
   const referenceId = payoutAdjustmentReferenceId(adjustmentId);
 
   const adjustment = await tx.t_adjustments.findUnique({
@@ -149,6 +151,7 @@ export async function syncPayoutAdjustmentJournal(tx: Tx, adjustmentId: number) 
         memo: `Piutang channel disesuaikan untuk adjustment payout ${adjustment.ref ?? adjustment.adjustment_id}`,
       },
     ],
+    createdBy,
   });
 }
 

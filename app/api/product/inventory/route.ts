@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         inv_code: payload.inv_code,
         inv_name: payload.inv_name,
         description: payload.description || null,
-        unit_price: payload.unit_price,
+        unit_cost: payload.unit_cost,
         is_active: payload.is_active,
       },
     });

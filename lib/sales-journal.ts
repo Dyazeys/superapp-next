@@ -41,7 +41,7 @@ async function deleteSalesOrderItemJournalByReferenceId(tx: Tx, referenceId: str
   });
 }
 
-export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number) {
+export async function syncSalesOrderItemJournal(tx: Tx, orderItemId: number, _createdBy?: string) {
   const referenceId = deterministicSalesOrderItemReferenceId(orderItemId);
   await deleteSalesOrderItemJournalByReferenceId(tx, referenceId);
 }
@@ -50,13 +50,13 @@ export async function deleteSalesOrderItemJournal(tx: Tx, orderItemId: number) {
   await deleteSalesOrderItemJournalByReferenceId(tx, deterministicSalesOrderItemReferenceId(orderItemId));
 }
 
-export async function syncSalesOrderJournals(tx: Tx, orderNo: string) {
+export async function syncSalesOrderJournals(tx: Tx, orderNo: string, createdBy?: string) {
   const items = await tx.t_order_item.findMany({
     where: { order_no: orderNo },
     select: { id: true },
   });
 
   for (const item of items) {
-    await syncSalesOrderItemJournal(tx, item.id);
+    await syncSalesOrderItemJournal(tx, item.id, createdBy);
   }
 }

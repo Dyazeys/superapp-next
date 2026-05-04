@@ -8,7 +8,7 @@ import { announcementInputSchema } from "@/schemas/task-module";
 
 export async function GET() {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_ANNOUNCEMENTS_VIEW);
 
     const announcements = await prisma.announcements.findMany({
       orderBy: [{ is_pinned: "desc" }, { created_at: "desc" }],
@@ -22,9 +22,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TEAM_ANNOUNCEMENTS_CREATE);
     const body = announcementInputSchema.parse(await request.json());
-    const session = await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
 
     const announcement = await prisma.announcements.create({
       data: {

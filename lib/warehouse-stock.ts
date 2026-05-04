@@ -199,7 +199,7 @@ export async function syncOperationalExpenseBarterMovements(tx: Tx, barterId: st
           qty: true,
         },
       },
-      accounts_operational_expense_barter_expense_account_idToaccounts: {
+      accounts: {
         select: {
           code: true,
           name: true,
@@ -252,7 +252,7 @@ export async function syncOperationalExpenseBarterMovements(tx: Tx, barterId: st
         reference_id: barterId,
         qty_change: -item.qty,
         running_balance: 0,
-        notes: `Opex barter ${barter.accounts_operational_expense_barter_expense_account_idToaccounts.code} - ${barter.description}`,
+        notes: `Opex barter ${barter.accounts.code} - ${barter.description}`,
       })),
     });
   }

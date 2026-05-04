@@ -36,7 +36,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_VOID);
+    const session = await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_VOID);
+    const createdBy = session.user.username;
 
     const { id } = await params;
 
@@ -63,7 +64,7 @@ export async function POST(
         },
       });
 
-      await syncOperationalExpenseJournal(tx, id);
+      await syncOperationalExpenseJournal(tx, id, createdBy);
 
       return tx.operational_expenses.findUniqueOrThrow({
         where: { id },

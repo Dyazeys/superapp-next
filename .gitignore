@@ -46,3 +46,10 @@ next-env.d.ts
 
 # prisma
 /lib/generated/prisma
+
+# temp / local
+.tmp-*.cookies
+.opencode/
+
+# data backups
+data/master-upload/*.bak

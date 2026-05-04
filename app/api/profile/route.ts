@@ -25,7 +25,7 @@ async function loadProfile(userId: string) {
           role_name: true,
         },
       },
-      profile: true,
+      user_profiles: true,
     },
   });
 
@@ -41,7 +41,7 @@ async function loadProfile(userId: string) {
       created_at: user.created_at,
       updated_at: user.updated_at,
     },
-    profile: user.profile,
+    profile: user.user_profiles,
   };
 }
 

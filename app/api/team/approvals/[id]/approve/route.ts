@@ -7,7 +7,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TEAM_APPROVALS_APPROVE);
     const { id } = await params;
     const body = await request.json();
 

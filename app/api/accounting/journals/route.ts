@@ -37,6 +37,7 @@ export async function GET() {
         reference_type: entry.reference_type,
         reference_id: entry.reference_id,
         description: entry.description,
+        created_by: entry.created_by,
         created_at: entry.created_at,
         updated_at: entry.updated_at,
         line_count: entry.journal_lines.length,

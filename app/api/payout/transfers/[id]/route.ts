@@ -120,7 +120,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.PAYOUT_TRANSFER_UPDATE);
+    const session = await requireApiPermission(PERMISSIONS.PAYOUT_TRANSFER_UPDATE);
+    const createdBy = session.user.username;
 
     const { id } = await params;
     const payload = payoutTransferSchema.partial().parse(await request.json());
@@ -160,7 +161,7 @@ export async function PATCH(
         },
       });
 
-      await syncPayoutTransferJournal(tx, id);
+      await syncPayoutTransferJournal(tx, id, createdBy);
 
       return tx.payout_transfers.findUniqueOrThrow({
         where: { id },

@@ -63,7 +63,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_UPDATE);
+    const session = await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_UPDATE);
+    const createdBy = session.user.username;
 
     const { id } = await params;
     const payload = operationalExpensePatchSchema.parse(await request.json());
@@ -110,7 +111,7 @@ export async function PATCH(
         },
       });
 
-      await syncOperationalExpenseJournal(tx, id);
+      await syncOperationalExpenseJournal(tx, id, createdBy);
 
       return tx.operational_expenses.findUniqueOrThrow({
         where: { id },

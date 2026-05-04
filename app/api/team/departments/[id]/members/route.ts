@@ -7,7 +7,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_DEPARTMENTS_MEMBERS_MANAGE);
     const { id: departmentId } = await params;
     const body = await request.json();
 

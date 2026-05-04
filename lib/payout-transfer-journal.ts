@@ -15,6 +15,7 @@ async function upsertPayoutTransferJournal(
     bankAccountId: string;
     saldoAccountId: string;
     amount: number;
+    createdBy?: string;
   }
 ) {
   await upsertJournalEntryReplacingLines(tx, {
@@ -36,10 +37,11 @@ async function upsertPayoutTransferJournal(
         memo: "Saldo channel dipindahkan ke rekening bank",
       },
     ],
+    createdBy: params.createdBy,
   });
 }
 
-export async function syncPayoutTransferJournal(tx: Tx, transferId: string) {
+export async function syncPayoutTransferJournal(tx: Tx, transferId: string, createdBy?: string) {
   const transfer = await tx.payout_transfers.findUnique({
     where: { id: transferId },
     select: {
@@ -95,6 +97,7 @@ export async function syncPayoutTransferJournal(tx: Tx, transferId: string) {
       `Transfer payout ${channel.channel_name} ke bank ${transfer.accounts.code}` +
       ` ref ${transfer.t_payout?.ref ?? "-"}` +
       `${transfer.notes ? ` - ${transfer.notes}` : ""}`,
+    createdBy,
   });
 }
 

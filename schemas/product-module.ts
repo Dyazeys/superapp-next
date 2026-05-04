@@ -34,7 +34,7 @@ export const masterInventorySchema = z.object({
   inv_code: z.string().min(1, "Inventory code is required").max(100),
   inv_name: z.string().min(2, "Inventory name is required").max(255),
   description: z.string().optional().nullable(),
-  unit_price: decimalInput,
+  unit_cost: decimalInput,
   is_active: z.boolean(),
 });
 

@@ -36,7 +36,8 @@ type ParsedOrder = {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.SALES_ORDER_CREATE);
+    const session = await requireApiPermission(PERMISSIONS.SALES_ORDER_CREATE);
+    const createdBy = session.user.username;
 
     const formData = await request.formData();
     const file = formData.get("file");
@@ -233,7 +234,7 @@ export async function POST(request: NextRequest) {
 
           if (!order.is_historical) {
             await syncSalesOrderItemMovements(tx, createdItem.id);
-            await syncSalesOrderItemJournal(tx, createdItem.id);
+            await syncSalesOrderItemJournal(tx, createdItem.id, createdBy);
           }
         }
       }

@@ -7,7 +7,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_APPROVALS_VIEW);
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const type = searchParams.get("type");

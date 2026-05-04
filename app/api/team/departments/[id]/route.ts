@@ -7,7 +7,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_DEPARTMENTS_UPDATE);
     const { id } = await params;
     const body = await request.json();
 
@@ -29,7 +29,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_DEPARTMENTS_DELETE);
     const { id } = await params;
 
     const existing = await prisma.departments.findUnique({ where: { id } });

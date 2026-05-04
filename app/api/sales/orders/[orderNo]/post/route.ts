@@ -12,7 +12,8 @@ export async function POST(
   { params }: { params: Promise<{ orderNo: string }> }
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.SALES_ORDER_POST);
+    const session = await requireApiPermission(PERMISSIONS.SALES_ORDER_POST);
+    const createdBy = session.user.username;
 
     const { orderNo } = await params;
 
@@ -35,7 +36,7 @@ export async function POST(
       invariant(current._count.t_order_item > 0, "Sales order belum punya item untuk diposting.");
 
       await syncSalesOrderMovements(tx, orderNo);
-      await syncSalesOrderJournals(tx, orderNo);
+      await syncSalesOrderJournals(tx, orderNo, createdBy);
 
       const [summary] = await tx.$queryRaw<
         Array<{

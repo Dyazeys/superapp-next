@@ -140,7 +140,7 @@ export function ProductWorkspace() {
         cell: (info) => <span className="font-medium">{info.getValue()}</span>,
       }),
       inventoryColumnHelper.accessor("inv_name", { header: "Inventory" }),
-      inventoryColumnHelper.accessor("unit_price", { header: "Unit Price" }),
+      inventoryColumnHelper.accessor("unit_cost", { header: "Unit Cost" }),
       inventoryColumnHelper.accessor("is_active", {
         header: "Status",
         cell: (info) => (
@@ -689,11 +689,11 @@ export function ProductWorkspace() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
-            label="Unit Price"
-            htmlFor="unit_price"
-            error={inventoryForm.formState.errors.unit_price?.message}
+            label="Unit Cost"
+            htmlFor="unit_cost"
+            error={inventoryForm.formState.errors.unit_cost?.message}
           >
-            <Input id="unit_price" {...inventoryForm.register("unit_price")} />
+            <Input id="unit_cost" {...inventoryForm.register("unit_cost")} />
           </FormField>
           <FormField label="Active" htmlFor="inventory_active">
             <SelectNative

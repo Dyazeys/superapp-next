@@ -73,7 +73,8 @@ export async function POST(
   { params }: { params: Promise<{ orderNo: string }> }
 ) {
   try {
-    await requireApiPermission(PERMISSIONS.SALES_ORDER_CREATE);
+    const session = await requireApiPermission(PERMISSIONS.SALES_ORDER_CREATE);
+    const createdBy = session.user.username;
 
     const { orderNo } = await params;
     const payload = salesOrderItemSchema.parse({ ...(await request.json()), order_no: orderNo });
@@ -100,7 +101,7 @@ export async function POST(
       });
 
       await syncSalesOrderItemMovements(tx, created.id);
-      await syncSalesOrderItemJournal(tx, created.id);
+      await syncSalesOrderItemJournal(tx, created.id, createdBy);
 
       return created;
     });

@@ -16,6 +16,7 @@ type UpsertJournalParams = {
   transactionDate: Date;
   description: string;
   lines: JournalLineInput[];
+  createdBy?: string;
 };
 
 function toCents(value: string) {
@@ -48,6 +49,7 @@ export async function upsertJournalEntryReplacingLines(tx: Tx, params: UpsertJou
         reference_type: params.referenceType,
         reference_id: params.referenceId,
         description: params.description,
+        created_by: params.createdBy ?? null,
       },
       select: { id: true },
     });

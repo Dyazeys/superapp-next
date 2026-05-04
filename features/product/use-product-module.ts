@@ -155,7 +155,7 @@ export function useProductInventory(): ProductInventoryHook {
   const [editingInventory, setEditingInventory] = useState<MasterInventoryRecord | null>(null);
   const form = useForm<MasterInventoryFormValues, unknown, MasterInventoryInput>({
     resolver: zodResolver(masterInventorySchema),
-    defaultValues: { inv_code: "", inv_name: "", description: "", unit_price: "0", is_active: true },
+    defaultValues:         { inv_code: "", inv_name: "", description: "", unit_cost: "0", is_active: true },
   });
   const modal = useModalState();
   const query = useQuery({ queryKey: ["product-inventory"], queryFn: productApi.inventory.list });
@@ -195,7 +195,7 @@ export function useProductInventory(): ProductInventoryHook {
       inv_code: inventory?.inv_code ?? "",
       inv_name: inventory?.inv_name ?? "",
       description: inventory?.description ?? "",
-      unit_price: inventory?.unit_price ?? "0",
+      unit_cost: inventory?.unit_cost ?? "0",
       is_active: inventory?.is_active ?? true,
     });
     modal.openModal();

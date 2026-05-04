@@ -30,6 +30,7 @@ export type AccountingJournalRecord = {
   reference_type: string;
   reference_id: string | null;
   description: string;
+  created_by: string | null;
   created_at: string;
   updated_at: string | null;
   line_count: number;
@@ -56,6 +57,7 @@ export type AccountingJournalEntryLineRecord = {
     reference_type: string;
     reference_id: string | null;
     description: string;
+    created_by: string | null;
     created_at: string;
   };
 };
@@ -124,7 +126,7 @@ export type AccountingOperationalExpenseBarterRecord = {
   updated_at: string | null;
   posted_at: string | null;
   voided_at: string | null;
-  accounts_operational_expense_barter_expense_account_idToaccounts: {
+  accounts: {
     id: string;
     code: string;
     name: string;

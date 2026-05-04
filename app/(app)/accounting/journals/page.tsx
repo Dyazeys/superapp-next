@@ -104,7 +104,8 @@ export default function AccountingJournalsPage() {
       journal.description.toLowerCase().includes(normalizedSearch) ||
       formatJournalDescription(journal).toLowerCase().includes(normalizedSearch) ||
       journal.reference_type.toLowerCase().includes(normalizedSearch) ||
-      toDateInput(journal.transaction_date).includes(normalizedSearch);
+      toDateInput(journal.transaction_date).includes(normalizedSearch) ||
+      (journal.created_by ?? "").toLowerCase().includes(normalizedSearch);
     const matchesSource = sourceFilter === "ALL" || journal.reference_type === sourceFilter;
     const matchesBalance =
       balanceFilter === "ALL" ||
@@ -153,6 +154,10 @@ export default function AccountingJournalsPage() {
     journalColumnHelper.accessor("reference_type", {
       header: "Sumber",
       cell: (info) => <StatusBadge label={formatSourceLabel(info.getValue())} tone="info" />,
+    }),
+    journalColumnHelper.accessor("created_by", {
+      header: "Dibuat oleh",
+      cell: (info) => info.getValue() ?? "-",
     }),
     journalColumnHelper.display({
       id: "balance_status",
@@ -300,7 +305,7 @@ export default function AccountingJournalsPage() {
                   {selectedJournal ? formatJournalDescription(selectedJournal) : "Belum ada jurnal dipilih."}
                 </p>
               </div>
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-3 md:grid-cols-4">
                 <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Tanggal</p>
                   <p className="mt-2 text-2xl font-bold tracking-tight text-slate-900">
@@ -328,6 +333,13 @@ export default function AccountingJournalsPage() {
                       tone={selectedJournal && isBalanced(selectedJournal) ? "success" : "warning"}
                     />
                   </div>
+                </div>
+                <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Dibuat oleh</p>
+                  <p className="mt-2 text-xl font-bold tracking-tight text-slate-900">
+                    {selectedJournal?.created_by ?? "-"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">User yang memposting jurnal.</p>
                 </div>
               </div>
             </div>

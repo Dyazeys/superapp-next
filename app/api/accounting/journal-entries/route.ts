@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
             reference_type: true,
             reference_id: true,
             description: true,
+            created_by: true,
             created_at: true,
           },
         },

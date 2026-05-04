@@ -134,7 +134,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.PAYOUT_TRANSFER_CREATE);
+    const session = await requireApiPermission(PERMISSIONS.PAYOUT_TRANSFER_CREATE);
+    const createdBy = session.user.username;
 
     const payload = payoutTransferSchema.parse(await request.json());
 
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      await syncPayoutTransferJournal(tx, created.id);
+      await syncPayoutTransferJournal(tx, created.id, createdBy);
 
       return tx.payout_transfers.findUniqueOrThrow({
         where: { id: created.id },

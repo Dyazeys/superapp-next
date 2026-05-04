@@ -66,6 +66,7 @@ async function upsertPayoutSettlementJournal(
       credit: number;
       memo: string;
     }>;
+    createdBy?: string;
   }
 ) {
   await upsertJournalEntryReplacingLines(tx, {
@@ -79,6 +80,7 @@ async function upsertPayoutSettlementJournal(
       credit: line.credit.toFixed(2),
       memo: line.memo,
     })),
+    createdBy: params.createdBy,
   });
 }
 
@@ -157,7 +159,7 @@ function payoutSettlementProfileForChannel(params: {
   } satisfies PayoutSettlementProfile;
 }
 
-export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
+export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number, createdBy?: string) {
   const referenceId = payoutSettlementReferenceId(payoutId);
 
   const payout = await tx.t_payout.findUnique({
@@ -218,7 +220,7 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
       slug: true,
       revenue_account_id: true,
       saldo_account_id: true,
-      revenue_account: {
+      accounts_m_channel_revenue_account_idToaccounts: {
         select: {
           code: true,
         },
@@ -242,7 +244,7 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
   const settlementProfile = payoutSettlementProfileForChannel({
     channelName: channel.channel_name,
     slug: channel.slug,
-    revenueCode: channel.revenue_account?.code,
+    revenueCode: channel.accounts_m_channel_revenue_account_idToaccounts?.code,
   });
 
   const amount = Number(payout.omset);
@@ -395,6 +397,7 @@ export async function syncPayoutSettlementJournal(tx: Tx, payoutId: number) {
     payoutDate: payout.payout_date,
     description: `Penerimaan payout ${settlementProfile.settlementLabel} ref ${payout.ref}`,
     lines,
+    createdBy,
   });
 }
 

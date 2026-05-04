@@ -136,6 +136,33 @@ export const PERMISSIONS = {
   TASK_WORKSPACE_VIEW: "task.workspace.view",
   TEAM_WORKSPACE_VIEW: "team.workspace.view",
 
+  TEAM_MEETINGS_VIEW: "team.meetings.view",
+  TEAM_MEETINGS_CREATE: "team.meetings.create",
+  TEAM_MEETINGS_UPDATE: "team.meetings.update",
+  TEAM_MEETINGS_DELETE: "team.meetings.delete",
+
+  TEAM_MEETING_TODOS_VIEW: "team.meeting_todos.view",
+  TEAM_MEETING_TODOS_CREATE: "team.meeting_todos.create",
+  TEAM_MEETING_TODOS_UPDATE: "team.meeting_todos.update",
+  TEAM_MEETING_TODOS_DELETE: "team.meeting_todos.delete",
+
+  TEAM_ANNOUNCEMENTS_VIEW: "team.announcements.view",
+  TEAM_ANNOUNCEMENTS_CREATE: "team.announcements.create",
+  TEAM_ANNOUNCEMENTS_UPDATE: "team.announcements.update",
+  TEAM_ANNOUNCEMENTS_DELETE: "team.announcements.delete",
+  TEAM_ANNOUNCEMENTS_PUBLISH: "team.announcements.publish",
+
+  TEAM_APPROVALS_VIEW: "team.approvals.view",
+  TEAM_APPROVALS_APPROVE: "team.approvals.approve",
+  TEAM_APPROVALS_REJECT: "team.approvals.reject",
+  TEAM_APPROVALS_ACKNOWLEDGE: "team.approvals.acknowledge",
+
+  TEAM_DEPARTMENTS_VIEW: "team.departments.view",
+  TEAM_DEPARTMENTS_CREATE: "team.departments.create",
+  TEAM_DEPARTMENTS_UPDATE: "team.departments.update",
+  TEAM_DEPARTMENTS_DELETE: "team.departments.delete",
+  TEAM_DEPARTMENTS_MEMBERS_MANAGE: "team.departments.members.manage",
+
   AUTH_USER_VIEW: "auth.user.view",
   AUTH_USER_CREATE: "auth.user.create",
   AUTH_USER_UPDATE: "auth.user.update",
@@ -550,6 +577,58 @@ export const PERMISSION_GROUPS: PermissionDomainGroup[] = [
         label: "Team Workspace",
         permissions: [PERMISSIONS.TEAM_WORKSPACE_VIEW],
       },
+      {
+        key: "team.meetings",
+        label: "Meeting",
+        permissions: [
+          PERMISSIONS.TEAM_MEETINGS_VIEW,
+          PERMISSIONS.TEAM_MEETINGS_CREATE,
+          PERMISSIONS.TEAM_MEETINGS_UPDATE,
+          PERMISSIONS.TEAM_MEETINGS_DELETE,
+        ],
+      },
+      {
+        key: "team.meeting_todos",
+        label: "Meeting To-Do",
+        permissions: [
+          PERMISSIONS.TEAM_MEETING_TODOS_VIEW,
+          PERMISSIONS.TEAM_MEETING_TODOS_CREATE,
+          PERMISSIONS.TEAM_MEETING_TODOS_UPDATE,
+          PERMISSIONS.TEAM_MEETING_TODOS_DELETE,
+        ],
+      },
+      {
+        key: "team.announcements",
+        label: "Pengumuman",
+        permissions: [
+          PERMISSIONS.TEAM_ANNOUNCEMENTS_VIEW,
+          PERMISSIONS.TEAM_ANNOUNCEMENTS_CREATE,
+          PERMISSIONS.TEAM_ANNOUNCEMENTS_UPDATE,
+          PERMISSIONS.TEAM_ANNOUNCEMENTS_DELETE,
+          PERMISSIONS.TEAM_ANNOUNCEMENTS_PUBLISH,
+        ],
+      },
+      {
+        key: "team.approvals",
+        label: "Approval",
+        permissions: [
+          PERMISSIONS.TEAM_APPROVALS_VIEW,
+          PERMISSIONS.TEAM_APPROVALS_APPROVE,
+          PERMISSIONS.TEAM_APPROVALS_REJECT,
+          PERMISSIONS.TEAM_APPROVALS_ACKNOWLEDGE,
+        ],
+      },
+      {
+        key: "team.departments",
+        label: "Departemen",
+        permissions: [
+          PERMISSIONS.TEAM_DEPARTMENTS_VIEW,
+          PERMISSIONS.TEAM_DEPARTMENTS_CREATE,
+          PERMISSIONS.TEAM_DEPARTMENTS_UPDATE,
+          PERMISSIONS.TEAM_DEPARTMENTS_DELETE,
+          PERMISSIONS.TEAM_DEPARTMENTS_MEMBERS_MANAGE,
+        ],
+      },
     ],
   },
   {
@@ -589,7 +668,11 @@ const ACTION_LABELS: Record<string, string> = {
   post: "Posting",
   void: "Void",
   reset_password: "Reset Password",
-  approve: "Approve",
+  approve: "Setujui",
+  reject: "Tolak",
+  acknowledge: "Acknowledge",
+  publish: "Publikasi",
+  members_manage: "Kelola Anggota",
 };
 
 export function getPermissionActionLabel(permission: string): string {
@@ -602,6 +685,15 @@ export const SUPERADMIN_ROLE_CODE = "OWNER";
 export const SUPERADMIN_ROLE_LABEL = "SUPERADMIN";
 
 const ALL_PERMISSIONS = Object.values(PERMISSIONS);
+
+const TEAM_VIEW_PERMISSIONS = [
+  PERMISSIONS.TEAM_WORKSPACE_VIEW,
+  PERMISSIONS.TEAM_MEETINGS_VIEW,
+  PERMISSIONS.TEAM_MEETING_TODOS_VIEW,
+  PERMISSIONS.TEAM_ANNOUNCEMENTS_VIEW,
+  PERMISSIONS.TEAM_APPROVALS_VIEW,
+  PERMISSIONS.TEAM_DEPARTMENTS_VIEW,
+];
 
 function uniquePermissions(permissions: Permission[]) {
   return Array.from(new Set(permissions));
@@ -627,7 +719,7 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
     ...permissionsByPrefix(["sales.", "warehouse.", "marketing.", "content."]),
     PERMISSIONS.TASK_WORKSPACE_VIEW,
-    PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    ...permissionsByPrefix(["team."]),
     PERMISSIONS.PAYOUT_RECORD_VIEW,
     PERMISSIONS.PAYOUT_ADJUSTMENT_VIEW,
     PERMISSIONS.PAYOUT_TRANSFER_VIEW,
@@ -649,7 +741,7 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.MARKETING_SHOPEE_TRAFFIC_VIEW,
     PERMISSIONS.MARKETING_SHOPEE_LIVESTREAM_VIEW,
     PERMISSIONS.TASK_WORKSPACE_VIEW,
-    PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    ...TEAM_VIEW_PERMISSIONS,
   ]),
   SALES: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -664,7 +756,7 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.PAYOUT_ADJUSTMENT_VIEW,
     PERMISSIONS.PAYOUT_RECONCILIATION_VIEW,
     PERMISSIONS.TASK_WORKSPACE_VIEW,
-    PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    ...TEAM_VIEW_PERMISSIONS,
   ]),
   ACCOUNTING: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -693,7 +785,7 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.PAYOUT_RECONCILIATION_VIEW,
     PERMISSIONS.CHANNEL_MASTER_VIEW,
     PERMISSIONS.TASK_WORKSPACE_VIEW,
-    PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    ...TEAM_VIEW_PERMISSIONS,
   ]),
   PURCHASING: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -709,9 +801,9 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.WAREHOUSE_PURCHASE_ORDER_UPDATE,
     PERMISSIONS.WAREHOUSE_INBOUND_VIEW,
     PERMISSIONS.WAREHOUSE_RETURN_VIEW,
-    PERMISSIONS.WAREHOUSE_STOCK_VIEW,
+PERMISSIONS.WAREHOUSE_STOCK_VIEW,
     PERMISSIONS.TASK_WORKSPACE_VIEW,
-    PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    ...TEAM_VIEW_PERMISSIONS,
   ]),
   WAREHOUSE: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -735,7 +827,7 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.PRODUCT_INVENTORY_VIEW,
     PERMISSIONS.PRODUCT_MASTER_VIEW,
     PERMISSIONS.TASK_WORKSPACE_VIEW,
-    PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    ...TEAM_VIEW_PERMISSIONS,
   ]),
   CONTENT_CREATOR: uniquePermissions([
     PERMISSIONS.DASHBOARD_VIEW,
@@ -748,7 +840,7 @@ export const ROLE_PERMISSION_TEMPLATES: Record<RoleCode, Permission[]> = {
     PERMISSIONS.MARKETING_WORKSPACE_VIEW,
     PERMISSIONS.MARKETING_PRODUCT_PERFORMANCE_VIEW,
     PERMISSIONS.TASK_WORKSPACE_VIEW,
-    PERMISSIONS.TEAM_WORKSPACE_VIEW,
+    ...TEAM_VIEW_PERMISSIONS,
   ]),
 };
 

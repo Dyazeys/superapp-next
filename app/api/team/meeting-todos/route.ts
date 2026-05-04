@@ -8,7 +8,7 @@ import { meetingTodoInputSchema } from "@/schemas/task-module";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_MEETING_TODOS_VIEW);
     const { searchParams } = new URL(request.url);
     const meetingId = searchParams.get("meeting_id");
     const assigneeId = searchParams.get("assignee_id");
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_MEETING_TODOS_CREATE);
     const body = meetingTodoInputSchema.parse(await request.json());
 
     const meeting = await prisma.meetings.findUnique({ where: { id: body.meeting_id.toString() } });

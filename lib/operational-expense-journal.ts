@@ -41,6 +41,7 @@ async function upsertOperationalExpenseJournal(
       credit: number;
       memo: string;
     }>;
+    createdBy?: string;
   }
 ) {
   await upsertJournalEntryReplacingLines(tx, {
@@ -54,10 +55,11 @@ async function upsertOperationalExpenseJournal(
       credit: line.credit.toFixed(2),
       memo: line.memo,
     })),
+    createdBy: params.createdBy,
   });
 }
 
-export async function syncOperationalExpenseJournal(tx: Tx, expenseId: string) {
+export async function syncOperationalExpenseJournal(tx: Tx, expenseId: string, createdBy?: string) {
   const expense = await tx.operational_expenses.findUnique({
     where: { id: expenseId },
     include: {
@@ -149,6 +151,7 @@ export async function syncOperationalExpenseJournal(tx: Tx, expenseId: string) {
           memo: `Persediaan keluar untuk opex barter ${expense.master_inventory?.inv_code ?? expense.inv_code}`,
         },
       ],
+      createdBy,
     });
     return;
   }
@@ -175,6 +178,7 @@ export async function syncOperationalExpenseJournal(tx: Tx, expenseId: string) {
         memo: `Pembayaran opex via ${paymentAccount.code}`,
       },
     ],
+    createdBy,
   });
 }
 

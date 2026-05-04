@@ -9,7 +9,7 @@ import { operationalExpenseBarterItemPatchSchema } from "@/schemas/accounting-mo
 
 function barterInclude() {
   return {
-    accounts_operational_expense_barter_expense_account_idToaccounts: {
+    accounts: {
       select: {
         id: true,
         code: true,

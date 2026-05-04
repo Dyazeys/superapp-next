@@ -12,7 +12,7 @@ function toDateOnly(value: string) {
 
 function barterInclude() {
   return {
-    accounts_operational_expense_barter_expense_account_idToaccounts: {
+    accounts: {
       select: {
         id: true,
         code: true,

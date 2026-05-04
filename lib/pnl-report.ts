@@ -150,7 +150,7 @@ export async function getProfitAndLossReport(input?: {
       where: barterWhere,
       select: {
         total_amount: true,
-        accounts_operational_expense_barter_expense_account_idToaccounts: {
+        accounts: {
           select: {
             code: true,
             name: true,
@@ -227,7 +227,7 @@ export async function getProfitAndLossReport(input?: {
   });
 
   barterRows.forEach((row) => {
-    const account = row.accounts_operational_expense_barter_expense_account_idToaccounts;
+    const account = row.accounts;
     addExpenseRow(account.code, account.name, toNumber(row.total_amount));
   });
 

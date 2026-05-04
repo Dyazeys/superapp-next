@@ -130,7 +130,7 @@ export function OperationalExpenseBarterWorkspace() {
       return true;
     }
 
-    const account = row.accounts_operational_expense_barter_expense_account_idToaccounts;
+    const account = row.accounts;
     const haystacks = [
       row.barter_date,
       row.status,
@@ -163,7 +163,7 @@ export function OperationalExpenseBarterWorkspace() {
       id: "account",
       header: "Akun",
       cell: ({ row }) => {
-        const account = row.original.accounts_operational_expense_barter_expense_account_idToaccounts;
+        const account = row.original.accounts;
         return (
           <div className="min-w-[220px]">
             <p className="font-medium">{account.code} - {account.name}</p>
@@ -352,8 +352,8 @@ export function OperationalExpenseBarterWorkspace() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">
-                      {selectedBarter.accounts_operational_expense_barter_expense_account_idToaccounts.code} -{" "}
-                      {selectedBarter.accounts_operational_expense_barter_expense_account_idToaccounts.name}
+                      {selectedBarter.accounts.code} -{" "}
+                      {selectedBarter.accounts.name}
                     </h3>
                     <StatusBadge label={selectedBarter.status} tone={statusTone(selectedBarter.status)} />
                   </div>

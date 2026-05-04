@@ -6,7 +6,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string; userId: string }> }) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_DEPARTMENTS_MEMBERS_MANAGE);
     const { id: departmentId, userId } = await params;
 
     await prisma.department_members.deleteMany({

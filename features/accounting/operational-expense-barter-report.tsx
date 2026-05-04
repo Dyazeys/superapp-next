@@ -79,7 +79,7 @@ export function OperationalExpenseBarterReport() {
     const map = new Map<string, BarterBreakdownRow>();
 
     for (const row of filteredRows) {
-      const account = row.accounts_operational_expense_barter_expense_account_idToaccounts;
+      const account = row.accounts;
       const key = `${account.code}:${row.expense_label ?? "__none__"}`;
       const current = map.get(key) ?? {
         key,
@@ -134,7 +134,7 @@ export function OperationalExpenseBarterReport() {
       id: "account",
       header: "Akun / Label",
       cell: ({ row }) => {
-        const account = row.original.accounts_operational_expense_barter_expense_account_idToaccounts;
+        const account = row.original.accounts;
         return (
           <div className="min-w-[220px]">
             <p className="font-medium">{account.code} - {account.name}</p>

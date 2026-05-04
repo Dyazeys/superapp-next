@@ -8,7 +8,7 @@ import { meetingInputSchema } from "@/schemas/task-module";
 
 export async function GET() {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    await requireApiPermission(PERMISSIONS.TEAM_MEETINGS_VIEW);
 
     const meetings = await prisma.meetings.findMany({
       orderBy: [{ date: "desc" }, { start_time: "asc" }],
@@ -22,9 +22,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TEAM_MEETINGS_CREATE);
     const body = meetingInputSchema.parse(await request.json());
-    const session = await requireApiPermission(PERMISSIONS.TEAM_WORKSPACE_VIEW);
 
     const meeting = await prisma.meetings.create({
       data: {
