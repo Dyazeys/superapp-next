@@ -49,7 +49,7 @@ export function MetricCard({
   subtitleClassName,
 }: MetricCardProps) {
   return (
-    <Card size="sm" className={cn("bg-white/95", className)}>
+    <Card size="sm" className={cn("border-l-[3px] border-l-slate-400 bg-white/95", className)}>
       <CardContent className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className={cn("text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500", titleClassName)}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useReducer, useEffect } from "react";
+import { toast } from "sonner";
 import type { MpAdsShopee, MpAdsTiktok, MpAdsFormData } from "@/types/marketing";
 import {
   fetchMpAds,
@@ -173,8 +174,8 @@ export function MpAdsWorkspace({ platform }: Props) {
         dispatch({ type: "add", payload: created });
       }
       handleCloseModal();
-    } catch {
-      // error handled by api-error
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gagal menyimpan data.");
     } finally {
       setSaving(false);
     }
@@ -182,7 +183,7 @@ export function MpAdsWorkspace({ platform }: Props) {
 
   function handleEdit(d: AdRecord) {
     setForm({
-      date: d.date,
+      date: d.date.slice(0, 10),
       produk: d.produk,
       impression: Number(d.impression),
       click: Number(d.click),

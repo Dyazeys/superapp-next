@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useReducer, useEffect } from "react";
+import { toast } from "sonner";
 import type { TikTokTraffic, TikTokTrafficFormData } from "@/types/marketing";
 import {
   fetchTiktokTraffic,
@@ -141,8 +142,8 @@ export function TiktokTrafficWorkspace() {
         dispatch({ type: "add", payload: created });
       }
       handleCloseModal();
-    } catch {
-      // error handled by api-error
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gagal menyimpan data.");
     } finally {
       setSaving(false);
     }
@@ -150,7 +151,7 @@ export function TiktokTrafficWorkspace() {
 
   function handleEdit(d: TikTokTraffic) {
     setForm({
-      date: d.date,
+      date: d.date.slice(0, 10),
       gross_merchandise_value: Number(d.gross_merchandise_value),
       refund_amount: Number(d.refund_amount),
       gross_revenue_platform_subsidy: Number(d.gross_revenue_platform_subsidy),

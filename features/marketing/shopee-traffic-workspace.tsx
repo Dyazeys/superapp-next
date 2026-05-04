@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useReducer, useEffect } from "react";
+import { toast } from "sonner";
 import type { ShopeeTraffic, ShopeeTrafficFormData } from "@/types/marketing";
 import {
   fetchShopeeTraffic,
@@ -158,8 +159,8 @@ export function ShopeeTrafficWorkspace() {
         dispatch({ type: "add", payload: created });
       }
       handleCloseModal();
-    } catch {
-      // error handled by api-error
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Gagal menyimpan data.");
     } finally {
       setSaving(false);
     }
@@ -167,7 +168,7 @@ export function ShopeeTrafficWorkspace() {
 
   function handleEdit(d: ShopeeTraffic) {
     setForm({
-      date: d.date,
+      date: d.date.slice(0, 10),
       region: d.region,
       gross_sales_usd: Number(d.gross_sales_usd),
       gross_sales_local: Number(d.gross_sales_local),
