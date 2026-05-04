@@ -4,11 +4,11 @@ import { useState } from "react";
 import { MarketingChart } from "@/components/charts/marketing-chart-client";
 import { FunnelChart, type FunnelStage } from "@/components/charts/funnel-chart";
 import type {
-  ShopeeTrafficReport,
-  ShopeeLivestreamReport,
-  ShopeeAdsReport,
-  AdsProductItem,
+  TiktokTrafficReport,
+  TiktokLivestreamReport,
+  TiktokAdsReport,
 } from "@/lib/marketing-report";
+import { ProductLeaderboard } from "./marketing-shopee-charts";
 
 type Tab = "traffic" | "livestream" | "ads";
 
@@ -16,15 +16,6 @@ function currency(value: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
-function currencyUsd(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
@@ -55,26 +46,26 @@ function SummaryCard({
   );
 }
 
-function buildFunnel(data: ShopeeTrafficReport): FunnelStage[] {
+function buildFunnel(data: TiktokTrafficReport): FunnelStage[] {
   return [
-    { label: "Product Views", value: data.totalProductViews },
-    { label: "Product Clicks", value: data.totalClicks },
+    { label: "Product Impressions", value: data.totalProductImpressions },
+    { label: "Product Clicks", value: data.totalProductClicks },
     { label: "Orders", value: data.totalOrders },
     { label: "Avg Conversion", value: Math.round(data.avgConversionRate * 10000) },
   ];
 }
 
-function TrafficView({ data }: { data: ShopeeTrafficReport }) {
+function TrafficView({ data }: { data: TiktokTrafficReport }) {
   const funnel = buildFunnel(data);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <SummaryCard label="Gross Sales (USD)" value={currencyUsd(data.totalGrossSalesUsd)} />
-        <SummaryCard label="Gross Sales (IDR)" value={currency(data.totalGrossSalesLocal)} />
+        <SummaryCard label="Total GMV" value={currency(data.totalGmv)} />
         <SummaryCard label="Total Orders" value={number(data.totalOrders)} />
+        <SummaryCard label="Total Impressions" value={number(data.totalProductImpressions)} />
         <SummaryCard label="Avg Conversion" value={rate(data.avgConversionRate)} />
       </div>
-      {data.totalProductViews > 0 || data.totalClicks > 0 ? (
+      {data.totalProductImpressions > 0 || data.totalProductClicks > 0 ? (
         <div className="rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold text-slate-900">Funnel Traffic</h3>
           <FunnelChart stages={funnel} />
@@ -88,22 +79,22 @@ function TrafficView({ data }: { data: ShopeeTrafficReport }) {
   );
 }
 
-function LivestreamView({ data }: { data: ShopeeLivestreamReport }) {
+function LivestreamView({ data }: { data: TiktokLivestreamReport }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <SummaryCard label="Total Sesi" value={number(data.totalSessions)} />
-        <SummaryCard label="Total Pengunjung" value={number(data.totalPengunjung)} />
-        <SummaryCard label="Total Pesanan" value={number(data.totalPesanan)} />
+        <SummaryCard label="Total Views" value={number(data.totalViews)} />
+        <SummaryCard label="Total Impressions" value={number(data.totalImpressions)} />
         <SummaryCard label="Total Penjualan" value={currency(data.totalPenjualan)} accent="text-emerald-600" />
       </div>
       {data.timeSeries.length > 0 ? (
         <div className="rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm">
-          <h3 className="mb-3 text-sm font-semibold text-slate-900">Viewers & Sales</h3>
+          <h3 className="mb-3 text-sm font-semibold text-slate-900">Views & Sales</h3>
           <MarketingChart
             data={data.timeSeries}
             metrics={[
-              { key: "pengunjung", label: "Pengunjung", color: "#1e293b", type: "area" },
+              { key: "views", label: "Views", color: "#1e293b", type: "area" },
               { key: "penjualan", label: "Penjualan", color: "#059669", type: "line" },
             ]}
           />
@@ -117,63 +108,7 @@ function LivestreamView({ data }: { data: ShopeeLivestreamReport }) {
   );
 }
 
-export function ProductLeaderboard({ products }: { products: AdsProductItem[] }) {
-  const [sortBy, setSortBy] = useState<"omset" | "roas" | "spent">("omset");
-  const sorted = [...products].sort((a, b) => b[sortBy] - a[sortBy]).slice(0, 10);
-
-  if (sorted.length === 0) return null;
-
-  const maxVal = Math.max(...sorted.map((p) => p[sortBy]));
-
-  const colLabel =
-    sortBy === "omset" ? "Omset" : sortBy === "roas" ? "ROAS" : "Spent";
-
-  return (
-    <div className="rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">Top Products</h3>
-        <div className="flex gap-1 rounded-lg bg-slate-100 p-0.5 text-xs">
-          {(["omset", "roas", "spent"] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              className={`rounded-md px-2 py-1 font-medium transition-colors ${
-                sortBy === key
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-              onClick={() => setSortBy(key)}
-            >
-              {key === "omset" ? "Omset" : key === "roas" ? "ROAS" : "Spent"}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        {sorted.map((p, i) => {
-          const barPct = maxVal > 0 ? (p[sortBy] / maxVal) * 100 : 0;
-          return (
-            <div key={p.produk} className="flex items-center gap-3">
-              <span className="w-5 text-right text-xs text-slate-400">{i + 1}</span>
-              <span className="w-1/3 truncate text-sm text-slate-700">{p.produk}</span>
-              <div className="h-5 flex-1 overflow-hidden rounded-md bg-slate-100">
-                <div
-                  className="h-full rounded-md bg-slate-800"
-                  style={{ width: `${Math.max(barPct, 2)}%` }}
-                />
-              </div>
-              <span className="w-24 text-right text-sm font-medium tabular-nums text-slate-900">
-                {sortBy === "roas" ? p[sortBy].toFixed(2) + "x" : currency(p[sortBy])}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function AdsView({ data }: { data: ShopeeAdsReport }) {
+function AdsView({ data }: { data: TiktokAdsReport }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -216,14 +151,14 @@ function AdsView({ data }: { data: ShopeeAdsReport }) {
   );
 }
 
-export function ShopeeChartPanel({
+export function TiktokChartPanel({
   traffic,
   livestream,
   ads,
 }: {
-  traffic: ShopeeTrafficReport;
-  livestream: ShopeeLivestreamReport;
-  ads: ShopeeAdsReport;
+  traffic: TiktokTrafficReport;
+  livestream: TiktokLivestreamReport;
+  ads: TiktokAdsReport;
 }) {
   const [tab, setTab] = useState<Tab>("traffic");
 
