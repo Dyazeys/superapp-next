@@ -5,12 +5,7 @@ import {
 import type { BudgetMeterGroup, BudgetSubItem } from "@/lib/budget-meter";
 
 export function currency(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
+  return "Rp" + new Intl.NumberFormat("id-ID").format(value);
 }
 
 export function Bar({ pct, over, dark }: { pct: number; over: boolean; dark?: boolean }) {

@@ -32,21 +32,14 @@ function formatNum(val: number): string {
 }
 
 function formatUSD(val: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
+  return "$" + new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(val);
 }
 
 function formatIDR(val: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(val);
+  return "Rp" + new Intl.NumberFormat("id-ID").format(val);
 }
 
 function pct(val: number): string {

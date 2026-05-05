@@ -43,12 +43,7 @@ function ratio(val: number): string {
 }
 
 function formatIDR(val: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(val);
+  return "Rp" + new Intl.NumberFormat("id-ID").format(val);
 }
 
 function formatNum(val: number): string {

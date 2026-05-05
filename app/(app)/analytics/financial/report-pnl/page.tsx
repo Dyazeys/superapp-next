@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { AlertTriangle } from "lucide-react";
 import { WorkspacePanel } from "@/components/foundation/workspace-panel";
 import { prisma } from "@/db/prisma";
@@ -167,12 +168,14 @@ export default async function DashboardReportPnlPage({
         titleClassName="text-2xl leading-none"
         descriptionClassName="text-xs leading-5"
       >
-        <ReportPnlFilters
-          monthOptions={monthOptions}
-          channelOptions={channelOptions}
-          defaultMonth={report.monthValue}
-          defaultChannelId={report.channelId ? String(report.channelId) : ""}
-        />
+        <Suspense fallback={<div className="h-11 animate-pulse rounded-2xl bg-slate-100" />}>
+          <ReportPnlFilters
+            monthOptions={monthOptions}
+            channelOptions={channelOptions}
+            defaultMonth={report.monthValue}
+            defaultChannelId={report.channelId ? String(report.channelId) : ""}
+          />
+        </Suspense>
         <div className="mt-4 text-sm text-slate-600">
           <span className="font-medium text-slate-900">Bulan:</span> {report.monthLabel}
           <span className="mx-2 text-slate-300">·</span>
