@@ -4,14 +4,7 @@ import { requireApiPermission } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 import { PERMISSIONS } from "@/lib/rbac";
-import { productBomSchema } from "@/schemas/product-module";
-
-function normalizeBomGroup(value: unknown) {
-  if (typeof value !== "string") return value;
-  const normalized = value.trim().toUpperCase();
-  if (normalized === "OVERHEAD") return "BRANDING";
-  return normalized;
-}
+import { normalizeBomGroup, productBomSchema } from "@/schemas/product-module";
 
 async function syncProductHpp(sku: string) {
   const aggregate = await prisma.product_bom.aggregate({
@@ -46,10 +39,12 @@ export async function PATCH(
       where: { id },
     });
 
+    invariant(current.sku === sku, "BOM row tidak milik produk ini.");
+
     const payload = productBomSchema.parse({
       sku,
       component_group: normalizeBomGroup(
-        raw.component_group === undefined ? current.component_group : raw.component_group
+        String(raw.component_group === undefined ? current.component_group ?? "" : raw.component_group)
       ),
       component_type: raw.component_type === undefined ? current.component_type : raw.component_type,
       inv_code: raw.inv_code === undefined ? current.inv_code : raw.inv_code,
@@ -110,11 +105,15 @@ export async function DELETE(
 
     const { sku, id } = await params;
 
-    await prisma.product_bom.delete({
+    const row = await prisma.product_bom.findUniqueOrThrow({
       where: { id },
     });
 
-    await syncProductHpp(sku);
+    await prisma.product_bom.delete({
+      where: { id, sku: row.sku },
+    });
+
+    await syncProductHpp(row.sku);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

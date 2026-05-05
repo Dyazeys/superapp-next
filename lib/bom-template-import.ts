@@ -97,7 +97,7 @@ function toPositiveNumber(value: unknown, fallback: number) {
 function normalizeComponentGroup(value: unknown) {
   const normalized = asString(value).toUpperCase();
   if (!normalized) return "MAIN";
-  if (normalized === "OVERHEAD") return "BRANDING";
+  if (normalized === "OVERHEAD" || normalized === "OTHER_COST") return "BRANDING";
   return normalized;
 }
 

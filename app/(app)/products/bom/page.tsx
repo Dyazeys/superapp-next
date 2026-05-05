@@ -393,7 +393,7 @@ export default function ProductBomPage() {
               <SearchableSelect
                 id="product-selection"
                 className="min-w-[320px]"
-                inputClassName="h-11 min-w-[320px] rounded-2xl bg-background px-3 py-2.5 text-sm shadow-sm shadow-slate-900/5"
+                inputClassName="h-10 min-w-[320px] rounded-2xl bg-background pl-10 pr-3 py-2.5 text-sm shadow-sm shadow-slate-900/5"
                 value={selectedSkuValue}
                 options={productOptions}
                 placeholder="cari produk di sini"
