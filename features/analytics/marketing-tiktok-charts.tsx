@@ -13,9 +13,7 @@ import { ProductLeaderboard } from "./marketing-shopee-charts";
 type Tab = "traffic" | "livestream" | "ads";
 
 function currency(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
+  return "Rp" + new Intl.NumberFormat("id-ID", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
