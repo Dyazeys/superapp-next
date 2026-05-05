@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { DataTable } from "@/components/data/data-table";
 import { PageShell } from "@/components/foundation/page-shell";
 import { FormField } from "@/components/forms/form-field";
 import { ModalFormShell } from "@/components/forms/modal-form-shell";
@@ -13,19 +11,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { teamApi } from "@/features/team/api";
+import { MeetingCard } from "@/features/team/meeting-card";
 import { meetingInputSchema } from "@/schemas/task-module";
 import type { TeamMeeting } from "@/types/task";
 import type { MeetingInput } from "@/schemas/task-module";
-
-const columnHelper = createColumnHelper<TeamMeeting>();
-
-const statusColors: Record<string, string> = {
-  draft: "bg-slate-100 text-slate-700",
-  pending: "bg-amber-100 text-amber-700",
-  approved: "bg-emerald-100 text-emerald-700",
-};
 
 export function TeamMeetingNotesWorkspace() {
   const queryClient = useQueryClient();
@@ -73,23 +63,6 @@ export function TeamMeetingNotesWorkspace() {
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
-  const columns = [
-    columnHelper.accessor("title", { header: "Judul", cell: (info) => <span className="font-medium text-slate-900">{info.getValue()}</span> }),
-    columnHelper.accessor("date", { header: "Tanggal", cell: (info) => info.getValue() }),
-    columnHelper.accessor("location", { header: "Tempat", cell: (info) => info.getValue() ?? "-" }),
-    columnHelper.accessor("status", { header: "Status", cell: (info) => <Badge className={statusColors[info.getValue()]}>{info.getValue()}</Badge> }),
-    columnHelper.display({
-      id: "actions",
-      header: "",
-      cell: ({ row }) => (
-        <div className="flex justify-end gap-2">
-          <Button size="icon-xs" variant="outline" onClick={() => openEdit(row.original)}><Pencil className="size-3.5" /></Button>
-          <Button size="icon-xs" variant="destructive" onClick={() => { setEditingMeeting(row.original); setDeleteModalOpen(true); }}><Trash2 className="size-3.5" /></Button>
-        </div>
-      ),
-    }),
-  ];
-
   function openEdit(meeting?: TeamMeeting) {
     if (meeting) {
       setEditingMeeting(meeting);
@@ -120,17 +93,23 @@ export function TeamMeetingNotesWorkspace() {
   }
 
   return (
-    <PageShell eyebrow="Meeting" title="Notulen Rapat" description="Kelola notulen meeting dan ajukan untuk approval.">
+    <PageShell eyebrow="Meeting" title="Notulen Rapat" description="Kelola notulen meeting dengan action items inline.">
       {isLoading ? (
         <div className="flex items-center justify-center p-8"><Loader2 className="size-6 animate-spin text-slate-400" /></div>
       ) : isError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">{(error as Error)?.message || "Gagal memuat data"}</div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className="flex justify-end">
             <Button size="sm" onClick={() => openEdit()}><Plus className="size-4" /> Buat Meeting</Button>
           </div>
-          <DataTable columns={columns} data={meetings} emptyMessage="Belum ada meeting." pagination={{ enabled: true, pageSize: 10 }} />
+          {meetings.length === 0 ? (
+            <p className="text-center text-sm text-slate-500 py-8">Belum ada meeting.</p>
+          ) : (
+            meetings.map((meeting) => (
+              <MeetingCard key={meeting.id} meeting={meeting} onEdit={openEdit} onDelete={(m) => { setEditingMeeting(m); setDeleteModalOpen(true); }} />
+            ))
+          )}
         </div>
       )}
 
@@ -147,7 +126,7 @@ export function TeamMeetingNotesWorkspace() {
 
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Hapus Meeting</DialogTitle><DialogDescription>Hapus meeting ini?</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>Hapus Meeting</DialogTitle><DialogDescription>Hapus meeting ini? Semua action item di dalamnya juga akan terhapus.</DialogDescription></DialogHeader>
           <DialogFooter showCloseButton><Button variant="destructive" onClick={deleteMeeting} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "Hapus"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>

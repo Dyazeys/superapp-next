@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useReducer, useEffect } from "react";
+import { useState, useReducer, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import type { MpAdsShopee, MpAdsTiktok, MpAdsFormData } from "@/types/marketing";
 import {
@@ -146,6 +146,7 @@ export function MpAdsWorkspace({ platform }: Props) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  const [filterProduct, setFilterProduct] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
@@ -153,10 +154,16 @@ export function MpAdsWorkspace({ platform }: Props) {
   const visible = ads.filter((d) => {
     if (filterDateFrom && d.date < filterDateFrom) return false;
     if (filterDateTo && d.date > filterDateTo) return false;
+    if (filterProduct && d.produk !== filterProduct) return false;
     return true;
   });
 
-  useEffect(() => { setPageIndex(0); }, [filterDateFrom, filterDateTo]);
+  const productOptions: SearchableOption[] = useMemo(() => {
+    const names = [...new Set(visible.map(d => d.produk))].sort();
+    return names.map(name => ({ label: name, value: name }));
+  }, [visible]);
+
+  useEffect(() => { setPageIndex(0); }, [filterDateFrom, filterDateTo, filterProduct]);
 
   const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
   const paginated = visible.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
@@ -277,6 +284,16 @@ export function MpAdsWorkspace({ platform }: Props) {
         description={`Filter data iklan ${platformLabel} berdasarkan rentang tanggal.`}
       >
         <div className="flex flex-wrap items-end gap-4">
+          <FormField label="Produk" htmlFor="filter_produk">
+            <SearchableSelect
+              id="filter_produk"
+              options={productOptions}
+              value={filterProduct}
+              onValueChange={(val) => setFilterProduct(val)}
+              placeholder="Semua Produk"
+              emptyText="Tidak ada produk"
+            />
+          </FormField>
           <FormField label="Dari tanggal" htmlFor="filter_from">
             <Input
               id="filter_from"
@@ -299,6 +316,7 @@ export function MpAdsWorkspace({ platform }: Props) {
             onClick={() => {
               setFilterDateFrom("");
               setFilterDateTo("");
+              setFilterProduct("");
             }}
           >
             Reset

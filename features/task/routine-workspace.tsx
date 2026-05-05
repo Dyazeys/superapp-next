@@ -53,8 +53,8 @@ export function TaskRoutineWorkspace() {
                 key={routine.id}
                 className={cn(
                   "group flex items-center gap-3 rounded-xl border px-4 py-3 transition-colors",
-                  routine.is_completed
-                    ? "border-emerald-200 bg-emerald-50/50"
+                    routine.is_completed
+                    ? "border-slate-300 bg-slate-50/50"
                     : "border-slate-200 bg-white hover:border-slate-300"
                 )}
               >
@@ -64,8 +64,8 @@ export function TaskRoutineWorkspace() {
                   className={cn(
                     "flex size-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
                     routine.is_completed
-                      ? "border-emerald-500 bg-emerald-500 text-white"
-                      : "border-slate-300 hover:border-slate-400"
+                    ? "border-slate-600 bg-slate-600 text-white"
+                    : "border-slate-300 hover:border-slate-400"
                   )}
                 >
                   {routine.is_completed && <Check className="size-3.5" />}

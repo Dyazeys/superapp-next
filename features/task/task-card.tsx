@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import type { TaskTodo, UserBrief, TaskStatus } from "@/types/task";
 
 const priorityColors: Record<string, string> = {
-  low: "bg-slate-100 text-slate-600",
-  medium: "bg-blue-100 text-blue-700",
-  high: "bg-red-100 text-red-700",
+  low: "bg-slate-100 text-slate-500",
+  medium: "bg-slate-200 text-slate-700",
+  high: "bg-slate-300 text-slate-800",
 };
 
 const priorityLabels: Record<string, string> = {
@@ -58,7 +58,7 @@ export function TaskCard({ todo, users, onEdit, onMove, onArchive }: TaskCardPro
               <ArrowLeft className="size-3" />
               Todo
             </Button>
-            <Button size="sm" className="h-6 text-xs gap-1 bg-emerald-500 hover:bg-emerald-600 text-white" onClick={() => onMove(todo, "done")}>
+            <Button size="sm" className="h-6 text-xs gap-1 bg-slate-900 hover:bg-slate-800 text-white" onClick={() => onMove(todo, "done")}>
               <Check className="size-3" />
               Done
             </Button>
@@ -71,7 +71,7 @@ export function TaskCard({ todo, users, onEdit, onMove, onArchive }: TaskCardPro
               <RotateCcw className="size-3" />
               Reopen
             </Button>
-            <Button size="sm" variant="ghost" className="h-6 text-xs gap-1 text-orange-600" onClick={() => onArchive(todo)}>
+            <Button size="sm" variant="ghost" className="h-6 text-xs gap-1 text-slate-500" onClick={() => onArchive(todo)}>
               <Archive className="size-3" />
               Arsip
             </Button>

@@ -181,20 +181,6 @@ const TEAM_MEETING_ITEM: ModuleNavItem = {
   icon: Presentation,
   badge: "Sync",
   permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
-  children: [
-    {
-      label: "Notulen",
-      href: "/team/meeting/notulen",
-      icon: BookOpenText,
-      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
-    },
-    {
-      label: "Ceklis",
-      href: "/team/meeting/to-do",
-      icon: ClipboardList,
-      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
-    },
-  ],
 };
 
 const TEAM_CALENDAR_ITEM: ModuleNavItem = {

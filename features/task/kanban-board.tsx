@@ -6,10 +6,10 @@ import { TaskCard } from "@/features/task/task-card";
 import type { TaskTodo, UserBrief, TaskStatus } from "@/types/task";
 
 const columns: { status: TaskStatus; label: string; color: string }[] = [
-  { status: "backlog", label: "Backlog", color: "border-t-slate-400" },
-  { status: "todo", label: "To Do", color: "border-t-blue-400" },
-  { status: "in_progress", label: "In Progress", color: "border-t-amber-400" },
-  { status: "done", label: "Done", color: "border-t-emerald-400" },
+  { status: "backlog", label: "Backlog", color: "border-t-slate-300" },
+  { status: "todo", label: "To Do", color: "border-t-slate-400" },
+  { status: "in_progress", label: "In Progress", color: "border-t-slate-500" },
+  { status: "done", label: "Done", color: "border-t-slate-600" },
 ];
 
 type KanbanBoardProps = {
