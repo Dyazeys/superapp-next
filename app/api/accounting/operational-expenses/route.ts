@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_CREATE);
+    const session = await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_CREATE);
 
     const payload = operationalExpenseSchema.parse(await request.json());
     invariant(!payload.is_product_barter, "Use Opex Barter module for inventory release / barter transactions.");
@@ -83,6 +83,16 @@ export async function POST(request: NextRequest) {
           description: payload.description,
           receipt_url: payload.receipt_url,
           inv_code: null,
+        },
+      });
+
+      await tx.approvals.create({
+        data: {
+          type: "opex",
+          source_id: expense.id,
+          requester_id: session.user.id,
+          title: `Opex — ${payload.expense_label ?? "Tanpa Label"} (Rp ${new Intl.NumberFormat("id-ID").format(Number(payload.amount))})`,
+          status: "pending",
         },
       });
 

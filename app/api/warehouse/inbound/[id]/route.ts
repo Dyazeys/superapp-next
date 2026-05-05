@@ -150,6 +150,10 @@ export async function DELETE(
         where: { inbound_id: id },
       });
 
+      await tx.approvals.deleteMany({
+        where: { type: "inbound", source_id: id },
+      });
+
       await tx.inbound_deliveries.delete({
         where: { id },
       });

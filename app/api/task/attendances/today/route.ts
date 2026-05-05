@@ -7,12 +7,13 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function GET() {
   try {
-    await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
+    const userId = session.user.id;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const attendance = await prisma.attendances.findFirst({
-      where: { date: today },
+      where: { user_id: userId, date: today },
     });
 
     return NextResponse.json(toJsonValue(attendance));

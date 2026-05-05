@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectNative } from "@/components/ui/select-native";
 import { Badge } from "@/components/ui/badge";
 import { teamApi } from "@/features/team/api";
 import { meetingTodoInputSchema } from "@/schemas/task-module";
@@ -29,7 +29,7 @@ export function TeamMeetingTodoWorkspace() {
   const [editing, setEditing] = useState<TeamMeetingTodo | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [form, setForm] = useState<{ meeting_id: string; title: string; description: string; assignee_id: string; status: MeetingTodoStatus; priority: TaskPriority; due_date: string }>({ meeting_id: "", title: "", description: "", assignee_id: "", status: "todo", priority: "medium", due_date: "" });
+  const [form, setForm] = useState<{ meeting_id: string | undefined; title: string; description: string; assignee_id: string | undefined; status: MeetingTodoStatus; priority: TaskPriority; due_date: string }>({ meeting_id: undefined, title: "", description: "", assignee_id: undefined, status: "todo", priority: "medium", due_date: "" });
 
   const { data: todos = [], isLoading, isError, error } = useQuery({
     queryKey: ["team-meeting-todos"],
@@ -90,8 +90,8 @@ export function TeamMeetingTodoWorkspace() {
   ];
 
   function openEdit(todo?: TeamMeetingTodo) {
-    if (todo) { setEditing(todo); setForm({ meeting_id: todo.meeting_id, title: todo.title, description: todo.description ?? "", assignee_id: todo.assignee_id ?? "", status: todo.status, priority: todo.priority, due_date: todo.due_date ?? "" }); }
-    else { setEditing(null); setForm({ meeting_id: "", title: "", description: "", assignee_id: "", status: "todo", priority: "medium", due_date: "" }); }
+    if (todo) { setEditing(todo); setForm({ meeting_id: todo.meeting_id ?? undefined, title: todo.title, description: todo.description ?? "", assignee_id: todo.assignee_id ?? undefined, status: todo.status, priority: todo.priority, due_date: todo.due_date ?? "" }); }
+    else { setEditing(null); setForm({ meeting_id: undefined, title: "", description: "", assignee_id: undefined, status: "todo", priority: "medium", due_date: "" }); }
     setModalOpen(true);
   }
 
@@ -126,40 +126,34 @@ export function TeamMeetingTodoWorkspace() {
         </div>
       )}
       <ModalFormShell open={modalOpen} onOpenChange={setModalOpen} title={editing ? "Edit To Do" : "Tambah To Do"} description="Isi detail action item." submitLabel={editing ? "Simpan" : "Buat"} isSubmitting={isPending} onSubmit={save}>
-        <FormField label="Meeting" htmlFor="todo_meeting">
-          <Select value={form.meeting_id} onValueChange={(v) => setForm({...form, meeting_id: v ?? ""})}>
-            <SelectTrigger><SelectValue placeholder="Pilih meeting" /></SelectTrigger>
-            <SelectContent>
-              {meetings.map((m) => (
-                <SelectItem key={m.id} value={m.id}>{m.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <FormField label="Meeting" htmlFor="todo_meeting" error={undefined}>
+          <SelectNative id="todo_meeting" value={form.meeting_id ?? ""} onChange={(e) => setForm({...form, meeting_id: e.target.value || undefined})}>
+            <option value="">Pilih meeting</option>
+            {meetings.map((m) => (
+              <option key={m.id} value={m.id}>{m.title}</option>
+            ))}
+          </SelectNative>
         </FormField>
         <FormField label="Judul" htmlFor="todo_title"><Input id="todo_title" value={form.title} onChange={e => setForm({...form, title: e.target.value})} /></FormField>
         <FormField label="Deskripsi" htmlFor="todo_desc"><Textarea id="todo_desc" value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={2} /></FormField>
         <div className="grid grid-cols-3 gap-4">
-          <FormField label="Status" htmlFor="todo_status">
-            <Select value={form.status} onValueChange={(v) => setForm({...form, status: v as MeetingTodoStatus})}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
-              </SelectContent>
-            </Select>
+          <FormField label="Status" htmlFor="todo_status" error={undefined}>
+            <SelectNative id="todo_status" value={form.status} onChange={(e) => setForm({...form, status: e.target.value as MeetingTodoStatus})}>
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="done">Done</option>
+            </SelectNative>
           </FormField>
-          <FormField label="Prioritas" htmlFor="todo_priority">
-            <Select value={form.priority} onValueChange={(v) => setForm({...form, priority: v as TaskPriority})}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
+          <FormField label="Prioritas" htmlFor="todo_priority" error={undefined}>
+            <SelectNative id="todo_priority" value={form.priority} onChange={(e) => setForm({...form, priority: e.target.value as TaskPriority})}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </SelectNative>
           </FormField>
-          <FormField label="Deadline" htmlFor="todo_due"><Input id="todo_due" type="date" value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})} /></FormField>
+          <FormField label="Deadline" htmlFor="todo_due">
+            <Input id="todo_due" type="date" value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})} />
+          </FormField>
         </div>
       </ModalFormShell>
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}><DialogContent className="sm:max-w-md"><DialogHeader><DialogTitle>Hapus To Do</DialogTitle><DialogDescription>Hapus to do ini?</DialogDescription></DialogHeader><DialogFooter showCloseButton><Button variant="destructive" onClick={deleteTodo} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : "Hapus"}</Button></DialogFooter></DialogContent></Dialog>

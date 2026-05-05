@@ -629,14 +629,18 @@ model t_order_item {
 }
 
 model attendances {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id    String    @db.Uuid
-  date       DateTime  @db.Date
-  clock_in   DateTime? @db.Timestamptz(6)
-  clock_out  DateTime? @db.Timestamptz(6)
-  status     String    @db.VarChar(20)
-  note       String?
-  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id       String    @db.Uuid
+  date          DateTime  @db.Date
+  clock_in      DateTime? @db.Timestamptz(6)
+  clock_out     DateTime? @db.Timestamptz(6)
+  status        String    @db.VarChar(20)
+  note          String?
+  clock_in_lat  Float?
+  clock_in_lng  Float?
+  clock_out_lat Float?
+  clock_out_lng Float?
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
 
   @@unique([user_id, date])
   @@schema("task")
@@ -755,7 +759,7 @@ model announcements {
 model approvals {
   id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   type          String    @db.VarChar(30)
-  source_id     String    @db.Uuid
+  source_id     String    @db.VarChar(100)
   requester_id  String    @db.Uuid
   title         String    @db.VarChar(255)
   status        String    @default("pending") @db.VarChar(30)

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectNative } from "@/components/ui/select-native";
 import { teamApi } from "@/features/team/api";
 import { announcementInputSchema } from "@/schemas/task-module";
 import type { TeamAnnouncement, AnnouncementCategory } from "@/types/task";
@@ -225,18 +225,15 @@ export function TeamAnnouncementWorkspace() {
         <FormField label="Judul" htmlFor="ann_title" error={errors.title}>
           <Input id="ann_title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
         </FormField>
-        <FormField label="Kategori" htmlFor="ann_category">
-          <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v as AnnouncementCategory })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="umum">Umum</SelectItem>
-              <SelectItem value="operasional">Operasional</SelectItem>
-              <SelectItem value="kebijakan">Kebijakan</SelectItem>
-              <SelectItem value="event">Event</SelectItem>
-            </SelectContent>
-          </Select>
+        <FormField label="Kategori" htmlFor="ann_category" helperText="Umum = semua orang, penting = highlight di atas">
+          <SelectNative id="ann_category" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value as AnnouncementCategory })}>
+            <option value="umum">Umum</option>
+            <option value="operasional">Operasional</option>
+            <option value="kebijakan">Kebijakan</option>
+            <option value="event">Event</option>
+          </SelectNative>
         </FormField>
-        <FormField label="Konten" htmlFor="ann_content" error={errors.content}>
+        <FormField label="Konten" htmlFor="ann_content" error={errors.content} helperText="Mendukung teks panjang.">
           <Textarea id="ann_content" value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} rows={5} />
         </FormField>
       </ModalFormShell>

@@ -34,7 +34,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_CREATE);
+    const session = await requireApiPermission(PERMISSIONS.WAREHOUSE_ADJUSTMENT_CREATE);
 
     const payload = adjustmentSchema.parse(await request.json());
 
@@ -45,26 +45,40 @@ export async function POST(request: NextRequest) {
     invariant(inventory, "Inventory code was not found.");
     invariant(inventory.is_active, "Adjustments require an active inventory item.");
 
-    const adjustment = await prisma.adjustments.create({
-      data: {
-        adjustment_date: asDateOnly(payload.adjustment_date),
-        inv_code: payload.inv_code,
-        adj_type: payload.adj_type,
-        post_status: "DRAFT",
-        posted_at: null,
-        qty: payload.qty,
-        reason: payload.reason,
-        notes: payload.notes || null,
-        created_by: payload.created_by || null,
-      },
-      include: {
-        master_inventory: {
-          select: {
-            inv_code: true,
-            inv_name: true,
+    const adjustment = await prisma.$transaction(async (tx) => {
+      const created = await tx.adjustments.create({
+        data: {
+          adjustment_date: asDateOnly(payload.adjustment_date),
+          inv_code: payload.inv_code,
+          adj_type: payload.adj_type,
+          post_status: "DRAFT",
+          posted_at: null,
+          qty: payload.qty,
+          reason: payload.reason,
+          notes: payload.notes || null,
+          created_by: payload.created_by || null,
+        },
+        include: {
+          master_inventory: {
+            select: {
+              inv_code: true,
+              inv_name: true,
+            },
           },
         },
-      },
+      });
+
+      await tx.approvals.create({
+        data: {
+          type: "warehouse_adjustment",
+          source_id: created.id,
+          requester_id: session.user.id,
+          title: `Adjustment ${payload.adj_type} — ${payload.inv_code} (${payload.reason}, Qty: ${payload.qty})`,
+          status: "pending",
+        },
+      });
+
+      return created;
     });
 
     return NextResponse.json(toJsonValue(adjustment), { status: 201 });

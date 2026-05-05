@@ -51,6 +51,10 @@ export type TaskAttendance = {
   clock_out: string | null;
   status: AttendanceStatus;
   note: string | null;
+  clock_in_lat: number | null;
+  clock_in_lng: number | null;
+  clock_out_lat: number | null;
+  clock_out_lng: number | null;
   created_at: string;
 };
 
@@ -138,7 +142,16 @@ export type TeamAnnouncement = {
   updated_at: string | null;
 };
 
-export type ApprovalType = "leave" | "announcement" | "meeting_note";
+export type ApprovalType =
+  | "leave"
+  | "announcement"
+  | "meeting_note"
+  | "opex"
+  | "opex_barter"
+  | "sales_order"
+  | "inbound"
+  | "warehouse_adjustment";
+
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "leader_approved" | "manager_acknowledged";
 
 export type ApprovalRequest = {
@@ -153,6 +166,10 @@ export type ApprovalRequest = {
   decided_at: string | null;
   created_at: string;
   updated_at: string | null;
+};
+
+export type ApprovalDetail = ApprovalRequest & {
+  domainDetail: Record<string, unknown>;
 };
 
 export type Department = {

@@ -88,7 +88,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.WAREHOUSE_INBOUND_CREATE);
+    const session = await requireApiPermission(PERMISSIONS.WAREHOUSE_INBOUND_CREATE);
 
     const payload = inboundDeliverySchema.parse(await request.json());
 
@@ -107,7 +107,6 @@ export async function POST(request: NextRequest) {
           po_id: payload.po_id || null,
           receive_date: asDateOnly(payload.receive_date),
           surat_jalan_vendor: payload.surat_jalan_vendor || null,
-          // Guardrail: inbound status can only become PASSED via /post endpoint flow.
           qc_status: "PENDING",
           received_by: payload.received_by,
           notes: payload.notes || null,
@@ -117,6 +116,16 @@ export async function POST(request: NextRequest) {
       if (created.po_id) {
         await seedInboundItemsFromPurchaseOrder(tx, created.id, created.po_id);
       }
+
+      await tx.approvals.create({
+        data: {
+          type: "inbound",
+          source_id: created.id,
+          requester_id: session.user.id,
+          title: `Inbound${created.surat_jalan_vendor ? ` — ${created.surat_jalan_vendor}` : ""} (${new Date(payload.receive_date).toLocaleDateString("id-ID")})`,
+          status: "pending",
+        },
+      });
 
       return created;
     });

@@ -122,6 +122,9 @@ export async function DELETE(
       invariant(current, "Operational expense barter was not found.", 404);
       invariant(current.status !== "POSTED", "Posted barter must be voided before deletion.");
 
+      await tx.approvals.deleteMany({
+        where: { type: "opex_barter", source_id: id },
+      });
       await tx.operational_expense_barter.delete({
         where: { id },
       });

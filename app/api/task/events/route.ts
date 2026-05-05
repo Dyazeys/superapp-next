@@ -8,15 +8,29 @@ import { eventInputSchema } from "@/schemas/task-module";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = searchParams.get("userId") ?? session.user.id;
+    const showAll = searchParams.get("all") === "true";
     const filterTeam = searchParams.get("filterTeam");
 
     const where: Record<string, unknown> = {};
-    if (userId) where.creator_id = userId;
-    if (filterTeam === "true") where.is_team_event = true;
-    else if (filterTeam === "false") where.is_team_event = false;
+    if (showAll) {
+      // admin view: no filters
+    } else if (filterTeam === "true") {
+      // team calendar: all team events
+      where.is_team_event = true;
+    } else if (filterTeam === "false") {
+      // personal only
+      where.creator_id = userId;
+      where.is_team_event = false;
+    } else {
+      // personal calendar: my events + all team events
+      where.OR = [
+        { creator_id: userId },
+        { is_team_event: true },
+      ];
+    }
 
     const events = await prisma.events.findMany({
       where,

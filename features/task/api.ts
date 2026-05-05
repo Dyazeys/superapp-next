@@ -32,9 +32,9 @@ export const taskApi = {
       return requestJson<TaskTodo[]>(`/api/task/todos?${params}`);
     },
     listAll: (): Promise<TaskTodo[]> =>
-      requestJson<TaskTodo[]>("/api/task/todos?archived=false"),
+      requestJson<TaskTodo[]>("/api/task/todos?all=true&archived=false"),
     listArchived: (): Promise<TaskTodo[]> =>
-      requestJson<TaskTodo[]>("/api/task/todos?archived=true"),
+      requestJson<TaskTodo[]>("/api/task/todos?all=true&archived=true"),
     create: (payload: TodoInput, creatorId?: string): Promise<TaskTodo> =>
       requestJson<TaskTodo>(`/api/task/todos${creatorId ? `?userId=${creatorId}` : ""}`, {
         method: "POST",
@@ -59,9 +59,10 @@ export const taskApi = {
       }),
   },
   kpis: {
-    list: (userId?: string): Promise<TaskKpi[]> => {
+    list: (userId?: string, all?: boolean): Promise<TaskKpi[]> => {
       const params = new URLSearchParams();
       if (userId) params.set("userId", userId);
+      if (all) params.set("all", "true");
       return requestJson<TaskKpi[]>(`/api/task/kpis?${params}`);
     },
     create: (payload: KpiTeamInput): Promise<TaskKpi> =>
@@ -89,12 +90,22 @@ export const taskApi = {
   attendance: {
     today: (): Promise<TaskAttendance | null> =>
       requestJson<TaskAttendance | null>("/api/task/attendances/today"),
-    list: (): Promise<TaskAttendance[]> =>
-      requestJson<TaskAttendance[]>("/api/task/attendances"),
-    clockIn: (): Promise<TaskAttendance> =>
-      requestJson<TaskAttendance>("/api/task/attendances/clock-in", { method: "POST" }),
-    clockOut: (): Promise<TaskAttendance> =>
-      requestJson<TaskAttendance>("/api/task/attendances/clock-out", { method: "POST" }),
+    list: (userId?: string, all?: boolean): Promise<TaskAttendance[]> => {
+      const params = new URLSearchParams();
+      if (userId) params.set("userId", userId);
+      if (all) params.set("all", "true");
+      return requestJson<TaskAttendance[]>(`/api/task/attendances?${params}`);
+    },
+    clockIn: (payload?: { latitude: number; longitude: number }): Promise<TaskAttendance> =>
+      requestJson<TaskAttendance>("/api/task/attendances/clock-in", {
+        method: "POST",
+        body: payload ? JSON.stringify(payload) : undefined,
+      }),
+    clockOut: (payload?: { latitude: number; longitude: number }): Promise<TaskAttendance> =>
+      requestJson<TaskAttendance>("/api/task/attendances/clock-out", {
+        method: "POST",
+        body: payload ? JSON.stringify(payload) : undefined,
+      }),
   },
   leaveRequests: {
     list: (): Promise<TaskLeaveRequest[]> =>
@@ -147,9 +158,10 @@ export const taskApi = {
       requestJson<void>(`/api/task/events/${id}`, { method: "DELETE" }),
   },
   routines: {
-    list: (userId?: string): Promise<TaskRoutine[]> => {
+    list: (userId?: string, all?: boolean): Promise<TaskRoutine[]> => {
       const params = new URLSearchParams();
       if (userId) params.set("userId", userId);
+      if (all) params.set("all", "true");
       return requestJson<TaskRoutine[]>(`/api/task/routines?${params}`);
     },
     create: (payload: RoutineInput, userId: string): Promise<TaskRoutine> =>

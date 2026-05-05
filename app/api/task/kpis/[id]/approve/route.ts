@@ -7,7 +7,7 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
     const { id } = await params;
 
     const existing = await prisma.kpis.findUnique({ where: { id } });

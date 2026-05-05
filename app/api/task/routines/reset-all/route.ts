@@ -6,12 +6,12 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = searchParams.get("userId") ?? session.user.id;
 
     await prisma.routines.updateMany({
-      where: { user_id: userId ?? undefined, is_completed: true },
+      where: { user_id: userId, is_completed: true },
       data: { is_completed: false, completed_at: null },
     });
 

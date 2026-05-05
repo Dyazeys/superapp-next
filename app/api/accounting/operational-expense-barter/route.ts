@@ -52,20 +52,36 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_CREATE);
+    const session = await requireApiPermission(PERMISSIONS.ACCOUNTING_OPEX_BARTER_CREATE);
 
     const payload = operationalExpenseBarterSchema.parse(await request.json());
 
-    const created = await prisma.operational_expense_barter.create({
-      data: {
-        barter_date: toDateOnly(payload.barter_date),
-        expense_account_id: payload.expense_account_id,
-        expense_label: payload.expense_label,
-        description: payload.description,
-        reference_no: payload.reference_no,
-        notes_internal: payload.notes_internal,
-      },
-      include: barterInclude(),
+    const created = await prisma.$transaction(async (tx) => {
+      const barter = await tx.operational_expense_barter.create({
+        data: {
+          barter_date: toDateOnly(payload.barter_date),
+          expense_account_id: payload.expense_account_id,
+          expense_label: payload.expense_label,
+          description: payload.description,
+          reference_no: payload.reference_no,
+          notes_internal: payload.notes_internal,
+        },
+      });
+
+      await tx.approvals.create({
+        data: {
+          type: "opex_barter",
+          source_id: barter.id,
+          requester_id: session.user.id,
+          title: `Opex Barter — ${payload.expense_label ?? "Tanpa Label"}${payload.reference_no ? ` (${payload.reference_no})` : ""}`,
+          status: "pending",
+        },
+      });
+
+      return tx.operational_expense_barter.findUniqueOrThrow({
+        where: { id: barter.id },
+        include: barterInclude(),
+      });
     });
 
     return NextResponse.json(toJsonValue(created), { status: 201 });

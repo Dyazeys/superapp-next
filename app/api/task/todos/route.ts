@@ -8,14 +8,15 @@ import { todoInputSchema } from "@/schemas/task-module";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = searchParams.get("userId") ?? session.user.id;
+    const showAll = searchParams.get("all") === "true";
     const status = searchParams.get("status");
     const archived = searchParams.get("archived");
 
     const where: Record<string, unknown> = {};
-    if (userId) where.user_id = userId;
+    if (!showAll) where.user_id = userId;
     if (status) where.status = status;
     if (archived === "true") where.is_archived = true;
     else if (archived !== "all") where.is_archived = false;

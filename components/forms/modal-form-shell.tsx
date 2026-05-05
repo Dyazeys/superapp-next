@@ -59,7 +59,7 @@ export function ModalFormShell({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div className={bodyClassName ?? "max-h-[70vh] space-y-4 overflow-y-auto bg-white py-5 pr-1 text-slate-900"}>
+        <div className={bodyClassName ?? "max-h-[70vh] space-y-4 overflow-y-auto bg-white py-5 pl-1 pr-3 text-slate-900"}>
           {children}
         </div>
         <DialogFooter showCloseButton>
