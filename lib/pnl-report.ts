@@ -113,7 +113,7 @@ export async function getProfitAndLossReport(input?: {
   };
 
   const adjustmentWhere = {
-    payout_date: {
+    posted_at: {
       gte: start,
       lt: end,
     },
