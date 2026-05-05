@@ -30,6 +30,9 @@ function fmtDate(d: Date) {
 
 export type DailyUploadDay = {
   date: string;
+  tiktokVideo: number;
+  igReels: number;
+  igFeed: number;
   count: number;
 };
 
@@ -80,8 +83,10 @@ export async function getDailyUploadReport(input?: {
     },
   });
 
-  // Time series by day
-  const dayMap = new Map<string, number>();
+  // Time series by day — 3 metrics
+  const tiktokMap = new Map<string, number>();
+  const reelsMap = new Map<string, number>();
+  const feedMap = new Map<string, number>();
   const platformMap = new Map<string, number>();
   const contentMap = new Map<string, number>();
   const statusMap = new Map<string, number>();
@@ -90,7 +95,13 @@ export async function getDailyUploadReport(input?: {
 
   for (const row of rows) {
     const day = fmtDate(row.tanggal_aktivitas);
-    dayMap.set(day, (dayMap.get(day) ?? 0) + 1);
+    if (row.platform === "TikTok") {
+      tiktokMap.set(day, (tiktokMap.get(day) ?? 0) + 1);
+    } else if (row.platform === "Instagram" && row.jenis_konten === "Reel") {
+      reelsMap.set(day, (reelsMap.get(day) ?? 0) + 1);
+    } else if (row.platform === "Instagram" && row.jenis_konten === "Feed") {
+      feedMap.set(day, (feedMap.get(day) ?? 0) + 1);
+    }
     platformMap.set(row.platform, (platformMap.get(row.platform) ?? 0) + 1);
     contentMap.set(row.jenis_konten, (contentMap.get(row.jenis_konten) ?? 0) + 1);
     statusMap.set(row.status, (statusMap.get(row.status) ?? 0) + 1);
@@ -103,7 +114,13 @@ export async function getDailyUploadReport(input?: {
   const cursor = new Date(start);
   while (cursor < end) {
     const d = fmtDate(cursor);
-    timeSeries.push({ date: d, count: dayMap.get(d) ?? 0 });
+    timeSeries.push({
+      date: d,
+      tiktokVideo: tiktokMap.get(d) ?? 0,
+      igReels: reelsMap.get(d) ?? 0,
+      igFeed: feedMap.get(d) ?? 0,
+      count: (tiktokMap.get(d) ?? 0) + (reelsMap.get(d) ?? 0) + (feedMap.get(d) ?? 0),
+    });
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
 

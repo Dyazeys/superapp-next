@@ -69,7 +69,9 @@ export function ContentDailyCharts({ report }: { report: DailyUploadReport }) {
           <MarketingChart
             data={report.timeSeries}
             metrics={[
-              { key: "count", label: "Upload", color: "#1e293b", type: "area" },
+              { key: "tiktokVideo", label: "Video TikTok", color: "#1e293b", type: "area" },
+              { key: "igReels", label: "IG Reels", color: "#059669", type: "line" },
+              { key: "igFeed", label: "IG Feed", color: "#3b82f6", type: "line" },
             ]}
             height={260}
           />
