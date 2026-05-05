@@ -56,6 +56,8 @@ export type SalesOrderListResponse = {
   summary: {
     normal_count: number;
     historical_count: number;
+    total_amount_sum: number;
+    total_item_rows: number;
   };
 };
 

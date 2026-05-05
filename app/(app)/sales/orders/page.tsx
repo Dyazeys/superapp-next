@@ -30,6 +30,8 @@ import {
 } from "@/features/sales/use-sales-module";
 import { useModalState } from "@/hooks/use-modal-state";
 import { SalesOrderCsvImport } from "@/features/sales/sales-order-csv-import";
+import { useSession } from "next-auth/react";
+import { hasPermission, PERMISSIONS } from "@/lib/rbac";
 import type { SalesOrderInput } from "@/schemas/sales-module";
 import type { SalesOrderItemRecord, SalesOrderRecord } from "@/types/sales";
 
@@ -50,6 +52,12 @@ export default function SalesOrdersPage() {
   const productsQuery = useSalesProductsLookup();
   const csvImportModal = useModalState();
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const perms = session?.user?.permissions;
+  const canCreate = hasPermission(perms, PERMISSIONS.SALES_ORDER_CREATE);
+  const canUpdate = hasPermission(perms, PERMISSIONS.SALES_ORDER_UPDATE);
+  const canDelete = hasPermission(perms, PERMISSIONS.SALES_ORDER_DELETE);
+  const canPost = hasPermission(perms, PERMISSIONS.SALES_ORDER_POST);
 
   const { orderForm, orderModal, editingOrder } = hooks;
   const ordersListQuery = useQuery({
@@ -109,8 +117,8 @@ export default function SalesOrdersPage() {
   const totalOrders = totalRows;
   const historicalOrders = summaryHistoricalCount;
   const normalOrders = summaryNormalCount;
-  const totalOrderAmount = allOrderRows.reduce((sum, row) => sum + Number(row.total_amount || 0), 0);
-  const totalItemRows = allOrderRows.reduce((sum, row) => sum + (row._count?.t_order_item ?? 0), 0);
+  const totalOrderAmount = ordersListQuery.data?.summary.total_amount_sum ?? 0;
+  const totalItemRows = ordersListQuery.data?.summary.total_item_rows ?? 0;
   const selectedCount = selectedOrderNos.length;
 
   const skuOptions = (productsQuery.data ?? []).map((product) => ({
@@ -232,6 +240,7 @@ export default function SalesOrdersPage() {
           <button
             type="button"
             className="text-left font-medium text-blue-600 hover:underline"
+            disabled={!canUpdate}
             onClick={() => {
               setSelectedOrderNo(row.original.order_no);
               hooks.openOrderModal(row.original);
@@ -301,7 +310,7 @@ export default function SalesOrdersPage() {
         ) : null,
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
-          <Button size="icon-xs" variant="outline" onClick={() => hooks.deleteOrder(row.original.order_no)}>
+          <Button size="icon-xs" variant="outline" disabled={!canDelete} onClick={() => hooks.deleteOrder(row.original.order_no)}>
             <Trash2 className="size-3.5" />
           </Button>
         </div>
@@ -424,7 +433,7 @@ export default function SalesOrdersPage() {
           <MetricCard
             title="Nilai order terlihat"
             value={totalOrderAmount.toLocaleString("id-ID", { maximumFractionDigits: 0 })}
-            subtitle={`Total item rows: ${totalItemRows}`}
+            subtitle={`Total items: ${totalItemRows.toLocaleString("id-ID")}`}
           />
         </div>
 
@@ -475,7 +484,7 @@ export default function SalesOrdersPage() {
                 size="sm"
                 variant="secondary"
                 className="h-9 px-3.5"
-                disabled={selectedCount === 0 || postingSelected}
+                disabled={!canPost || selectedCount === 0 || postingSelected}
                 onClick={handlePostSelected}
               >
                 <Check className="size-4" />
@@ -485,6 +494,7 @@ export default function SalesOrdersPage() {
                 size="sm"
                 variant="outline"
                 className="h-9 px-3.5"
+                disabled={!canCreate}
                 onClick={csvImportModal.openModal}
               >
                 <Upload className="size-4" />
@@ -492,6 +502,7 @@ export default function SalesOrdersPage() {
               </Button>
               <Button
                 size="sm"
+                disabled={!canCreate}
                 onClick={() => {
                   setSelectedOrderNo(null);
                   hooks.openOrderModal();

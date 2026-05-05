@@ -122,6 +122,8 @@ export async function GET(request: NextRequest) {
         total_count: bigint | number;
         normal_count: bigint | number;
         historical_count: bigint | number;
+        total_amount_sum: bigint | number;
+        total_item_rows: bigint | number;
       }>
     >(
       Prisma.sql`
@@ -129,8 +131,10 @@ export async function GET(request: NextRequest) {
         SELECT
           COUNT(*)::bigint AS total_count,
           COUNT(*) FILTER (WHERE is_historical = false)::bigint AS normal_count,
-          COUNT(*) FILTER (WHERE is_historical = true)::bigint AS historical_count
-        FROM filtered_orders
+          COUNT(*) FILTER (WHERE is_historical = true)::bigint AS historical_count,
+          COALESCE(SUM(f.total_amount), 0)::numeric AS total_amount_sum,
+          COALESCE(SUM(f.item_count), 0)::bigint AS total_item_rows
+        FROM filtered_orders f
       `
     );
 
@@ -261,6 +265,8 @@ export async function GET(request: NextRequest) {
         summary: {
           normal_count: Number(summary?.normal_count ?? 0),
           historical_count: Number(summary?.historical_count ?? 0),
+          total_amount_sum: Number(summary?.total_amount_sum ?? 0),
+          total_item_rows: Number(summary?.total_item_rows ?? 0),
         },
       })
     );
