@@ -7,12 +7,13 @@ import { PERMISSIONS } from "@/lib/rbac";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = searchParams.get("userId") ?? session.user.id;
+    const showAll = searchParams.get("all") === "true";
 
     const where: Record<string, unknown> = {};
-    if (userId) where.user_id = userId;
+    if (!showAll) where.user_id = userId;
 
     const attendances = await prisma.attendances.findMany({
       where,

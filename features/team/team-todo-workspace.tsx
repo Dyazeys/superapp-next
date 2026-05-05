@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectNative } from "@/components/ui/select-native";
 import { Badge } from "@/components/ui/badge";
 import { useTeamTodos, useTeamRoutines, useUsers } from "@/features/task/use-task-module";
 import { taskApi } from "@/features/task/api";
@@ -109,7 +109,7 @@ export function TeamTodoWorkspace() {
           due_date: taskDue || null,
           description: taskDesc || null,
           assignee_id: taskUser.id,
-        });
+        }, taskUser.id);
         toast.success("Tugas ditambahkan");
       }
       await invalidateTasks();
@@ -295,9 +295,9 @@ export function TeamTodoWorkspace() {
 
           <div className="space-y-4">
             {taskFormOpen && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+              <div className="rounded-xl border border-border/60 bg-white p-5 space-y-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{editingTask ? "Edit Tugas" : "Tambah Tugas Baru"}</span>
+                  <span className="text-sm font-semibold text-slate-900">{editingTask ? "Edit Tugas" : "Tambah Tugas Baru"}</span>
                   <Button size="icon-xs" variant="ghost" onClick={closeTaskForm}><X className="size-3.5" /></Button>
                 </div>
                 <FormField label="Judul" htmlFor="ut_title">
@@ -305,25 +305,19 @@ export function TeamTodoWorkspace() {
                 </FormField>
                 <div className="grid grid-cols-2 gap-4">
                   <FormField label="Prioritas" htmlFor="ut_priority">
-                    <Select value={taskPriority} onValueChange={(v) => setTaskPriority(v as TaskPriority)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <SelectNative id="ut_priority" value={taskPriority} onChange={(e) => setTaskPriority(e.target.value as TaskPriority)}>
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </SelectNative>
                   </FormField>
                   <FormField label="Status" htmlFor="ut_status">
-                    <Select value={taskStatus} onValueChange={(v) => setTaskStatus(v as TaskStatus)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="backlog">Backlog</SelectItem>
-                        <SelectItem value="todo">To Do</SelectItem>
-                        <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="done">Done</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <SelectNative id="ut_status" value={taskStatus} onChange={(e) => setTaskStatus(e.target.value as TaskStatus)}>
+                      <option value="backlog">Backlog</option>
+                      <option value="todo">To Do</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="done">Done</option>
+                    </SelectNative>
                   </FormField>
                 </div>
                 <FormField label="Deadline" htmlFor="ut_due">
@@ -390,15 +384,15 @@ export function TeamTodoWorkspace() {
 
           <div className="space-y-4">
             {routineFormOpen && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+              <div className="rounded-xl border border-border/60 bg-white p-5 space-y-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{editingRoutine ? "Edit Rutinitas" : "Tambah Rutinitas Baru"}</span>
+                  <span className="text-sm font-semibold text-slate-900">{editingRoutine ? "Edit Rutinitas" : "Tambah Rutinitas Baru"}</span>
                   <Button size="icon-xs" variant="ghost" onClick={closeRoutineForm}><X className="size-3.5" /></Button>
                 </div>
                 <FormField label="Judul" htmlFor="ur_title">
                   <Input id="ur_title" value={routineTitle} onChange={e => setRoutineTitle(e.target.value)} placeholder="Nama rutinitas..." />
                 </FormField>
-                <FormField label="Deskripsi (opsional)" htmlFor="ur_desc">
+                <FormField label="Deskripsi" htmlFor="ur_desc" helperText="Opsional.">
                   <Textarea id="ur_desc" value={routineDesc} onChange={e => setRoutineDesc(e.target.value)} rows={2} placeholder="Detail rutinitas..." />
                 </FormField>
                 <div className="flex justify-end gap-2 pt-1">

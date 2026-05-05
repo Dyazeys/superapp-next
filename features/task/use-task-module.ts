@@ -180,32 +180,49 @@ export function useTaskKpis(userId?: string) {
   return { kpisQuery, updateRealization };
 }
 
-export function useTaskAttendance() {
+async function getCurrentPosition(): Promise<{ latitude: number; longitude: number } | null> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return null;
+  try {
+    const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 300000,
+      })
+    );
+    return { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+  } catch {
+    return null;
+  }
+}
+
+export function useTaskAttendance(userId?: string) {
   const queryClient = useQueryClient();
   const [clockingIn, setClockingIn] = useState(false);
   const [clockingOut, setClockingOut] = useState(false);
 
   const todayQuery = useQuery({
-    queryKey: [...TASK_ATTENDANCE_KEY, "today"],
-    queryFn: taskApi.attendance.today,
+    queryKey: [...TASK_ATTENDANCE_KEY, "today", userId],
+    queryFn: () => taskApi.attendance.today(),
   });
 
   const historyQuery = useQuery({
-    queryKey: [...TASK_ATTENDANCE_KEY, "history"],
-    queryFn: taskApi.attendance.list,
+    queryKey: [...TASK_ATTENDANCE_KEY, "history", userId],
+    queryFn: () => taskApi.attendance.list(),
   });
 
   async function invalidate() {
     await Promise.all([
-      queryClient.invalidateQueries({ queryKey: [...TASK_ATTENDANCE_KEY, "today"] }),
-      queryClient.invalidateQueries({ queryKey: [...TASK_ATTENDANCE_KEY, "history"] }),
+      queryClient.invalidateQueries({ queryKey: [...TASK_ATTENDANCE_KEY, "today", userId] }),
+      queryClient.invalidateQueries({ queryKey: [...TASK_ATTENDANCE_KEY, "history", userId] }),
     ]);
   }
 
   async function clockIn() {
     setClockingIn(true);
     try {
-      await taskApi.attendance.clockIn();
+      const coords = await getCurrentPosition();
+      await taskApi.attendance.clockIn(coords ?? undefined);
       await invalidate();
       toast.success("Clock in recorded");
     } catch (error) {
@@ -218,7 +235,8 @@ export function useTaskAttendance() {
   async function clockOut() {
     setClockingOut(true);
     try {
-      await taskApi.attendance.clockOut();
+      const coords = await getCurrentPosition();
+      await taskApi.attendance.clockOut(coords ?? undefined);
       await invalidate();
       toast.success("Clock out recorded");
     } catch (error) {
@@ -690,7 +708,7 @@ export function useTeamRoutines() {
 
   const routinesQuery = useQuery({
     queryKey: [...TASK_ROUTINES_KEY, "team", filterUser],
-    queryFn: () => taskApi.routines.list(filterUser),
+    queryFn: () => filterUser ? taskApi.routines.list(filterUser) : taskApi.routines.list(undefined, true),
   });
 
   const routineForm = useForm<RoutineTeamInput>({
@@ -781,7 +799,7 @@ export function useTeamKpis() {
 
   const kpisQuery = useQuery({
     queryKey: [...TEAM_KPIS_KEY, filterUser],
-    queryFn: () => taskApi.kpis.list(filterUser),
+    queryFn: () => filterUser ? taskApi.kpis.list(filterUser) : taskApi.kpis.list(undefined, true),
   });
 
   const kpiForm = useForm<KpiTeamInput>({

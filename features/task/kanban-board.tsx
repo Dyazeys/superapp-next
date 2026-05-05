@@ -6,10 +6,10 @@ import { TaskCard } from "@/features/task/task-card";
 import type { TaskTodo, UserBrief, TaskStatus } from "@/types/task";
 
 const columns: { status: TaskStatus; label: string; color: string }[] = [
-  { status: "backlog", label: "Backlog", color: "border-t-slate-400" },
-  { status: "todo", label: "To Do", color: "border-t-blue-400" },
-  { status: "in_progress", label: "In Progress", color: "border-t-amber-400" },
-  { status: "done", label: "Done", color: "border-t-emerald-400" },
+  { status: "backlog", label: "Backlog", color: "border-t-slate-300" },
+  { status: "todo", label: "To Do", color: "border-t-slate-400" },
+  { status: "in_progress", label: "In Progress", color: "border-t-slate-500" },
+  { status: "done", label: "Done", color: "border-t-slate-600" },
 ];
 
 type KanbanBoardProps = {
@@ -28,7 +28,7 @@ export function KanbanBoard({ todos, users, onEdit, onMove, onArchive, onShowArc
       {columns.map((col) => {
         const colTodos = todos.filter(t => t.status === col.status);
         return (
-          <div key={col.status} className={`rounded-lg border border-slate-200 border-t-4 ${col.color} bg-slate-50/50`}>
+          <div key={col.status} className={`rounded-lg border border-slate-200 border-t-4 ${col.color} bg-slate-50/50 min-w-0`}>
             <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-200">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold text-slate-900">{col.label}</span>

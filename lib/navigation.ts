@@ -181,20 +181,6 @@ const TEAM_MEETING_ITEM: ModuleNavItem = {
   icon: Presentation,
   badge: "Sync",
   permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
-  children: [
-    {
-      label: "Notulen",
-      href: "/team/meeting/notulen",
-      icon: BookOpenText,
-      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
-    },
-    {
-      label: "Ceklis",
-      href: "/team/meeting/to-do",
-      icon: ClipboardList,
-      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
-    },
-  ],
 };
 
 const TEAM_CALENDAR_ITEM: ModuleNavItem = {
@@ -224,13 +210,13 @@ const TEAM_APPROVAL_ITEM: ModuleNavItem = {
       label: "Leader",
       href: "/team/approval/leader",
       icon: CheckCheck,
-      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
+      permission: PERMISSIONS.TEAM_APPROVALS_LEADER_APPROVE,
     },
     {
       label: "Manager",
       href: "/team/approval/manager",
       icon: Eye,
-      permission: PERMISSIONS.TEAM_WORKSPACE_VIEW,
+      permission: PERMISSIONS.TEAM_APPROVALS_MANAGER_APPROVE,
     },
   ],
 };

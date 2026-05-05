@@ -271,7 +271,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.SALES_ORDER_CREATE);
+    const session = await requireApiPermission(PERMISSIONS.SALES_ORDER_CREATE);
 
     const payload = salesOrderSchema.parse(await request.json());
 
@@ -304,18 +304,34 @@ export async function POST(request: NextRequest) {
       invariant(parentOrder, "Parent order was not found.");
     }
 
-    const order = await prisma.t_order.create({
-      data: {
-        order_no: payload.order_no,
-        order_date: asDateTime(payload.order_date),
-        ref_no: payload.ref_no || null,
-        parent_order_no: payload.parent_order_no || null,
-        channel_id: payload.channel_id ?? null,
-        customer_id: payload.customer_id ?? null,
-        total_amount: payload.total_amount,
-        status: payload.status,
-        is_historical: payload.is_historical,
-      },
+    const order = await prisma.$transaction(async (tx) => {
+      const created = await tx.t_order.create({
+        data: {
+          order_no: payload.order_no,
+          order_date: asDateTime(payload.order_date),
+          ref_no: payload.ref_no || null,
+          parent_order_no: payload.parent_order_no || null,
+          channel_id: payload.channel_id ?? null,
+          customer_id: payload.customer_id ?? null,
+          total_amount: payload.total_amount,
+          status: payload.status,
+          is_historical: payload.is_historical,
+        },
+      });
+
+      if (!payload.is_historical) {
+        await tx.approvals.create({
+          data: {
+            type: "sales_order",
+            source_id: created.order_no,
+            requester_id: session.user.id,
+            title: `SO ${created.order_no}${created.ref_no ? ` — ${created.ref_no}` : ""}`,
+            status: "pending",
+          },
+        });
+      }
+
+      return created;
     });
 
     return NextResponse.json(toJsonValue(order), { status: 201 });

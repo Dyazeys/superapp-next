@@ -207,8 +207,18 @@ export function useTeamRoles() {
   }
 
   function applyTemplate(roleCode: RoleCode) {
-    roleForm.setValue("role_name", roleCode);
-    roleForm.setValue("permissions", ROLE_PERMISSION_TEMPLATES[roleCode]);
+    const existingRole = rolesQuery.data?.find((r) => r.role_name === roleCode);
+    if (existingRole) {
+      setEditingRole(existingRole);
+      roleForm.reset({
+        role_name: existingRole.role_name,
+        permissions: ROLE_PERMISSION_TEMPLATES[roleCode],
+      });
+      roleModal.openModal();
+    } else {
+      roleForm.setValue("role_name", roleCode);
+      roleForm.setValue("permissions", ROLE_PERMISSION_TEMPLATES[roleCode]);
+    }
   }
 
   async function saveRole(values: RoleInput) {

@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { requireApiAuth } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const session = await requireApiAuth();
     const userId = session.user.id;
@@ -24,12 +24,24 @@ export async function POST() {
     const hours = now.getHours();
     const status = hours >= 9 ? "late" : "present";
 
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    try {
+      const body = await request.json();
+      if (typeof body.latitude === "number" && typeof body.longitude === "number") {
+        latitude = body.latitude;
+        longitude = body.longitude;
+      }
+    } catch {}
+
     const attendance = await prisma.attendances.create({
       data: {
         user_id: userId,
         date: today,
         clock_in: now,
         status,
+        clock_in_lat: latitude,
+        clock_in_lng: longitude,
       },
     });
 

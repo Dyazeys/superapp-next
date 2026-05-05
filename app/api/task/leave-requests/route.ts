@@ -8,12 +8,13 @@ import { leaveRequestInputSchema } from "@/schemas/task-module";
 
 export async function GET(request: NextRequest) {
   try {
-    await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
+    const session = await requireApiPermission(PERMISSIONS.TASK_WORKSPACE_VIEW);
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId");
+    const userId = searchParams.get("userId") ?? session.user.id;
+    const showAll = searchParams.get("all") === "true";
 
     const where: Record<string, unknown> = {};
-    if (userId) where.user_id = userId;
+    if (!showAll) where.user_id = userId;
 
     const leaves = await prisma.leave_requests.findMany({
       where,

@@ -153,6 +153,20 @@ export const authOptions: NextAuthOptions = {
         if (nextName) {
           token.name = nextName;
         }
+
+        if (token.id && token.id !== "demo-admin") {
+          const dbUser = await prisma.users.findUnique({
+            where: { id: token.id as string },
+            include: { roles: true },
+          });
+          if (dbUser?.roles) {
+            const roleName = dbUser.roles.role_name;
+            token.permissions = isSuperadminRole(roleName)
+              ? ROLE_PERMISSION_TEMPLATES.OWNER
+              : normalizePermissions(dbUser.roles.permissions);
+            token.roleName = roleName;
+          }
+        }
       }
 
       return token;

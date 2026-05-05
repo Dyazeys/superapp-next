@@ -10,7 +10,7 @@ import { ModalFormShell } from "@/components/forms/modal-form-shell";
 import { FormField } from "@/components/forms/form-field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectNative } from "@/components/ui/select-native";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { KanbanBoard } from "@/features/task/kanban-board";
@@ -96,42 +96,24 @@ export function TaskTodoKanbanWorkspace() {
         </FormField>
         <div className="grid grid-cols-2 gap-4">
           <FormField label="Status" htmlFor="todo_status" error={hooks.todoForm.formState.errors.status?.message}>
-            <Select value={hooks.todoForm.watch("status")} onValueChange={(v) => hooks.todoForm.setValue("status", v as TaskStatus)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="backlog">Backlog</SelectItem>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
-              </SelectContent>
-            </Select>
+            <SelectNative id="todo_status" value={hooks.todoForm.watch("status")} onChange={(e) => hooks.todoForm.setValue("status", e.target.value as TaskStatus)}>
+              <option value="backlog">Backlog</option>
+              <option value="todo">To Do</option>
+              <option value="in_progress">In Progress</option>
+              <option value="done">Done</option>
+            </SelectNative>
           </FormField>
           <FormField label="Prioritas" htmlFor="todo_priority" error={hooks.todoForm.formState.errors.priority?.message}>
-            <Select value={hooks.todoForm.watch("priority")} onValueChange={(v) => hooks.todoForm.setValue("priority", v as TaskPriority)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-              </SelectContent>
-            </Select>
+            <SelectNative id="todo_priority" value={hooks.todoForm.watch("priority")} onChange={(e) => hooks.todoForm.setValue("priority", e.target.value as TaskPriority)}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </SelectNative>
           </FormField>
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <FormField label="Assignee" htmlFor="todo_assignee" error={hooks.todoForm.formState.errors.assignee_id?.message}>
-            <Select value={hooks.todoForm.watch("assignee_id") ?? ""} onValueChange={(v) => hooks.todoForm.setValue("assignee_id", v || null)}>
-              <SelectTrigger><SelectValue placeholder="Pilih user..." /></SelectTrigger>
-              <SelectContent>
-                {users.map((u) => (
-                  <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
-          <FormField label="Deadline" htmlFor="todo_due" error={hooks.todoForm.formState.errors.due_date?.message}>
-            <Input id="todo_due" type="date" {...hooks.todoForm.register("due_date")} />
-          </FormField>
-        </div>
+        <FormField label="Deadline" htmlFor="todo_due" error={hooks.todoForm.formState.errors.due_date?.message} helperText="Format: YYYY-MM-DD. Opsional.">
+          <Input id="todo_due" type="date" {...hooks.todoForm.register("due_date")} />
+        </FormField>
       </ModalFormShell>
 
       <Dialog open={hooks.todoDeleteModal.open} onOpenChange={hooks.todoDeleteModal.setOpen}>

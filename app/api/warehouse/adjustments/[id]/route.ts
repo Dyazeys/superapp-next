@@ -79,6 +79,10 @@ export async function DELETE(
 
       await removeAdjustmentMovement(tx, id, current.inv_code);
 
+      await tx.approvals.deleteMany({
+        where: { type: "warehouse_adjustment", source_id: id },
+      });
+
       await tx.adjustments.delete({
         where: { id },
       });

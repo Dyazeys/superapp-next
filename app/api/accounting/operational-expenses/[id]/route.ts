@@ -170,6 +170,9 @@ export async function DELETE(
       invariant(current.status === "DRAFT", "Only draft opex can be deleted.");
 
       await deleteOperationalExpenseJournal(tx, id);
+      await tx.approvals.deleteMany({
+        where: { type: "opex", source_id: id },
+      });
       await tx.operational_expenses.delete({
         where: { id },
       });

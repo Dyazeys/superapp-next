@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectNative } from "@/components/ui/select-native";
 import { Badge } from "@/components/ui/badge";
 import { useTeamKpis, useUsers } from "@/features/task/use-task-module";
 import { taskApi } from "@/features/task/api";
@@ -227,23 +227,20 @@ export function TeamKpiWorkspace() {
 
           <div className="space-y-4">
             {formOpen && (
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
+              <div className="rounded-xl border border-border/60 bg-white p-5 space-y-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">{editingKpi ? "Edit KPI" : "Tambah KPI Baru"}</span>
+                  <span className="text-sm font-semibold text-slate-900">{editingKpi ? "Edit KPI" : "Tambah KPI Baru"}</span>
                   <Button size="icon-xs" variant="ghost" onClick={closeForm}><X className="size-3.5" /></Button>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <FormField label="Judul" htmlFor="kpi_title">
                     <Input id="kpi_title" value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Nama KPI..." />
                   </FormField>
-                  <FormField label="Jenis" htmlFor="kpi_type">
-                    <Select value={formType} onValueChange={(v) => setFormType(v as KpiType)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="maximize">Maximize</SelectItem>
-                        <SelectItem value="minimize">Minimize</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <FormField label="Jenis" htmlFor="kpi_type" helperText="Maximize = makin tinggi makin baik. Minimize = sebaliknya.">
+                    <SelectNative id="kpi_type" value={formType} onChange={(e) => setFormType(e.target.value as KpiType)}>
+                      <option value="maximize">Maximize</option>
+                      <option value="minimize">Minimize</option>
+                    </SelectNative>
                   </FormField>
                 </div>
                 <FormField label="Deskripsi" htmlFor="kpi_desc">
@@ -257,7 +254,7 @@ export function TeamKpiWorkspace() {
                     <Input id="kpi_target" type="number" value={formTarget} onChange={e => setFormTarget(Number(e.target.value))} />
                   </FormField>
                   <FormField label="Satuan" htmlFor="kpi_unit">
-                    <Input id="kpi_unit" value={formUnit} onChange={e => setFormUnit(e.target.value)} placeholder="%, Rp, unit" />
+                    <Input id="kpi_unit" value={formUnit} onChange={e => setFormUnit(e.target.value)} placeholder="%, unit" />
                   </FormField>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -268,7 +265,7 @@ export function TeamKpiWorkspace() {
                     <Input id="kpi_pe" type="date" value={formPeriodEnd} onChange={e => setFormPeriodEnd(e.target.value)} />
                   </FormField>
                 </div>
-                <FormField label="Catatan" htmlFor="kpi_notes">
+                <FormField label="Catatan" htmlFor="kpi_notes" helperText="Opsional.">
                   <Textarea id="kpi_notes" value={formNotes} onChange={e => setFormNotes(e.target.value)} rows={2} />
                 </FormField>
                 <div className="flex justify-end gap-2 pt-1">

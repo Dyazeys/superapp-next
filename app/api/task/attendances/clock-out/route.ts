@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/db/prisma";
 import { requireApiAuth } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
     const session = await requireApiAuth();
     const userId = session.user.id;
@@ -25,9 +25,19 @@ export async function POST() {
       status = "early_leave";
     }
 
+    let latitude: number | null = null;
+    let longitude: number | null = null;
+    try {
+      const body = await request.json();
+      if (typeof body.latitude === "number" && typeof body.longitude === "number") {
+        latitude = body.latitude;
+        longitude = body.longitude;
+      }
+    } catch {}
+
     const updated = await prisma.attendances.update({
       where: { id: attendance.id },
-      data: { clock_out: now, status, note: "" },
+      data: { clock_out: now, status, note: "", clock_out_lat: latitude, clock_out_lng: longitude },
     });
 
     return NextResponse.json(toJsonValue(updated));

@@ -107,8 +107,17 @@ export const announcementInputSchema = z.object({
 
 export type AnnouncementInput = z.input<typeof announcementInputSchema>;
 
-export const approvalTypeSchema = z.enum(["leave", "announcement", "meeting_note"]);
-export const approvalStatusSchema = z.enum(["pending", "approved", "rejected"]);
+export const approvalTypeSchema = z.enum([
+  "leave",
+  "announcement",
+  "meeting_note",
+  "opex",
+  "opex_barter",
+  "sales_order",
+  "inbound",
+  "warehouse_adjustment",
+]);
+export const approvalStatusSchema = z.enum(["pending", "approved", "rejected", "leader_approved", "manager_acknowledged"]);
 
 export const approvalDecisionSchema = z.object({
   status: approvalStatusSchema,

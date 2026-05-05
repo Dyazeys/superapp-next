@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectNative } from "@/components/ui/select-native";
 import { Badge } from "@/components/ui/badge";
 import { useTaskLeaveRequests } from "@/features/task/use-task-module";
 import type { TaskLeaveRequest, LeaveType, LeaveCategory, LeaveStatus } from "@/types/task";
@@ -131,25 +131,21 @@ export function TaskLeaveRequestWorkspace() {
         isSubmitting={hooks.leaveQuery.isPending}
         onSubmit={hooks.leaveForm.handleSubmit((values) => hooks.saveLeave(values))}
       >
-        <FormField label="Izin" htmlFor="leave_type" error={hooks.leaveForm.formState.errors.type?.message}>
-          <Select value={hooks.leaveForm.watch("type")} onValueChange={(v) => hooks.leaveForm.setValue("type", v as LeaveType)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="izin_direncanakan">Izin Direncanakan</SelectItem>
-              <SelectItem value="izin_mendesak">Izin Mendesak</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
-        <FormField label="Jenis" htmlFor="leave_category" error={hooks.leaveForm.formState.errors.category?.message}>
-          <Select value={hooks.leaveForm.watch("category")} onValueChange={(v) => hooks.leaveForm.setValue("category", v as LeaveCategory)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="tidak_masuk">Tidak Masuk</SelectItem>
-              <SelectItem value="datang_terlambat">Datang Terlambat</SelectItem>
-              <SelectItem value="pulang_cepat">Pulang Cepat</SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
+        <div className="grid grid-cols-2 gap-4">
+          <FormField label="Izin" htmlFor="leave_type" error={hooks.leaveForm.formState.errors.type?.message}>
+            <SelectNative id="leave_type" value={hooks.leaveForm.watch("type")} onChange={(e) => hooks.leaveForm.setValue("type", e.target.value as LeaveType)}>
+              <option value="izin_direncanakan">Izin Direncanakan</option>
+              <option value="izin_mendesak">Izin Mendesak</option>
+            </SelectNative>
+          </FormField>
+          <FormField label="Jenis" htmlFor="leave_category" error={hooks.leaveForm.formState.errors.category?.message} helperText="Tidak masuk = hari penuh, datang/pulang cepat = sebagian">
+            <SelectNative id="leave_category" value={hooks.leaveForm.watch("category")} onChange={(e) => hooks.leaveForm.setValue("category", e.target.value as LeaveCategory)}>
+              <option value="tidak_masuk">Tidak Masuk</option>
+              <option value="datang_terlambat">Datang Terlambat</option>
+              <option value="pulang_cepat">Pulang Cepat</option>
+            </SelectNative>
+          </FormField>
+        </div>
         {watchedCategory === "tidak_masuk" ? (
           <div className="grid grid-cols-2 gap-4">
             <FormField label="Mulai" htmlFor="leave_start" error={hooks.leaveForm.formState.errors.start_date?.message}>

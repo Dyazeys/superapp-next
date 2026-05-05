@@ -112,6 +112,10 @@ export async function DELETE(
         where: { order_no: orderNo },
       });
 
+      await tx.approvals.deleteMany({
+        where: { type: "sales_order", source_id: orderNo },
+      });
+
       await tx.t_order.delete({
         where: { order_no: orderNo },
       });

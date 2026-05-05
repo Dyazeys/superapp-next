@@ -126,6 +126,8 @@ export const teamApi = {
       if (params?.type) search.set("type", params.type);
       return requestJson<ApprovalRequest[]>(`/api/team/approvals?${search}`);
     },
+    detail: (id: string) =>
+      requestJson<ApprovalRequest & { domainDetail: Record<string, unknown> }>(`/api/team/approvals/${id}`),
     approve: (id: string, note?: string) =>
       requestJson<ApprovalRequest>(`/api/team/approvals/${id}/approve`, {
         method: "PATCH",
