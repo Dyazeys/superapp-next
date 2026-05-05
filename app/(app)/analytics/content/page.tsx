@@ -6,34 +6,12 @@ import { ContentDailyCharts } from "@/features/analytics/content-daily-charts";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-function buildMonthOptions() {
-  const now = new Date();
-  const endYear = now.getUTCFullYear() + 1;
-  const months: { value: string; label: string }[] = [];
-  for (let y = 2026; y <= endYear; y++) {
-    const mEnd = y === endYear ? now.getUTCMonth() : 11;
-    for (let m = 0; m <= mEnd; m++) {
-      const date = new Date(Date.UTC(y, m, 1));
-      months.push({
-        value: `${y}-${String(m + 1).padStart(2, "0")}`,
-        label: new Intl.DateTimeFormat("id-ID", {
-          month: "long",
-          year: "numeric",
-          timeZone: "UTC",
-        }).format(date),
-      });
-    }
-  }
-  return months;
-}
-
 export default async function ContentPage({
   searchParams,
 }: {
-  searchParams: Promise<{ month?: string; product?: string }>;
+  searchParams: Promise<{ from?: string; to?: string; product?: string }>;
 }) {
   const params = await searchParams;
-  const monthOptions = buildMonthOptions();
   const report = await getDailyUploadReport(params);
 
   return (
@@ -44,21 +22,31 @@ export default async function ContentPage({
         titleClassName="text-2xl leading-none"
         descriptionClassName="text-xs leading-5"
       >
-        <form className="flex flex-wrap items-end gap-3">
+        <form method="get" className="grid gap-3 md:grid-cols-[220px_220px_minmax(0,1fr)_auto]">
           <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Bulan
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Dari
             </p>
-            <SelectNative name="month" defaultValue={report.monthValue}>
-              {monthOptions.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </SelectNative>
+            <input
+              type="date"
+              name="from"
+              defaultValue={report.from}
+              className="block h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-0 text-sm leading-10 text-slate-900 shadow-sm focus-visible:border-slate-400 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-slate-200"
+            />
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Sampai
+            </p>
+            <input
+              type="date"
+              name="to"
+              defaultValue={report.to}
+              className="block h-10 w-full rounded-xl border border-slate-200 bg-white px-3 py-0 text-sm leading-10 text-slate-900 shadow-sm focus-visible:border-slate-400 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-slate-200"
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               Produk
             </p>
             <SelectNative name="product" defaultValue={params.product || ""}>
@@ -70,12 +58,14 @@ export default async function ContentPage({
               ))}
             </SelectNative>
           </div>
-          <button
-            type="submit"
-            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-900 bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-800"
-          >
-            Tampilkan
-          </button>
+          <div className="flex items-end">
+            <button
+              type="submit"
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-900 bg-slate-900 px-4 text-sm font-medium text-white transition-colors hover:bg-slate-800"
+            >
+              Tampilkan
+            </button>
+          </div>
         </form>
       </WorkspacePanel>
 

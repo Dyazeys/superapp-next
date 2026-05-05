@@ -1,33 +1,6 @@
 import "server-only";
 import { prisma } from "@/db/prisma";
 
-function monthRange(monthValue: string) {
-  const [yearRaw, monthRaw] = monthValue.split("-");
-  const year = Number(yearRaw);
-  const monthIndex = Number(monthRaw) - 1;
-  const start = new Date(Date.UTC(year, monthIndex, 1));
-  const end = new Date(Date.UTC(year, monthIndex + 1, 1));
-  return { start, end };
-}
-
-function monthLabel(monthValue: string) {
-  const { start } = monthRange(monthValue);
-  return new Intl.DateTimeFormat("id-ID", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(start);
-}
-
-function currentMonthValue() {
-  const now = new Date();
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
-}
-
-function fmtDate(d: Date) {
-  return d.toISOString().split("T")[0];
-}
-
 export type DailyUploadDay = {
   date: string;
   tiktokVideo: number;
@@ -41,9 +14,18 @@ export type DailyUploadBar = {
   count: number;
 };
 
+export type ProductPlatformRow = {
+  produk: string;
+  tiktokVideo: number;
+  igReels: number;
+  igFeed: number;
+  total: number;
+};
+
 export type DailyUploadReport = {
-  monthValue: string;
-  monthLabel: string;
+  from: string;
+  to: string;
+  dateLabel: string;
   totalUploads: number;
   uniquePlatforms: number;
   uniqueProducts: number;
@@ -52,15 +34,49 @@ export type DailyUploadReport = {
   byPlatform: DailyUploadBar[];
   byContentType: DailyUploadBar[];
   byStatus: DailyUploadBar[];
+  byProductPlatform: ProductPlatformRow[];
   productOptions: string[];
 };
 
+function fmtDate(d: Date) {
+  return d.toISOString().split("T")[0];
+}
+
+function currentMonthStart(): string {
+  const now = new Date();
+  return fmtDate(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)));
+}
+
+function currentMonthEnd(): string {
+  const now = new Date();
+  return fmtDate(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)));
+}
+
+function dateLabel(from: string, to: string) {
+  const f = new Date(from + "T00:00:00Z");
+  const t = new Date(to + "T00:00:00Z");
+  const fmt = (d: Date) =>
+    new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }).format(d);
+  if (from === to) return fmt(f);
+  return `${fmt(f)} – ${fmt(t)}`;
+}
+
 export async function getDailyUploadReport(input?: {
-  month?: string | null;
+  from?: string | null;
+  to?: string | null;
   product?: string | null;
 }): Promise<DailyUploadReport> {
-  const monthValue = input?.month?.trim() || currentMonthValue();
-  const { start, end } = monthRange(monthValue);
+  const fromRaw = input?.from?.trim() || currentMonthStart();
+  const toRaw = input?.to?.trim() || currentMonthEnd();
+
+  const start = new Date(fromRaw + "T00:00:00Z");
+  const end = new Date(toRaw + "T00:00:00Z");
+  end.setUTCDate(end.getUTCDate() + 1);
 
   const where: Record<string, unknown> = {
     tanggal_aktivitas: { gte: start, lt: end },
@@ -83,7 +99,6 @@ export async function getDailyUploadReport(input?: {
     },
   });
 
-  // Time series by day — 3 metrics
   const tiktokMap = new Map<string, number>();
   const reelsMap = new Map<string, number>();
   const feedMap = new Map<string, number>();
@@ -92,6 +107,7 @@ export async function getDailyUploadReport(input?: {
   const statusMap = new Map<string, number>();
   const productSet = new Set<string>();
   const picSet = new Set<string>();
+  const productPlatformMap = new Map<string, { tiktokVideo: number; igReels: number; igFeed: number }>();
 
   for (const row of rows) {
     const day = fmtDate(row.tanggal_aktivitas);
@@ -107,9 +123,20 @@ export async function getDailyUploadReport(input?: {
     statusMap.set(row.status, (statusMap.get(row.status) ?? 0) + 1);
     if (row.produk) productSet.add(row.produk);
     if (row.pic) picSet.add(row.pic);
+
+    if (row.produk) {
+      const prev = productPlatformMap.get(row.produk) ?? { tiktokVideo: 0, igReels: 0, igFeed: 0 };
+      if (row.platform === "TikTok") {
+        prev.tiktokVideo += 1;
+      } else if (row.platform === "Instagram" && row.jenis_konten === "Reel") {
+        prev.igReels += 1;
+      } else if (row.platform === "Instagram" && row.jenis_konten === "Feed") {
+        prev.igFeed += 1;
+      }
+      productPlatformMap.set(row.produk, prev);
+    }
   }
 
-  // Generate all dates in the month for continuous time series
   const timeSeries: DailyUploadDay[] = [];
   const cursor = new Date(start);
   while (cursor < end) {
@@ -124,7 +151,6 @@ export async function getDailyUploadReport(input?: {
     cursor.setUTCDate(cursor.getUTCDate() + 1);
   }
 
-  // Product options from ALL data (not filtered by month)
   const allProducts = await prisma.daily_uploads.findMany({
     distinct: ["produk"],
     select: { produk: true },
@@ -135,9 +161,18 @@ export async function getDailyUploadReport(input?: {
     .map((r) => r.produk)
     .filter((p): p is string => typeof p === "string" && p.length > 0);
 
+  const byProductPlatform = Array.from(productPlatformMap.entries())
+    .map(([produk, counts]) => ({
+      produk,
+      ...counts,
+      total: counts.tiktokVideo + counts.igReels + counts.igFeed,
+    }))
+    .sort((a, b) => b.total - a.total);
+
   return {
-    monthValue,
-    monthLabel: monthLabel(monthValue),
+    from: fromRaw,
+    to: toRaw,
+    dateLabel: dateLabel(fromRaw, toRaw),
     totalUploads: rows.length,
     uniquePlatforms: platformMap.size,
     uniqueProducts: productSet.size,
@@ -152,6 +187,7 @@ export async function getDailyUploadReport(input?: {
     byStatus: Array.from(statusMap.entries())
       .map(([label, count]) => ({ label, count }))
       .sort((a, b) => b.count - a.count),
+    byProductPlatform,
     productOptions,
   };
 }

@@ -64,7 +64,7 @@ export function ContentDailyCharts({ report }: { report: DailyUploadReport }) {
       {report.timeSeries.length > 0 ? (
         <div className="rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold text-slate-900">
-            Trend Upload — {report.monthLabel}
+            Trend Upload — {report.dateLabel}
           </h3>
           <MarketingChart
             data={report.timeSeries}
@@ -78,7 +78,7 @@ export function ContentDailyCharts({ report }: { report: DailyUploadReport }) {
         </div>
       ) : (
         <p className="py-8 text-center text-sm text-slate-400">
-          Belum ada data upload untuk bulan ini.
+          Belum ada data upload untuk rentang tanggal ini.
         </p>
       )}
 
@@ -107,6 +107,40 @@ export function ContentDailyCharts({ report }: { report: DailyUploadReport }) {
         <div className="rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm">
           <h3 className="mb-3 text-sm font-semibold text-slate-900">By Status</h3>
           <HorizontalBarList items={report.byStatus} color="#059669" />
+        </div>
+      )}
+
+      {/* Produk × Platform */}
+      {report.byProductPlatform.length > 0 && (
+        <div className="rounded-xl border border-slate-200/60 bg-white px-4 py-3 shadow-sm">
+          <h3 className="mb-3 text-sm font-semibold text-slate-900">Produk × Platform</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  <th className="py-2 pr-4 text-left">Produk</th>
+                  <th className="py-2 px-3 text-right tabular-nums">TikTok</th>
+                  <th className="py-2 px-3 text-right tabular-nums">IG Reels</th>
+                  <th className="py-2 px-3 text-right tabular-nums">IG Feed</th>
+                  <th className="py-2 pl-3 text-right tabular-nums">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.byProductPlatform.map((row, idx) => (
+                  <tr
+                    key={row.produk}
+                    className={idx % 2 === 0 ? "border-b border-slate-50" : "bg-slate-50/50 border-b border-slate-50"}
+                  >
+                    <td className="py-1.5 pr-4 font-medium text-slate-700">{row.produk}</td>
+                    <td className="py-1.5 px-3 text-right tabular-nums text-slate-600">{number(row.tiktokVideo)}</td>
+                    <td className="py-1.5 px-3 text-right tabular-nums text-slate-600">{number(row.igReels)}</td>
+                    <td className="py-1.5 px-3 text-right tabular-nums text-slate-600">{number(row.igFeed)}</td>
+                    <td className="py-1.5 pl-3 text-right font-semibold tabular-nums text-slate-900">{number(row.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
