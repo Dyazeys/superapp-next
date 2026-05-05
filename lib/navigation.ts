@@ -370,6 +370,7 @@ export const ANALYTICS_MODULE_ITEMS: ModuleNavItem[] = [
       PERMISSIONS.ANALYTICS_REPORT_PNL_VIEW,
       PERMISSIONS.ANALYTICS_BUDGET_METERS_VIEW,
       PERMISSIONS.MARKETING_WORKSPACE_VIEW,
+      PERMISSIONS.CONTENT_DAILY_REPORT_VIEW,
     ],
   },
   {
@@ -416,6 +417,23 @@ export const ANALYTICS_MODULE_ITEMS: ModuleNavItem[] = [
         href: "/analytics/marketing/tiktok",
         icon: Music,
         permission: PERMISSIONS.MARKETING_WORKSPACE_VIEW,
+      },
+    ],
+  },
+  {
+    label: "Content",
+    href: "/analytics/content",
+    icon: Upload,
+    badge: "Visual",
+    permissionAny: [
+      PERMISSIONS.CONTENT_DAILY_REPORT_VIEW,
+    ],
+    children: [
+      {
+        label: "Daily Upload",
+        href: "/analytics/content",
+        icon: Upload,
+        permission: PERMISSIONS.CONTENT_DAILY_REPORT_VIEW,
       },
     ],
   },
