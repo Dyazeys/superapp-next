@@ -3,6 +3,7 @@ import { prisma } from "@/db/prisma";
 import { requireApiAuth } from "@/lib/authz";
 import { jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { getClockInStatus } from "@/lib/attendance";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,8 +22,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(toJsonValue(existing));
     }
 
-    const hours = now.getHours();
-    const status = hours >= 9 ? "late" : "present";
+    const { status, error } = getClockInStatus(now);
+    if (error) {
+      return NextResponse.json({ error }, { status: 400 });
+    }
 
     let latitude: number | null = null;
     let longitude: number | null = null;

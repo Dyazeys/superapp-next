@@ -124,3 +124,52 @@ serverExternalPackages: ["@prisma/client", "prisma", "@prisma/adapter-pg", "pg"]
 - NextAuth v4 — credentials provider (`lib/auth.ts`, `app/api/auth/[...nextauth]/route.ts`)
 - `hooks/use-modal-state.ts` — helper untuk state dialog (open/close + selected item)
 - `lib/password.ts` — hashing password (digunakan `auth:hash`)
+
+## Aturan Absensi (Clock In/Out)
+
+### Jam Kerja & Status
+
+| Konstanta | Nilai | Keterangan |
+|-----------|-------|------------|
+| Jam masuk | 09:00 WIB | Batas "present" vs "late" |
+| Grace period | 15 menit (09:00–09:15 WIB) | Masih dianggap "present" |
+| Jam absen dibuka | 06:00 WIB | Tidak bisa clock in sebelum jam ini |
+| Minimum jam kerja | 8 jam | Di bawah ini → "early_leave" |
+
+### Clock In
+
+| Waktu Clock In | Status | Keterangan |
+|----------------|--------|------------|
+| < 06:00 WIB | **REJECT** | `Belum bisa absen, jam masuk dibuka mulai pukul 06:00 WIB` |
+| 06:00 – 09:15 WIB | `"present"` | On time / dalam grace period |
+| > 09:15 WIB | `"late"` | Terlambat, lewat grace period |
+
+### Clock Out
+
+| Kondisi | Status Akhir |
+|---------|---------------|
+| Durasi >= 8 jam | Tidak diubah (present tetap present, late tetap late) |
+| Durasi < 8 jam, status awal `"present"` | `"early_leave"` |
+| Durasi < 8 jam, status awal `"late"` | `"late"` (tidak berubah) |
+
+### Status yang Ada di Type
+
+- `"present"` — hadir on time
+- `"late"` — terlambat clock in (> 09:15 WIB)
+- `"early_leave"` — pulang sebelum 8 jam kerja
+- `"absent"` — **tidak pernah diset otomatis**; hanya bisa diset manual oleh admin atau scheduled job
+
+### Timezone
+
+Semua perhitungan jam menggunakan **WIB (UTC+7)** via `Intl.DateTimeFormat` dengan `timeZone: "Asia/Jakarta"`, **bukan** `now.getHours()` (server local time).
+
+### File Terkait
+
+| File | Peran |
+|------|-------|
+| `lib/attendance.ts` | Konstanta & fungsi `getClockInStatus()`, `getClockOutStatus()` |
+| `app/api/task/attendances/clock-in/route.ts` | POST handler clock in |
+| `app/api/task/attendances/clock-out/route.ts` | POST handler clock out |
+| `prisma/schema.prisma` (`attendances`) | Model DB, `@@unique([user_id, date])` |
+| `types/task.ts` | `TaskAttendance`, `AttendanceStatus` |
+| `features/task/clock-in-out-workspace.tsx` | UI workspace |

@@ -3,6 +3,7 @@ import { prisma } from "@/db/prisma";
 import { requireApiAuth } from "@/lib/authz";
 import { invariant, jsonError } from "@/lib/api-error";
 import { toJsonValue } from "@/lib/json";
+import { getClockOutStatus } from "@/lib/attendance";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,12 +19,8 @@ export async function POST(request: NextRequest) {
     });
     invariant(attendance, "No active clock-in found for today.", 400);
 
-    const clockInTime = attendance.clock_in ? new Date(attendance.clock_in).getTime() : 0;
-    const durationHours = (now.getTime() - clockInTime) / (1000 * 60 * 60);
-    let status = attendance.status;
-    if (durationHours < 8 && status !== "late") {
-      status = "early_leave";
-    }
+    const clockInDate = attendance.clock_in ? new Date(attendance.clock_in) : now;
+    const status = getClockOutStatus(clockInDate, now, attendance.status);
 
     let latitude: number | null = null;
     let longitude: number | null = null;
